@@ -1,10 +1,9 @@
 *** TBD for Jikes 1.14 release:
 
-correct configure script for LIB_ICU, HP/UX, and ICC fp
-bug on other compilers
+corect configure script for LIB_ICU, HP/UX, and ICC fp
+bug on other compilers.
 
 (fixes in hand)
-
 
 Fix problem with debug line number tables. Newer
 versions of java don't like our line numbers.
@@ -12,6 +11,10 @@ This is commonly known as "Jikes and JPDA".
 
 (first fix in hand, need to see if it exposes more problems)
 
+correct numerous constant, floating point and String
+concatentaion problems.
+
+(fixes in hand)
 
 It is not clear if iconv is only a little
 broken or totally busted.
@@ -42,6 +45,10 @@ would have wanted.
 
 (postponed from last release)
 
+
+command line UI issues, including the classpath
+handling options, to make us a drop in replacement
+for javac (as near as possible)
 
 
 
@@ -93,6 +100,19 @@ Make the floating point emulation code default.
                                                 
 
 
+If a zip file can not be found,
+the error message printed should
+say that instead of saying it
+is "invalid" (implies it was corrupted).
+
+"D:\File\with\wrong\classpath\entry\rt.jar is not a valid zip file" (BAD)
+
+"D:\File\with\wrong\classpath\entry\rt.jar not found" (GOOD)
+
+
+
+
+
 
 *** Things that will not be done in 1.14
 
@@ -112,16 +132,6 @@ the .tar file.
 able to regenerate a working
 ./configure with autoconf 2.13
 anyway, so this can be delayed)
-
-
-If a zip file can not be found,
-the error message printed should
-say that instead of saying it
-is "invalid" (implies it was corrupted).
-
-"D:\File\with\wrong\classpath\entry\rt.jar is not a valid zip file" (BAD)
-
-"D:\File\with\wrong\classpath\entry\rt.jar not found" (GOOD)
 
 
 
