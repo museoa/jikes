@@ -37,8 +37,8 @@ int main(int argc, char *argv[])
     else
     {
         fprintf(stderr,
-        "\nIBM Jikes Compiler"
-        "\n(C) Copyright IBM Corp. 1997, 1999.\n"
+        "\nJikes Compiler"
+        "\n(C) Copyright IBM Corp. 1997, 2000.\n"
         "- Licensed Materials - Program Property of IBM - All Rights Reserved.\n\n");
         fprintf(stderr, "%s", StringConstant::U8S_command_format);
         fprintf(stderr,
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
         "+u                 unparse AST; produces Java code for the AST\n"
         "+ud                unparse AST, with extra debugging information\n"
 #endif
-        "\nVersion 1.11 (4 Jan 2000)\n"
+        "\nVersion 1.11 (10 Jan 2000)\n"
         "Originally written by Philippe Charles and David Shields \n"
         "of IBM Research, Jikes is now maintained and refined by the\n"
         "Jikes Project at http://ibm.com/developerworks/opensource.\n"
