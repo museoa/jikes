@@ -172,6 +172,40 @@ void Semantic::ProcessBlock(Ast* stmt)
 }
 
 
+void Semantic::WarnOfAccessibleFieldWithName(SemanticError::SemanticErrorKind problem,
+                                             AstVariableDeclaratorId* name,
+                                             NameSymbol* name_symbol)
+{
+    TypeSymbol* this_type = ThisType();
+    for (TypeSymbol* type = this_type; type != 0; type = type -> super)
+    {
+        //
+        // Try to find a variable with the same name_symbol, first in the
+        // type itself, then in any of its implemented interfaces.
+        //
+        VariableSymbol* variable = type -> FindVariableSymbol(name_symbol);
+        for (unsigned i = 0; variable == 0 && i < type -> NumInterfaces(); ++i)
+        {
+            variable = type -> Interface(i) -> FindVariableSymbol(name_symbol);
+        }
+
+        //
+        // Warn if we found an accessible field with the same name_symbol.
+        //
+        if (variable && MemberAccessCheck(this_type, variable, 0))
+        {
+            TypeSymbol* containing_type = variable -> ContainingType();
+            ReportSemError(problem,
+                           name -> identifier_token,
+                           name_symbol -> Name(),
+                           containing_type -> ContainingPackageName(),
+                           containing_type -> ExternalName());
+            return;
+        }
+    }
+}
+
+
 void Semantic::ProcessLocalVariableDeclarationStatement(Ast* stmt)
 {
     AstLocalVariableDeclarationStatement* local_decl =
@@ -203,6 +237,8 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast* stmt)
         }
         else
         {
+            WarnOfAccessibleFieldWithName(SemanticError::LOCAL_SHADOWS_FIELD,
+                                          name, name_symbol);
             AstBlock* block = LocalBlockStack().TopBlock();
             SymbolTable* table;
             if (block -> block_tag == AstBlock::SWITCH)
@@ -609,6 +645,8 @@ void Semantic::ProcessForeachStatement(Ast* stmt)
     }
     else
     {
+        WarnOfAccessibleFieldWithName(SemanticError::LOCAL_SHADOWS_FIELD,
+                                      name, name_symbol);
         SymbolTable* table = LocalSymbolTable().Top();
         VariableSymbol* symbol = table -> InsertVariableSymbol(name_symbol);
         variable_declarator -> symbol = symbol;
@@ -1555,6 +1593,8 @@ void Semantic::ProcessTryStatement(Ast* stmt)
                            name -> identifier_token, name_symbol -> Name(),
                            duplicate -> FileLoc());
         }
+        WarnOfAccessibleFieldWithName(SemanticError::LOCAL_SHADOWS_FIELD,
+                                      name, name_symbol);
 
         AstBlock* block_body = clause -> block;
         

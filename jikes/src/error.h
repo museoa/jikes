@@ -182,6 +182,8 @@ public:
         CLASS_METHOD_INVOKED_VIA_INSTANCE,
         CLASS_FIELD_ACCESSED_VIA_INSTANCE,
         CONSTANT_OVERFLOW,
+        LOCAL_SHADOWS_FIELD,
+        HIDDEN_FIELD,
 
         // "Effective Java" warnings.
         EJ_AVOID_OVERLOADING_EQUALS,

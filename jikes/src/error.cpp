@@ -611,6 +611,12 @@ void SemanticError::InitializeMessageGroups()
     group -> AddMessage(MISSING_SERIAL_VERSION_UID);
     message_groups.Push(group);
 
+    group = new MessageGroup("shadow", "shadowed and hidden fields",
+                             NAMED_WEAK_ON);
+    group -> AddMessage(HIDDEN_FIELD);
+    group -> AddMessage(LOCAL_SHADOWS_FIELD);
+    message_groups.Push(group);
+
     group = new MessageGroup("switchcheck",
                              "fallthrough between switch statement cases",
                              NAMED_WEAK_ON);
@@ -662,7 +668,6 @@ void SemanticError::InitializeMessageGroups()
                              NAMED_WEAK_OFF);
     group -> AddMessage(UNUSED_PACKAGE_IMPORT);
     message_groups.Push(group);
-
 }
 
 //
@@ -1311,6 +1316,10 @@ void SemanticError::InitializeMessages()
         "declared type, not the instance's dynamic type.";
     messages[CONSTANT_OVERFLOW] =
         "Overflow in %1 expression.";
+    messages[LOCAL_SHADOWS_FIELD] =
+        "Local \"%1\" shadows a field of the same name in \"%T2\".";
+    messages[HIDDEN_FIELD] =
+        "Field \"%1\" shadows a field of the same name in \"%T2\".";
 
     // "Effective Java" warnings.
     messages[EJ_AVOID_OVERLOADING_EQUALS] =

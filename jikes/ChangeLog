@@ -1,3 +1,13 @@
+2004-02-27  Elliott Hughes  <enh@acm.org>
+
+	* src/body.cpp, src/semantic.h: Add a method to check for an
+	accessible field with a given name (WarnOfAccessibleFieldWithName).
+	* src/error.cpp, error.h: New error messages, and +P[no-]shadow.
+	* src/body.cpp, src/decl.cpp: Check for shadowing of fields
+	when declaring a local variable, a foreach variable, a catch
+	variable; or hiding of fields when declaring a field.
+	* doc/jikes.1: Document +P[no-]shadow.
+
 2004-02-27  Eric Blake  <ebb9@byu.net>
 
 	* src/ast.h (AstImportDeclaration::static_token_opt): New field.

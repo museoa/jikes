@@ -1129,6 +1129,8 @@ private:
     void ProcessBlockStatements(AstBlock*);
     void ProcessThisCall(AstThisCall*);
     void ProcessSuperCall(AstSuperCall*);
+    void WarnOfAccessibleFieldWithName(SemanticError::SemanticErrorKind,
+                                       AstVariableDeclaratorId*, NameSymbol*);
     void CheckThrow(AstTypeName*, Tuple<AstTypeName*>*);
     void ProcessMethodBody(AstMethodDeclaration*);
     void ProcessConstructorBody(AstConstructorDeclaration*);
