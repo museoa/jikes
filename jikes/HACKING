@@ -54,6 +54,7 @@ options, be sure to update the documentation of those options. Try to
 stay consistent with existing formatting (note that it is not the
 standard GNU formatting), and keep to 80-column lines where possible.
 
+See also: http://www-124.ibm.com/developerworks/oss/jikes/patchguide.shtml
 
 Some handy CXXFLAGS you may want to use g++:
 
