@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
         " Originally written by Philippe Charles and David Shields, IBM Research,\n"
         " Jikes is now maintained and refined by the\n"
         " Jikes Project at http://ibm.com/developerworks/opensource.\n"
-        " Please use the above URL to report problems.\n);
+        " Please use the above URL to report problems.\n");
 
         return_code = 1;
     }
