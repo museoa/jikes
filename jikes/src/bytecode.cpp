@@ -29,44 +29,23 @@ void ByteCode::GenerateCode()
     //
     // Process static variables.
     //
-    Tuple<AstVariableDeclarator*> initialized_static_fields
-        (unit_type -> NumVariableSymbols());
     for (i = 0; i < class_body -> NumClassVariables(); i++)
     {
         AstFieldDeclaration* field_decl = class_body -> ClassVariable(i);
         for (unsigned vi = 0;
              vi < field_decl -> NumVariableDeclarators(); vi++)
         {
-            AstVariableDeclarator* variable_declarator =
-                field_decl -> VariableDeclarator(vi);
-            VariableSymbol* vsym = variable_declarator -> symbol;
-            DeclareField(vsym);
-            //
-            // We need a static initializer if we encounter at least one
-            // class variable that is not a constant. Remember, according
-            // to JLS 15.28, a constant is a final field initialized with
-            // a constant expression.
-            //
-            if (variable_declarator -> variable_initializer_opt)
-            {
-                if (vsym -> initial_value)
-                {
-                    AstExpression* init;
-                    assert(init = variable_declarator ->
-                           variable_initializer_opt -> ExpressionCast());
-                    assert(init -> IsConstant() &&
-                           variable_declarator -> symbol -> ACC_FINAL());
-                }
-                else
-                    initialized_static_fields.Next() = variable_declarator;
-            }
+            AstVariableDeclarator* vd = field_decl -> VariableDeclarator(vi);
+            DeclareField(vd -> symbol);
         }
     }
 
     //
-    // Process instance variables.
+    // Process instance variables.  We separate constant fields from others,
+    // because in 1.4 or later, constant fields are initialized before the
+    // call to super() in order to obey semantics of JLS 13.1.
     //
-    Tuple<AstVariableDeclarator*> initialized_instance_fields
+    Tuple<AstVariableDeclarator*> constant_instance_fields
         (unit_type -> NumVariableSymbols());
     for (i = 0; i < class_body -> NumInstanceVariables(); i++)
     {
@@ -75,12 +54,16 @@ void ByteCode::GenerateCode()
              vi < field_decl -> NumVariableDeclarators(); vi++)
         {
             AstVariableDeclarator* vd = field_decl -> VariableDeclarator(vi);
-            DeclareField(vd -> symbol);
-            //
-            // We must initialize all instance fields, even the constants.
-            //
-            if (vd -> variable_initializer_opt)
-                initialized_instance_fields.Next() = vd;
+            VariableSymbol* vsym = vd -> symbol;
+            DeclareField(vsym);
+            if (vd -> variable_initializer_opt && vsym -> initial_value)
+            {
+                AstExpression* init;
+                assert(init = vd -> variable_initializer_opt ->
+                       ExpressionCast());
+                assert(init -> IsConstant() && vd -> symbol -> ACC_FINAL());
+                constant_instance_fields.Next() = vd;
+            }
         }
     }
 
@@ -175,11 +158,12 @@ void ByteCode::GenerateCode()
     //
     if (class_body -> default_constructor)
         CompileConstructor(class_body -> default_constructor,
-                           has_instance_initializer);
+                           constant_instance_fields, has_instance_initializer);
     else
     {
         for (i = 0; i < class_body -> NumConstructors(); i++)
             CompileConstructor(class_body -> Constructor(i),
+                               constant_instance_fields,
                                has_instance_initializer);
     }
     for (i = 0; i < unit_type -> NumPrivateAccessConstructors(); i++)
@@ -188,7 +172,8 @@ void ByteCode::GenerateCode()
             unit_type -> PrivateAccessConstructor(i);
         AstConstructorDeclaration* constructor =
             constructor_sym -> declaration -> ConstructorDeclarationCast();
-        CompileConstructor(constructor, has_instance_initializer);
+        CompileConstructor(constructor, constant_instance_fields,
+                           has_instance_initializer);
     }
 
     //
@@ -277,6 +262,7 @@ void ByteCode::GenerateCode()
 // initialized_fields is a list of fields needing code to initialize.
 //
 void ByteCode::CompileConstructor(AstConstructorDeclaration* constructor,
+                                  Tuple<AstVariableDeclarator*>& constants,
                                   bool has_instance_initializer)
 {
     MethodSymbol* method_symbol = constructor -> constructor_symbol;
@@ -313,6 +299,7 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration* constructor,
 
     //
     // Supply synthetic field initialization unless constructor calls this().
+    // Also initialize all constants.
     //
     if (constructor_block -> explicit_constructor_opt &&
         ! constructor_block -> explicit_constructor_opt -> ThisCallCast())
@@ -341,6 +328,9 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration* constructor,
             PutU2(RegisterFieldref(shadow));
             index += GetTypeWords(shadow -> Type());
         }
+
+        for (unsigned j = 0; j < constants.Length(); j ++)
+            EmitStatement(constants[j]);
     }
 
     if (control.option.target >= JikesOption::SDK1_4)

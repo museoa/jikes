@@ -899,7 +899,8 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     // Methods to process statements
     //
-    void CompileConstructor(AstConstructorDeclaration*, bool);
+    void CompileConstructor(AstConstructorDeclaration*,
+                            Tuple<AstVariableDeclarator*>&, bool);
 
     void BeginMethod(int, MethodSymbol*);
     void EndMethod(int, MethodSymbol*);

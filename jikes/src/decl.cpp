@@ -837,6 +837,8 @@ TypeSymbol* Semantic::FindNestedType(TypeSymbol* type,
 //
 TypeSymbol* Semantic::MustFindNestedType(TypeSymbol* type, AstName* name)
 {
+    if (type -> Bad())
+        return control.no_type;
     if (name -> base_opt && ! name -> base_opt -> symbol)
         type = MustFindNestedType(type, name -> base_opt);
     TypeSymbol* inner_type = FindNestedType(type, name -> identifier_token);
@@ -3512,8 +3514,7 @@ void Semantic::ProcessType(AstType* type_expr)
 //
 // Initializes a static or instance field. In addition to checking the
 // semantics, the initialization is added as a statement in the init_method,
-// for easy bytecode emission, if it has an initializer and is not a static
-// constant.
+// for easy bytecode emission, if it has an initializer and is not a constant.
 //
 void Semantic::InitializeVariable(AstFieldDeclaration* field_declaration,
                                   MethodSymbol* init_method)
@@ -3542,8 +3543,7 @@ void Semantic::InitializeVariable(AstFieldDeclaration* field_declaration,
                 if (NumErrors() == start_num_errors)
                 {
                     DefiniteFieldInitializer(variable_declarator);
-                    if (! variable -> ACC_STATIC() ||
-                        ! variable -> initial_value)
+                    if (! variable -> initial_value)
                     {
                         declaration -> method_body_opt ->
                             AddStatement(variable_declarator);
