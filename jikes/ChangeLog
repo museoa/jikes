@@ -1,5 +1,12 @@
 2002-05-16  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/expr.cpp (ProcessAssignmentExpression): Fix coredump in
+	Jacks test 15.26.2-left-shift-12 and others.
+	* src/symbol.h (IsLocal): Workaround coredump in jacks test
+	8.1.2-static-15.
+
+2002-05-16  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/bytecode.cpp (EmitStatement): Fix bug 2871, where infinite
 	loops were not properly detected.
 

@@ -7118,12 +7118,16 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
                                 right_type -> Name());
              }
 
-             assignment_expression -> left_hand_side = PromoteUnaryNumericExpression(assignment_expression -> left_hand_side);
-             assignment_expression -> expression = PromoteUnaryNumericExpression(assignment_expression -> expression);
-             if (assignment_expression -> expression -> Type() == control.long_type)
-                 assignment_expression -> expression
-                     = ConvertToType(assignment_expression -> expression,
-                                     control.int_type);
+             assignment_expression -> left_hand_side
+                 = PromoteUnaryNumericExpression(left_hand_side);
+             //
+             // This call captures both unary numeric conversion (widening) of
+             // byte, char, or short, and narrowing of long, since the bytecode
+             // requires an int shift amount.
+             //
+             assignment_expression -> expression =
+                 ConvertToType(assignment_expression -> expression,
+                               control.int_type);
              break;
         case AstAssignmentExpression::AND_EQUAL:
         case AstAssignmentExpression::XOR_EQUAL:
