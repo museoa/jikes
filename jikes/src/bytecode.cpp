@@ -610,7 +610,7 @@ void ByteCode::EndMethod(int method_index, MethodSymbol* msym)
             {
                 local_variable_table_attribute ->
                     AddLocalVariable(0, code_attribute -> CodeLength(),
-                                     RegisterUtf8(control.this_literal),
+                                     RegisterUtf8(control.this_name_symbol -> Utf8_literal),
                                      RegisterUtf8(msym -> containing_type -> signature),
                                      0);
             }
@@ -3887,14 +3887,22 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression* assignment_expre
             left_type == control.String())
         {
             PutOp(OP_NEW);
-            PutU2(RegisterClass(control.StringBuffer()));
+            PutU2(RegisterClass(control.option.target >= JikesOption::SDK1_5
+                                ? control.StringBuilder()
+                                : control.StringBuffer()));
             PutOp(OP_DUP_X1);
             PutOp(OP_INVOKESPECIAL);
-            PutU2(RegisterLibraryMethodref(control.StringBuffer_InitMethod()));
+            PutU2(RegisterLibraryMethodref
+                  (control.option.target >= JikesOption::SDK1_5
+                   ? control.StringBuilder_InitMethod()
+                   : control.StringBuffer_InitMethod()));
             EmitStringAppendMethod(control.String());
             AppendString(assignment_expression -> expression, true);
             PutOp(OP_INVOKEVIRTUAL);
-            PutU2(RegisterLibraryMethodref(control.StringBuffer_toStringMethod()));
+            PutU2(RegisterLibraryMethodref
+                  (control.option.target >= JikesOption::SDK1_5
+                   ? control.StringBuilder_toStringMethod()
+                   : control.StringBuffer_toStringMethod()));
             ChangeStack(1); // account for return value
         }
         //
@@ -4145,7 +4153,10 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression* expression,
             return 0;
         }
         PutOp(OP_INVOKEVIRTUAL);
-        PutU2(RegisterLibraryMethodref(control.StringBuffer_toStringMethod()));
+        PutU2(RegisterLibraryMethodref
+              (control.option.target >= JikesOption::SDK1_5
+               ? control.StringBuilder_toStringMethod()
+               : control.StringBuffer_toStringMethod()));
         ChangeStack(1); // account for return value
         return 1;
     }
@@ -4833,7 +4844,7 @@ void ByteCode::EmitCheckForNull(AstExpression* expression, bool need_value)
         expression -> SuperExpressionCast() ||
         expression -> ClassLiteralCast() ||
         (variable && variable -> ACC_SYNTHETIC() &&
-         variable -> Identity() == control.this0_name_symbol))
+         variable -> Identity() == control.this_name_symbol))
     {
         EmitExpression(expression, need_value);
         return;
@@ -5971,6 +5982,7 @@ void ByteCode::ConcatenateString(AstBinaryExpression* expression,
     // Use recursion to share a single buffer where possible.
     // If concatenated string is not needed, we must still perform string
     // conversion on all objects, as well as perform side effects of terms.
+    // In 1.5 and later, StringBuilder was added with better performance.
     //
     AstExpression* left_expr = StripNops(expression -> left_expression);
     if (left_expr -> Type() == control.String() &&
@@ -5982,7 +5994,9 @@ void ByteCode::ConcatenateString(AstBinaryExpression* expression,
     else
     {
         PutOp(OP_NEW);
-        PutU2(RegisterClass(control.StringBuffer()));
+        PutU2(RegisterClass(control.option.target >= JikesOption::SDK1_5
+                            ? control.StringBuilder()
+                            : control.StringBuffer()));
         PutOp(OP_DUP);
         if (left_expr -> IsConstant())
         {
@@ -6000,21 +6014,28 @@ void ByteCode::ConcatenateString(AstBinaryExpression* expression,
             {
                 PutOp(OP_INVOKESPECIAL);
                 PutU2(RegisterLibraryMethodref
-                      (control.StringBuffer_InitMethod()));
+                      (control.option.target >= JikesOption::SDK1_5
+                       ? control.StringBuilder_InitMethod()
+                       : control.StringBuffer_InitMethod()));
             }
             else
             {
                 LoadConstantAtIndex(RegisterString(value));
                 PutOp(OP_INVOKESPECIAL);
                 PutU2(RegisterLibraryMethodref
-                      (control.StringBuffer_InitWithStringMethod()));
+                      (control.option.target >= JikesOption::SDK1_5
+                       ? control.StringBuilder_InitWithStringMethod()
+                       : control.StringBuffer_InitWithStringMethod()));
                 ChangeStack(-1); // account for the argument
             }
         }
         else
         {
             PutOp(OP_INVOKESPECIAL);
-            PutU2(RegisterLibraryMethodref(control.StringBuffer_InitMethod()));
+            PutU2(RegisterLibraryMethodref
+                  (control.option.target >= JikesOption::SDK1_5
+                   ? control.StringBuilder_InitMethod()
+                   : control.StringBuffer_InitMethod()));
             //
             // Don't pass stripped left_expr, or ((int)char)+"" would be
             // treated as a char append rather than int append.
@@ -6102,29 +6123,53 @@ void ByteCode::EmitStringAppendMethod(TypeSymbol* type)
     // correct char[].toString(). Treating null as a String is slightly more
     // efficient than as an Object.
     //
-    MethodSymbol* append_method =
-        (type == control.char_type
-         ? control.StringBuffer_append_charMethod()
-         : type == control.boolean_type
-         ? control.StringBuffer_append_booleanMethod()
-         : (type == control.int_type || type == control.short_type ||
-            type == control.byte_type)
-         ? control.StringBuffer_append_intMethod()
-         : type == control.long_type
-         ? control.StringBuffer_append_longMethod()
-         : type == control.float_type
-         ? control.StringBuffer_append_floatMethod()
-         : type == control.double_type
-         ? control.StringBuffer_append_doubleMethod()
-         : (type == control.String() || type == control.null_type)
-         ? control.StringBuffer_append_stringMethod()
-         : IsReferenceType(type)
-         ? control.StringBuffer_append_objectMethod()
-         : control.StringBuffer_InitMethod()); // for assertion
-
-    assert(append_method != control.StringBuffer_InitMethod() &&
+    MethodSymbol* append_method;
+    if (control.option.target >= JikesOption::SDK1_5)
+    {
+        append_method =
+            (type == control.char_type
+             ? control.StringBuilder_append_charMethod()
+             : type == control.boolean_type
+             ? control.StringBuilder_append_booleanMethod()
+             : (type == control.int_type || type == control.short_type ||
+                type == control.byte_type)
+             ? control.StringBuilder_append_intMethod()
+             : type == control.long_type
+             ? control.StringBuilder_append_longMethod()
+             : type == control.float_type
+             ? control.StringBuilder_append_floatMethod()
+             : type == control.double_type
+             ? control.StringBuilder_append_doubleMethod()
+             : (type == control.String() || type == control.null_type)
+             ? control.StringBuilder_append_stringMethod()
+             : IsReferenceType(type)
+             ? control.StringBuilder_append_objectMethod()
+             : (MethodSymbol*) NULL); // for assertion
+    }
+    else
+    {
+        append_method =
+            (type == control.char_type
+             ? control.StringBuffer_append_charMethod()
+             : type == control.boolean_type
+             ? control.StringBuffer_append_booleanMethod()
+             : (type == control.int_type || type == control.short_type ||
+                type == control.byte_type)
+             ? control.StringBuffer_append_intMethod()
+             : type == control.long_type
+             ? control.StringBuffer_append_longMethod()
+             : type == control.float_type
+             ? control.StringBuffer_append_floatMethod()
+             : type == control.double_type
+             ? control.StringBuffer_append_doubleMethod()
+             : (type == control.String() || type == control.null_type)
+             ? control.StringBuffer_append_stringMethod()
+             : IsReferenceType(type)
+             ? control.StringBuffer_append_objectMethod()
+             : (MethodSymbol*) NULL); // for assertion
+    }
+    assert(append_method &&
            "unable to find method for string buffer concatenation");
-
     PutOp(OP_INVOKEVIRTUAL);
     if (control.IsDoubleWordType(type))
         ChangeStack(-1);
@@ -6583,7 +6628,7 @@ int ByteCode::LoadVariable(VariableCategory kind, AstExpression* expr,
         assert(sym -> IsInitialized() || ! sym -> ACC_FINAL());
         if (shadow_parameter_offset && sym -> owner == unit_type &&
             (sym -> accessed_local ||
-             sym -> Identity() == control.this0_name_symbol))
+             sym -> Identity() == control.this_name_symbol))
         {
             //
             // In a constructor, use the parameter that was passed to the

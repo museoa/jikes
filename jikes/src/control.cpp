@@ -1380,10 +1380,9 @@ void Control::ProcessBodies(TypeSymbol* type)
     }
 
     sem -> types_to_be_processed.RemoveElement(type);
- 
+
     if (option.pedantic && sem -> types_to_be_processed.Size() == 0)
         CheckForUnusedImports(sem);
- 
     if (! option.nocleanup && sem -> types_to_be_processed.Size() == 0)
     {
         // All types belonging to this compilation unit have been processed.
@@ -1391,41 +1390,37 @@ void Control::ProcessBodies(TypeSymbol* type)
     }
 }
 
-void Control::CheckForUnusedImports(Semantic *sem)
+void Control::CheckForUnusedImports(Semantic* sem)
 {
     for (unsigned i = 0;
          i < sem -> compilation_unit -> NumImportDeclarations(); ++i)
     {
-        AstImportDeclaration *import_declaration = 
+        AstImportDeclaration* import_declaration =
             sem -> compilation_unit -> ImportDeclaration(i);
-        Symbol *symbol = import_declaration -> name -> symbol;
-        if (import_declaration -> star_token_opt) 
+        Symbol* symbol = import_declaration -> name -> symbol;
+        if (import_declaration -> star_token_opt)
         {
-            PackageSymbol *package = symbol -> PackageCast();
-            if (package && 
+            PackageSymbol* package = symbol -> PackageCast();
+            if (package &&
                 ! sem -> referenced_package_imports.IsElement(package))
             {
-                sem -> 
-                    ReportSemError(SemanticError::UNUSED_PACKAGE_IMPORT,
-                                   import_declaration -> name -> LeftToken(),
-                                   import_declaration -> name -> RightToken(),
-                                   package -> PackageName());
+                sem -> ReportSemError(SemanticError::UNUSED_PACKAGE_IMPORT,
+                                      import_declaration -> name,
+                                      package -> PackageName());
             }
         }
         else
         {
-            TypeSymbol *import_type = symbol -> TypeCast();
-            if (import_type && 
+            TypeSymbol* import_type = symbol -> TypeCast();
+            if (import_type &&
                 ! sem -> referenced_type_imports.IsElement(import_type))
             {
-                sem -> 
-                    ReportSemError(SemanticError::UNUSED_TYPE_IMPORT,
-                                   import_declaration -> name -> LeftToken(),
-                                   import_declaration -> name -> RightToken(),
-                                   import_type -> ContainingPackage() -> PackageName(),
-                                   import_type -> ExternalName());
+                sem -> ReportSemError(SemanticError::UNUSED_TYPE_IMPORT,
+                                      import_declaration -> name,
+                                      import_type -> ContainingPackage() -> PackageName(),
+                                      import_type -> ExternalName());
             }
-        }                   
+        }
     }
 }
 

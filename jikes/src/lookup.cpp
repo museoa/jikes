@@ -8,7 +8,6 @@
 //
 
 #include "lookup.h"
-#include "control.h"
 #include "symbol.h"
 #include "code.h"
 #include "ast.h"
@@ -1549,11 +1548,13 @@ bool Utf8LiteralTable::EndsInKnownString(AstExpression* expression)
         // We are careful that null is never given a string value unless it is
         // part of a chain of strings, as it is not a compile-time constant.
         //
-        utf8_literals -> Next() = FindOrInsert(StringConstant::U8S_null, 4);
+        //ebb hack. This entire method probably belongs in Semantic, where
+        // we have access to Control.
+        static char null_literal[] = { U_n, U_u, U_l, U_l, U_NU };
+        utf8_literals -> Next() = FindOrInsert(null_literal, 4);
         if (! leftmost_constant_expr)
             leftmost_constant_expr = expression;
-        else
-            expression -> value = FindOrInsert("", 0);
+        else expression -> value = FindOrInsert("", 0);
         return true;
     }
 

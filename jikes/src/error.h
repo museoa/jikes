@@ -200,14 +200,14 @@ public:
         UNNEEDED_SERIAL_VERSION_UID,
         BAD_SERIAL_VERSION_UID,
         MISSING_SERIAL_VERSION_UID,
-        
+
         // Naming convention warnings.
         UNCONVENTIONAL_CLASS_NAME,
         UNCONVENTIONAL_CONSTANT_FIELD_NAME,
         UNCONVENTIONAL_FIELD_NAME,
         UNCONVENTIONAL_METHOD_NAME,
         UNCONVENTIONAL_VARIABLE_NAME,
-        
+
         // Type and package related errors.
         DUPLICATE_INNER_TYPE_NAME,
         DUPLICATE_TYPE_DECLARATION,

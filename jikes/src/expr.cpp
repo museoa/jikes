@@ -279,7 +279,7 @@ wchar_t* Semantic::Header(const NameSymbol* name, AstArguments* args)
             PackageSymbol* package = arg_type -> ContainingPackage();
             wchar_t* package_name = package -> PackageName();
             if (package -> PackageNameLength() > 0 &&
-                wcscmp(package_name, StringConstant::US_DO) != 0)
+                package_name[0] != U_DOT)
             {
                 while (*package_name)
                 {
@@ -1760,7 +1760,7 @@ AstExpression* Semantic::CreateAccessToType(Ast* source,
         if (ExplicitConstructorInvocation())
         {
             VariableSymbol* variable = LocalSymbolTable().
-                FindVariableSymbol(control.this0_name_symbol);
+                FindVariableSymbol(control.this_name_symbol);
             assert(variable);
             resolution = compilation_unit -> ast_pool -> GenName(left_tok);
             resolution -> symbol = variable;
@@ -3675,7 +3675,7 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class
     if (anonymous_type -> EnclosingType())
     {
         VariableSymbol* this0_variable =
-            block_symbol -> InsertVariableSymbol(control.this0_name_symbol);
+            block_symbol -> InsertVariableSymbol(control.this_name_symbol);
         this0_variable -> SetType(anonymous_type -> EnclosingType());
         this0_variable -> SetOwner(constructor);
         this0_variable -> SetFlags(AccessFlags::ACCESS_FINAL |
@@ -4821,15 +4821,11 @@ LiteralValue* Semantic::CastValue(const TypeSymbol* target_type,
         else if (source_type == control.boolean_type)
         {
             if (IsConstantFalse(expr))
-                literal_value =
-                    control.Utf8_pool.FindOrInsert(StringConstant::U8S_false,
-                                                   5);
+                literal_value = control.false_name_symbol -> Utf8_literal;
             else
             {
                 assert(IsConstantTrue(expr));
-                literal_value =
-                    control.Utf8_pool.FindOrInsert(StringConstant::U8S_true,
-                                                   4);
+                literal_value = control.true_name_symbol -> Utf8_literal;
             }
         }
         else if (control.IsSimpleIntegerValueType(source_type))

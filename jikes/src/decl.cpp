@@ -188,7 +188,7 @@ void Semantic::ProcessTypeNames()
                         type -> semantic_environment;
                     CheckNestedMembers(type, declaration -> class_body);
                 }
-                
+
                 //
                 // Warn against unconventional names.
                 //
@@ -466,7 +466,7 @@ TypeSymbol* Semantic::ProcessNestedTypeName(TypeSymbol* containing_type,
             outermost_type -> non_local = new SymbolSet;
         outermost_type -> non_local -> AddElement(inner_type);
     }
-    
+
     //
     // Warn against unconventional names.
     //
@@ -475,7 +475,7 @@ TypeSymbol* Semantic::ProcessNestedTypeName(TypeSymbol* containing_type,
         ReportSemError(SemanticError::UNCONVENTIONAL_CLASS_NAME,
                        class_body -> identifier_token, name_symbol -> Name());
     }
-    
+
     declaration -> class_body -> semantic_environment =
         inner_type -> semantic_environment;
     CheckNestedMembers(inner_type, class_body);
@@ -918,7 +918,7 @@ void Semantic::ProcessClassBodyForEffectiveJavaChecks(AstClassBody* class_body)
 {
     TypeSymbol* this_type = ThisType();
     assert(this_type -> HeaderProcessed());
-    
+
     //
     // Find out about this class' constructors:
     // Does it have any non-default constructors?
@@ -938,14 +938,14 @@ void Semantic::ProcessClassBodyForEffectiveJavaChecks(AstClassBody* class_body)
         {
             has_private_constructor = true;
         }
-            
+
         if (class_body -> default_constructor == NULL ||
             constructor != class_body -> default_constructor -> constructor_symbol)
         {
             has_non_default_constructor = true;
         }
     }
-    
+
     //
     // Find out about equals and hashCode, and count how many instance methods
     // we have (the NumMethods member function returns the sum of both the
@@ -955,7 +955,7 @@ void Semantic::ProcessClassBodyForEffectiveJavaChecks(AstClassBody* class_body)
     AstMethodDeclaration* equals_method = NULL;
     AstMethodDeclaration* hashCode_method = NULL;
     int instance_method_count = 0;
-    
+
     for (unsigned i = 0; i < class_body -> NumMethods(); ++i)
     {
         AstMethodDeclaration* method_declaration = class_body -> Method(i);
@@ -980,7 +980,7 @@ void Semantic::ProcessClassBodyForEffectiveJavaChecks(AstClassBody* class_body)
                 has_correct_equals_method = (method -> FormalParameter(0) ->
                                              Type() == control.Object());
             }
-            
+
             //
             // Is it "int hashCode()"?
             //
@@ -992,7 +992,7 @@ void Semantic::ProcessClassBodyForEffectiveJavaChecks(AstClassBody* class_body)
             }
         }
     }
-    
+
     //
     // Warn about problems with equals and hashCode.
     //
@@ -1014,7 +1014,7 @@ void Semantic::ProcessClassBodyForEffectiveJavaChecks(AstClassBody* class_body)
                        hashCode_method -> method_declarator -> identifier_token,
                        this_type -> Name());
     }
-    
+
     //
     // Warn against utility classes that don't have a private constructor.
     // Empty classes don't count. They're not very useful, but they do
@@ -1039,7 +1039,7 @@ void Semantic::ProcessClassBodyForEffectiveJavaChecks(AstClassBody* class_body)
                        class_body -> identifier_token,
                        this_type -> Name());
     }
-    
+
     //
     // Warn against interfaces that don't define any behavior.
     //
@@ -2040,7 +2040,7 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration* field_declaration)
             if (deprecated_declarations)
                 variable -> MarkDeprecated();
         }
-        
+
         CheckFieldDeclaration(field_declaration, name, access_flags);
     }
 }
@@ -2067,7 +2067,7 @@ void Semantic::CheckFieldDeclaration(AstFieldDeclaration* field_declaration,
         ReportSemError(SemanticError::EJ_PUBLIC_STATIC_FINAL_ARRAY_FIELD,
                        name, name_symbol -> Name());
     }
-        
+
     if (name_symbol == control.serialVersionUID_name_symbol)
     {
         //
@@ -2213,7 +2213,7 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration* construc
     if (this_type -> EnclosingType())
     {
         VariableSymbol* this0_variable =
-            block_symbol -> InsertVariableSymbol(control.this0_name_symbol);
+            block_symbol -> InsertVariableSymbol(control.this_name_symbol);
         this0_variable -> SetType(this_type -> ContainingType());
         this0_variable -> SetOwner(constructor);
         this0_variable -> SetLocalVariableIndex(block_symbol ->
@@ -2278,7 +2278,7 @@ void Semantic::AddDefaultConstructor(TypeSymbol* type)
     if (type -> EnclosingType())
     {
         VariableSymbol* this0_variable =
-            block_symbol -> InsertVariableSymbol(control.this0_name_symbol);
+            block_symbol -> InsertVariableSymbol(control.this_name_symbol);
         this0_variable -> SetType(type -> ContainingType());
         this0_variable -> SetOwner(constructor);
         this0_variable -> SetLocalVariableIndex(block_symbol ->
@@ -3272,7 +3272,7 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration* method_declaration
                        method_declarator -> identifier_token,
                        name_symbol -> Name());
     }
-    
+
     //
     // Warn against unconventional names.
     //

@@ -1,3 +1,25 @@
+2004-02-26  Eric Blake  <ebb9@byu.net>
+
+	* AUTHORS: Give credit where due.
+	* src/bytecode.cpp (EmitAssignmentExpression),
+	(EmitBinaryExpression, ConcatenateString, EmitStringAppendMethod):
+	Use faster StringBuilder (added in 1.5) when available.
+	* src/control.h (*_name_symbol): Rearrange the name_symbols to be
+	in alphabetic order.
+	(GetPrimitiveType): Improve the signature.
+	* src/system.cpp: Implement changes to control.h.
+	* src/platform.h: Delete lots of unused string constants, now that
+	they are more easily generated in system.cpp.
+	* src/control.cpp: Whitespace cleanup, and use changes in
+	control.h and platform.h.
+	* src/decl.cpp: Ditto.
+	* src/error.cpp: Ditto.
+	* src/error.h: Ditto.
+	* src/expr.cpp: Ditto.
+	* src/lookup.cpp: Ditto.
+	* src/platform.cpp: Ditto.
+	* src/symbol.cpp: Ditto.
+
 2004-02-23  Emil Ong  <emilong@cs.berkeley.edu>, 
             Mark Richters  <mr@Informatik.Uni-Bremen.DE>
 	
@@ -27,7 +49,6 @@
 	UNUSED_PACKAGE_IMPORT to enum SemanticErrorKind.
 	* src/semantic.h (class Semantic): Added SymbolSets
 	referenced_package_imports and referenced_type_imports.
-
 
 2004-02-23  Eric Blake  <ebb9@byu.net>
 

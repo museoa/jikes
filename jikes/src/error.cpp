@@ -574,7 +574,7 @@ struct MessageGroup
 };
 
 
-static Tuple<MessageGroup*> message_groups; 
+static Tuple<MessageGroup*> message_groups;
 
 
 //
@@ -652,14 +652,14 @@ void SemanticError::InitializeMessageGroups()
     // Warnings about unused imports
     //
     group = new MessageGroup("unused-type-imports",
-			     "unused single-type import statements",
-			     NAMED_WEAK_OFF);
+                             "unused single-type import statements",
+                             NAMED_WEAK_OFF);
     group -> AddMessage(UNUSED_TYPE_IMPORT);
     message_groups.Push(group);
 
     group = new MessageGroup("unused-package-imports",
-			     "unused package import statements",
-			     NAMED_WEAK_OFF);
+                             "unused package import statements",
+                             NAMED_WEAK_OFF);
     group -> AddMessage(UNUSED_PACKAGE_IMPORT);
     message_groups.Push(group);
 
@@ -1361,7 +1361,7 @@ void SemanticError::InitializeMessages()
         "The default serialized form of an inner class is ill-defined; "
         "inner classes should rarely, if ever, implement Serializable. "
         "(See item 54 of \"Effective Java\".)";
-    
+
     // serialVersionUID warnings.
     messages[UNNEEDED_SERIAL_VERSION_UID] =
         "serialVersionUID is only needed in classes that implement "
@@ -1390,7 +1390,7 @@ void SemanticError::InitializeMessages()
     messages[UNCONVENTIONAL_VARIABLE_NAME] =
         "Use names thatLookLikeThis for variables such as \"%1\". "
         "(See item 38 of \"Effective Java\".)";
-    
+
     // Type and package related errors.
     messages[DUPLICATE_INNER_TYPE_NAME] =
         "The nested type name \"%1\" is illegal, as it is enclosed in "
@@ -1404,9 +1404,9 @@ void SemanticError::InitializeMessages()
     messages[UNNECESSARY_TYPE_IMPORT] =
         "Unnecessary import of type \"%1\". The type is declared at "
         "location %2.";
-    messages[UNUSED_TYPE_IMPORT] = 
+    messages[UNUSED_TYPE_IMPORT] =
         "Unnecessary import of type \"%T1\". The type is never referenced.";
-    messages[UNUSED_PACKAGE_IMPORT] = 
+    messages[UNUSED_PACKAGE_IMPORT] =
         "Unnecessary import of package \"%1\". No types of this package are "
         "referenced.";
     messages[DUPLICATE_ACCESS_MODIFIER] =
@@ -1415,7 +1415,7 @@ void SemanticError::InitializeMessages()
         "may appear in a declaration.";
     messages[DUPLICATE_MODIFIER] =
         "Duplicate specification of the modifier \"%1\".";
-    messages[FINAL_ABSTRACT_ENTITY] = 
+    messages[FINAL_ABSTRACT_ENTITY] =
         "It is not possible for %1 to be both \"final\" and \"abstract\".";
     messages[VOLATILE_FINAL_FIELD] =
         "A field may not be both \"volatile\" and \"final\".";
@@ -1909,7 +1909,7 @@ void SemanticError::InitializeMessages()
         "The variable \"%1\" declared in type \"%T2\" has been deprecated.";
     messages[DEPRECATED_METHOD] =
         "The method \"%1\" declared in type \"%T2\" has been deprecated.";
-    messages[DEPRECATED_CONSTRUCTOR] = 
+    messages[DEPRECATED_CONSTRUCTOR] =
         "The constructor \"%1\" declared in type \"%T2\" has been deprecated.";
 
     // Inner type related errors.
@@ -1920,7 +1920,7 @@ void SemanticError::InitializeMessages()
     messages[SUPER_TYPE_NOT_INNER_CLASS] =
         "The super type \"%T1\" of this type, \"%T3\", is not "
         "an inner class that is immediately enclosed in type \"%T5\".";
-    messages[STATIC_FIELD_IN_INNER_CLASS_NOT_FINAL] = 
+    messages[STATIC_FIELD_IN_INNER_CLASS_NOT_FINAL] =
         "This static variable declaration is invalid, because it is not "
         "final, but is enclosed in an inner class, \"%1\", located at %2.";
     messages[STATIC_FIELD_IN_INNER_CLASS_NOT_CONSTANT] =
@@ -1951,11 +1951,11 @@ void SemanticError::InitializeMessages()
         "The unqualified usage of \"%1\" refers to the inherited member "
         "type \"%T2\", and not the enclosing type \"%T4\". "
         "Explicit qualification is suggested.";
-    messages[ILLEGAL_THIS_FIELD_ACCESS] = 
+    messages[ILLEGAL_THIS_FIELD_ACCESS] =
         "The type \"%T1\" is either not an outer type of type \"%T3\" "
         "or it is not accessible because this expression appears in a "
         "static region.";
-    messages[CONSTRUCTOR_FOUND_IN_ANONYMOUS_CLASS] = 
+    messages[CONSTRUCTOR_FOUND_IN_ANONYMOUS_CLASS] =
         "An anonymous class cannot have a constructor. Assuming "
         "that \"%1\" is a method with missing return type.";
     messages[ENCLOSING_INSTANCE_ACCESS_FROM_CONSTRUCTOR_INVOCATION] =
@@ -1971,7 +1971,7 @@ void SemanticError::InitializeMessages()
         "method, constructor (after the explicit constructor invocation, if "
         "any), initializer block, or in the initializer expression of an "
         "instance variable.";
-    messages[INVALID_ENCLOSING_INSTANCE] = 
+    messages[INVALID_ENCLOSING_INSTANCE] =
         "The super type of this type, \"%T1\", is immediately enclosed "
         "in type \"%T3\" which does not match the type of this "
         "primary expression, \"%T5\".";

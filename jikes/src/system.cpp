@@ -142,8 +142,9 @@ NameSymbol* Control::FindOrInsertSystemName(const char* name)
         case '/': wname[i] = U_SL; break;
         case '[': wname[i] = U_LB; break;
         case ']': wname[i] = U_RB; break;
-        case '+': wname[i] = U_PL; break;
+        case '-': wname[i] = U_MI; break;
         case '.': wname[i] = U_DO; break;
+        case '?': wname[i] = U_QU; break;
         default: assert(false && "bad character in system name");
         }
     }
@@ -291,34 +292,35 @@ void Control::ProcessGlobals()
 {
     // Some names are conditional on 1.5 VMs, which expanded the set of legal
     // VM names to include non-Java identifiers.
+    access_name_symbol =
+        FindOrInsertSystemName(option.source < JikesOption::SDK1_5
+                               ? "access$" : "-");
+    array_name_symbol = FindOrInsertSystemName("array");
+    assert_name_symbol = FindOrInsertSystemName("assert");
+    block_init_name_symbol = FindOrInsertSystemName("this");
+    class_name_symbol = FindOrInsertSystemName("class");
+    clinit_name_symbol = FindOrInsertSystemName("<clinit>");
+    clone_name_symbol = FindOrInsertSystemName("clone");
     dot_name_symbol = FindOrInsertSystemName(".");
     dot_dot_name_symbol = FindOrInsertSystemName("..");
-    length_name_symbol = FindOrInsertSystemName("length");
-    init_name_symbol = FindOrInsertSystemName("<init>");
-    clinit_name_symbol = FindOrInsertSystemName("<clinit>");
-    block_init_name_symbol = FindOrInsertSystemName("this");
-    this0_name_symbol =
-        FindOrInsertSystemName(option.target >= JikesOption::SDK1_5
-                               ? "this+" : "this$0");
-    clone_name_symbol = FindOrInsertSystemName("clone");
-    object_name_symbol = FindOrInsertSystemName("Object");
-    type_name_symbol = FindOrInsertSystemName("TYPE");
-    class_name_symbol = FindOrInsertSystemName("class$");
     equals_name_symbol = FindOrInsertSystemName("equals");
+    false_name_symbol = FindOrInsertSystemName("false");
     hashCode_name_symbol = FindOrInsertSystemName("hashCode");
+    init_name_symbol = FindOrInsertSystemName("<init>");
+    length_name_symbol = FindOrInsertSystemName("length");
+    null_name_symbol = FindOrInsertSystemName("null");
+    object_name_symbol = FindOrInsertSystemName("Object");
+    package_info_name_symbol = FindOrInsertSystemName("package-info");
+    question_name_symbol = FindOrInsertSystemName("??");
     serialPersistentFields_name_symbol =
         FindOrInsertSystemName("serialPersistentFields");
     serialVersionUID_name_symbol = FindOrInsertSystemName("serialVersionUID");
-    toString_name_symbol = FindOrInsertSystemName("toString");
-    append_name_symbol = FindOrInsertSystemName("append");
-    forName_name_symbol = FindOrInsertSystemName("forName");
-    getMessage_name_symbol = FindOrInsertSystemName("getMessage");
-    desiredAssertionStatus_name_symbol =
-        FindOrInsertSystemName("desiredAssertionStatus");
-    getClass_name_symbol = FindOrInsertSystemName("getClass");
-    getComponentType_name_symbol = FindOrInsertSystemName("getComponentType");
-    initCause_name_symbol = FindOrInsertSystemName("initCause");
-    iterator_name_symbol = FindOrInsertSystemName("iterator");
+    this_name_symbol = FindOrInsertSystemName("this");
+    true_name_symbol = FindOrInsertSystemName("true");
+    type_name_symbol = FindOrInsertSystemName("TYPE");
+    val_name_symbol =
+        FindOrInsertSystemName(option.source < JikesOption::SDK1_5
+                               ? "val$" : "-");
 
     ConstantValue_literal = Utf8_pool.FindOrInsert(U8S_ConstantValue,
                                                    strlen(U8S_ConstantValue));
@@ -342,9 +344,6 @@ void Control::ProcessGlobals()
     EnclosingMethod_literal =
         Utf8_pool.FindOrInsert(U8S_EnclosingMethod,
                                strlen(U8S_EnclosingMethod));
-
-    null_literal = Utf8_pool.FindOrInsert(U8S_null, strlen(U8S_null));
-    this_literal = Utf8_pool.FindOrInsert(U8S_this, strlen(U8S_this));
 }
 
 
@@ -360,9 +359,8 @@ void Control::ProcessUnnamedPackage()
     // Create an entry for no_type. no_type is used primarily to signal an
     // error.
     //
-    no_type = unnamed_package ->
-        InsertSystemTypeSymbol(FindOrInsertName(US_QU_QU, 2));
-    no_type -> SetSignature(Utf8_pool.FindOrInsert(U8S_DO, strlen(U8S_DO)));
+    no_type = unnamed_package -> InsertSystemTypeSymbol(question_name_symbol);
+    no_type -> SetSignature(dot_name_symbol -> Utf8_literal);
     no_type -> outermost_type = no_type;
     no_type -> SetOwner(unnamed_package);
     no_type -> subtypes = new SymbolSet();
@@ -371,8 +369,7 @@ void Control::ProcessUnnamedPackage()
     //
     // Create an entry for the null type.
     //
-    null_type = unnamed_package ->
-        InsertSystemTypeSymbol(FindOrInsertName(US_null, 4));
+    null_type = unnamed_package -> InsertSystemTypeSymbol(null_name_symbol);
     null_type -> outermost_type = null_type;
     null_type -> SetOwner(unnamed_package);
     null_type -> SetACC_PUBLIC();
@@ -765,11 +762,13 @@ void Control::ProcessExtDirs()
                                 entry_length + 1;
 			    char * ending = &(entry->d_name[entry_length-3]);
 			    // skip ., .., and things that are neither zip nor jar
-                            if (! strcmp(entry->d_name, U8S_DO) ||
-                                ! strcmp(entry->d_name, U8S_DO_DO) ||
-				  ( strcasecmp(ending, "zip") &&
-				    strcasecmp(ending, "jar")    ) )
+                            if (! strcmp(entry -> d_name, ".") ||
+                                ! strcmp(entry -> d_name, "..") ||
+                                (strcasecmp(ending, "zip") &&
+                                 strcasecmp(ending, "jar")))
+                            {
                                 continue;
+                            }
 
                             char* extdir_entry = new char[fullpath_length + 1];
                             // First put on path.
@@ -1241,12 +1240,12 @@ void Control::ProcessSourcePath()
     }
 }
 
-TypeSymbol* Control::GetPrimitiveType(const wchar_t* name,
-                                      const char* signature)
+TypeSymbol* Control::GetPrimitiveType(const char* name, char signature)
 {
-    NameSymbol* name_symbol = FindOrInsertName(name, wcslen(name));
+    NameSymbol* name_symbol = FindOrInsertSystemName(name);
     TypeSymbol* type = unnamed_package -> InsertSystemTypeSymbol(name_symbol);
-    type -> SetSignature(Utf8_pool.FindOrInsert(signature, strlen(signature)));
+    char sig[2] = { signature, U_NU };
+    type -> SetSignature(Utf8_pool.FindOrInsert(sig, 1));
     type -> outermost_type = type;
     type -> SetOwner(unnamed_package);
     type -> SetACC_PUBLIC();
@@ -1267,15 +1266,15 @@ void Control::ProcessSystemInformation()
     // treated as a primitive. We do not set up any subtyping relationships,
     // as that would violate the assumptions made elsewhere.
     //
-    void_type = GetPrimitiveType(US_void, U8S_V);
-    boolean_type = GetPrimitiveType(US_boolean, U8S_Z);
-    byte_type = GetPrimitiveType(US_byte, U8S_B);
-    char_type = GetPrimitiveType(US_char, U8S_C);
-    short_type = GetPrimitiveType(US_short, U8S_S);
-    int_type = GetPrimitiveType(US_int, U8S_I);
-    long_type = GetPrimitiveType(US_long, U8S_J);
-    float_type = GetPrimitiveType(US_float, U8S_F);
-    double_type = GetPrimitiveType(US_double, U8S_D);
+    void_type = GetPrimitiveType("void", U_V);
+    boolean_type = GetPrimitiveType("boolean", U_Z);
+    byte_type = GetPrimitiveType("byte", U_B);
+    char_type = GetPrimitiveType("char", U_C);
+    short_type = GetPrimitiveType("short", U_S);
+    int_type = GetPrimitiveType("int", U_I);
+    long_type = GetPrimitiveType("long", U_J);
+    float_type = GetPrimitiveType("float", U_F);
+    double_type = GetPrimitiveType("double", U_D);
 }
 
 
@@ -1321,11 +1320,16 @@ MethodSymbol* Control::ProcessSystemMethod(TypeSymbol* type,
     }
     if (! method)
     {
-        system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
-                                          LexStream::BadToken(),
-                                          type -> ContainingPackageName(),
-                                          type -> ExternalName());
-        // TODO: Create a place-holder method in control.no_type.
+        system_semantic ->
+            ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
+                           LexStream::BadToken(),
+                           type -> ContainingPackageName(),
+                           type -> ExternalName());
+        method = type -> InsertMethodSymbol(name_symbol);
+        method -> SetType(no_type);
+        method -> SetContainingType(type);
+        method -> SetSignature(FindOrInsertSystemName(descriptor) ->
+                               Utf8_literal);
     }
     return method;
 }

@@ -85,7 +85,7 @@ wchar_t* MethodSymbol::Header()
             PackageSymbol* package = Type() -> ContainingPackage();
             wchar_t* package_name = package -> PackageName();
             if (package -> PackageNameLength() > 0 &&
-                wcscmp(package_name, StringConstant::US_DO) != 0)
+                package_name[0] != U_DOT)
             {
                 while (*package_name)
                 {
@@ -113,7 +113,7 @@ wchar_t* MethodSymbol::Header()
                     formal -> Type() -> ContainingPackage();
                 wchar_t* package_name = package -> PackageName();
                 if (package -> PackageNameLength() > 0 &&
-                    wcscmp(package_name, StringConstant::US_DO) != 0)
+                    package_name[0] != U_DOT)
                 {
                     while (*package_name)
                     {
@@ -178,7 +178,7 @@ wchar_t* MethodSymbol::Header()
                 wchar_t* package_name = package -> PackageName();
                 *s++ = U_SPACE;
                 if (package -> PackageNameLength() > 0 &&
-                    wcscmp(package_name, StringConstant::US_DO) != 0)
+                    package_name[0] != U_DOT)
                 {
                     while (*package_name)
                     {
@@ -435,9 +435,10 @@ void TypeSymbol::SetSignature(Control& control)
         int len = ContainingPackage() -> PackageNameLength() +
                   ExternalNameLength() + 4;
         wchar_t* type_signature = new wchar_t[len];
-        wcscpy(type_signature, StringConstant::US_L);
+        type_signature[0] = U_L;
+        type_signature[1] = U_NU;
         if (ContainingPackage() -> PackageNameLength() > 0 &&
-            wcscmp(package_name, StringConstant::US_DO) != 0)
+            package_name[0] != U_DOT)
         {
             wcscat(type_signature, package_name);
             wcscat(type_signature, StringConstant::US_SL);
@@ -750,7 +751,7 @@ void DirectorySymbol::SetDirectoryName()
     PathSymbol* path_symbol = owner -> PathCast();
     if (path_symbol)
     {
-        if (strcmp(path_symbol -> Utf8Name(), StringConstant::U8S_DO) == 0)
+        if (path_symbol -> Utf8Name()[0] == U_DOT)
         {
             directory_name_length = Utf8NameLength();
             directory_name = new char[directory_name_length + 1]; // +1: '\0'
@@ -769,8 +770,7 @@ void DirectorySymbol::SetDirectoryName()
     {
         DirectorySymbol* owner_directory = owner -> DirectoryCast();
         if (Name()[NameLength() - 1] == U_SLASH ||
-            strcmp(owner_directory -> DirectoryName(),
-                   StringConstant::U8S_DO) == 0)
+            owner_directory -> DirectoryName()[0] == U_DOT)
         {
             // An absolute file name, or is the owner "." ?
             directory_name_length = Utf8NameLength();
@@ -943,7 +943,7 @@ void FileSymbol::SetFileName()
     PathSymbol* path_symbol = PathSym();
     char* directory_name = directory_symbol -> DirectoryName();
     size_t directory_name_length = directory_symbol -> DirectoryNameLength();
-    bool dot_directory = (strcmp(directory_name, StringConstant::U8S_DO) == 0);
+    bool dot_directory = directory_name[0] == U_DOT;
     file_name_length = (dot_directory ? 0 : directory_name_length) +
         Utf8NameLength() +
         (path_symbol -> IsZip() ? 2 // For zip files, we need "()";
@@ -1461,7 +1461,7 @@ VariableSymbol* TypeSymbol::InsertThis0()
     // Create a this0 pointer for an inner class.
     //
     VariableSymbol* variable_symbol =
-        InsertVariableSymbol(control.this0_name_symbol);
+        InsertVariableSymbol(control.this_name_symbol);
     variable_symbol -> SetType(ContainingType());
     variable_symbol -> SetFlags(ACCESS_FINAL | ACCESS_SYNTHETIC);
     variable_symbol -> SetOwner(this);
@@ -1587,12 +1587,12 @@ VariableSymbol* TypeSymbol::FindOrInsertClassLiteral(TypeSymbol* type)
     const char* signature = type -> SignatureString();
     if (signature[0] == U_LEFT_BRACKET) // an array?
     {
-        int array_length = wcslen(StringConstant::US_array),
-            length = strlen(signature) + array_length;
+        int array_length = control.array_name_symbol -> NameLength();
+        int length = strlen(signature) + array_length;
         wchar_t* name = new wchar_t[length + 1]; // +1 for '\0';
-        wcscpy(name, StringConstant::US_array);
-        int i,
-            k;
+        wcscpy(name, control.array_name_symbol -> Name());
+        int i;
+        int k;
         for (i = 0, k = array_length; signature[i] == U_LEFT_BRACKET; i++, k++)
             name[k] = U_DOLLAR;
         // Leave leading 'L', since there can be conflicts with primitive
@@ -1604,19 +1604,19 @@ VariableSymbol* TypeSymbol::FindOrInsertClassLiteral(TypeSymbol* type)
         }
         name[k] = U_NULL;
         name_symbol = control.FindOrInsertName(name, k);
-
         delete [] name;
     }
     else
     {
         assert(signature[0] == U_L); // a reference type
-        int class_length = wcslen(StringConstant::US_class_DOLLAR),
-            length = strlen(signature) + class_length;
+        int class_length = control.class_name_symbol -> NameLength();
+        int length = strlen(signature) + class_length;
 
         wchar_t* name = new wchar_t[length + 1]; // +1 for '\0';
-        wcscpy(name, StringConstant::US_class_DOLLAR);
-        int i = 1, // skip leading 'L'
-            k = class_length;
+        wcscpy(name, control.class_name_symbol -> Name());
+        int i = 1; // skip leading 'L'
+        int k = class_length;
+        name[k++] = U_DOLLAR;
         for (wchar_t ch = signature[i++]; ch && ch != U_SEMICOLON;
              ch = signature[i++])
         {
@@ -1624,7 +1624,6 @@ VariableSymbol* TypeSymbol::FindOrInsertClassLiteral(TypeSymbol* type)
         }
         name[k] = U_NULL;
         name_symbol = control.FindOrInsertName(name, k);
-
         delete [] name;
     }
 
@@ -1663,14 +1662,7 @@ VariableSymbol* TypeSymbol::FindOrInsertAssertVariable()
         Semantic* sem = semantic_environment -> sem;
         Control& control = sem -> control;
 
-        NameSymbol* name_symbol = NULL;
-        int length = wcslen(StringConstant::US_DOLLAR_noassert);
-        wchar_t* name = new wchar_t[length + 1]; // +1 for '\0';
-        wcscpy(name, StringConstant::US_DOLLAR_noassert);
-        name_symbol = control.FindOrInsertName(name, length);
-        delete [] name;
-
-        assert_variable = InsertVariableSymbol(name_symbol);
+        assert_variable = InsertVariableSymbol(control.assert_name_symbol);
         assert_variable -> SetType(control.boolean_type);
         assert_variable -> SetFlags(ACCESS_PRIVATE | ACCESS_STATIC |
                                     ACCESS_FINAL | ACCESS_SYNTHETIC);
@@ -1739,11 +1731,14 @@ VariableSymbol* TypeSymbol::FindOrInsertLocalShadow(VariableSymbol* local)
     //   new Local() { int i; };
     // }
     //
+    // In 1.5 and later, we use the prefix "-" instead of "val$".
+    //
     if (! variable)
     {
-        int length = 4 + local -> NameLength(); // +4 for val$
+        int length = control.val_name_symbol -> NameLength() +
+            local -> NameLength();
         wchar_t* name = new wchar_t[length + 1]; // +1 for '\0';
-        wcscpy(name, StringConstant::US_val_DOLLAR);
+        wcscpy(name, control.val_name_symbol -> Name());
         wcscat(name, local -> Name());
         NameSymbol* name_symbol = control.FindOrInsertName(name, length);
 
@@ -1890,6 +1885,8 @@ MethodSymbol* TypeSymbol::GetReadAccessMethod(MethodSymbol* member,
         //     return;
         // }
         //
+        // In 1.5 and later, we use the prefix "-" instead of "access$".
+        //
         Semantic* sem = semantic_environment -> sem;
         assert(sem);
 
@@ -1898,9 +1895,10 @@ MethodSymbol* TypeSymbol::GetReadAccessMethod(MethodSymbol* member,
 
         IntToWstring value(NumPrivateAccessMethods());
 
-        int length = 7 + value.Length(); // +7 for access$
+        int length = control.access_name_symbol -> NameLength() +
+            value.Length();
         wchar_t* name = new wchar_t[length + 1]; // +1 for '\0';
-        wcscpy(name, StringConstant::US_access_DOLLAR);
+        wcscpy(name, control.access_name_symbol -> Name());
         wcscat(name, value.String());
 
         //
@@ -2195,7 +2193,7 @@ MethodSymbol* TypeSymbol::GetReadAccessConstructor(MethodSymbol* ctor)
         if (EnclosingType())
         {
             this0_variable = block_symbol ->
-                InsertVariableSymbol(control.this0_name_symbol);
+                InsertVariableSymbol(control.this_name_symbol);
             this0_variable -> SetACC_SYNTHETIC();
             this0_variable -> SetType(ContainingType());
             this0_variable -> SetOwner(read_method);
@@ -2309,6 +2307,8 @@ MethodSymbol* TypeSymbol::GetReadAccessMethod(VariableSymbol* member,
         //     return $1.name;
         // }
         //
+        // In 1.5 and later, we use the prefix "-" instead of "access$".
+        //
         Semantic* sem = semantic_environment -> sem;
         assert(sem);
 
@@ -2317,9 +2317,10 @@ MethodSymbol* TypeSymbol::GetReadAccessMethod(VariableSymbol* member,
 
         IntToWstring value(NumPrivateAccessMethods());
 
-        int length = 7 + value.Length(); // +7 for access$
+        int length = control.access_name_symbol -> NameLength() +
+            value.Length();
         wchar_t* name = new wchar_t[length + 1]; // +1 for '\0';
-        wcscpy(name, StringConstant::US_access_DOLLAR);
+        wcscpy(name, control.access_name_symbol -> Name());
         wcscat(name, value.String());
 
         //
@@ -2474,6 +2475,8 @@ MethodSymbol* TypeSymbol::GetWriteAccessMethod(VariableSymbol* member,
         //     return;
         // }
         //
+        // In 1.5 and later, we use the prefix "-" instead of "access$".
+        //
         Semantic* sem = semantic_environment -> sem;
         assert(sem);
 
@@ -2482,9 +2485,10 @@ MethodSymbol* TypeSymbol::GetWriteAccessMethod(VariableSymbol* member,
 
         IntToWstring value(NumPrivateAccessMethods());
 
-        int length = 7 + value.Length(); // +7 for access$
+        int length = control.access_name_symbol -> NameLength() +
+            value.Length();
         wchar_t* name = new wchar_t[length + 1]; // +1 for '\0';
-        wcscpy(name, StringConstant::US_access_DOLLAR);
+        wcscpy(name, control.access_name_symbol -> Name());
         wcscat(name, value.String());
 
         //

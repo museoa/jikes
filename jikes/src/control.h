@@ -82,30 +82,41 @@ public:
     //
     // This cache of name symbols is initialized in system.cpp.
     //
+    NameSymbol* access_name_symbol;
+    NameSymbol* array_name_symbol;
+    NameSymbol* assert_name_symbol;
+    NameSymbol* block_init_name_symbol;
+    NameSymbol* class_name_symbol;
+    NameSymbol* clinit_name_symbol;
+    NameSymbol* clone_name_symbol;
     NameSymbol* dot_name_symbol;
     NameSymbol* dot_dot_name_symbol;
-    NameSymbol* length_name_symbol;
-    NameSymbol* init_name_symbol;
-    NameSymbol* clinit_name_symbol;
-    NameSymbol* block_init_name_symbol;
-    NameSymbol* this0_name_symbol;
-    NameSymbol* clone_name_symbol;
-    NameSymbol* object_name_symbol;
-    NameSymbol* type_name_symbol;
-    NameSymbol* class_name_symbol;
     NameSymbol* equals_name_symbol;
+    NameSymbol* false_name_symbol;
     NameSymbol* hashCode_name_symbol;
+    NameSymbol* init_name_symbol;
+    NameSymbol* length_name_symbol;
+    NameSymbol* null_name_symbol;
+    NameSymbol* object_name_symbol;
+    NameSymbol* package_info_name_symbol;
+    NameSymbol* question_name_symbol;
     NameSymbol* serialPersistentFields_name_symbol;
     NameSymbol* serialVersionUID_name_symbol;
-    NameSymbol* toString_name_symbol;
-    NameSymbol* append_name_symbol;
-    NameSymbol* forName_name_symbol;
-    NameSymbol* getMessage_name_symbol;
-    NameSymbol* desiredAssertionStatus_name_symbol;
-    NameSymbol* getClass_name_symbol;
-    NameSymbol* getComponentType_name_symbol;
-    NameSymbol* initCause_name_symbol;
-    NameSymbol* iterator_name_symbol;
+    NameSymbol* this_name_symbol;
+    NameSymbol* true_name_symbol;
+    NameSymbol* type_name_symbol;
+    NameSymbol* val_name_symbol;
+
+    Utf8LiteralValue* ConstantValue_literal;
+    Utf8LiteralValue* Exceptions_literal;
+    Utf8LiteralValue* InnerClasses_literal;
+    Utf8LiteralValue* Synthetic_literal;
+    Utf8LiteralValue* Deprecated_literal;
+    Utf8LiteralValue* LineNumberTable_literal;
+    Utf8LiteralValue* LocalVariableTable_literal;
+    Utf8LiteralValue* Code_literal;
+    Utf8LiteralValue* SourceFile_literal;
+    Utf8LiteralValue* EnclosingMethod_literal;
 
     //
     // The primitive types.
@@ -294,26 +305,12 @@ public:
         TYPE_ACCESSOR(Void, lang_package)
 #undef TYPE_ACCESSOR
 #undef METHOD_ACCESSOR
-        
+
     IntLiteralTable int_pool;
     LongLiteralTable long_pool;
     FloatLiteralTable float_pool;
     DoubleLiteralTable double_pool;
     Utf8LiteralTable Utf8_pool;
-
-    Utf8LiteralValue* ConstantValue_literal;
-    Utf8LiteralValue* Exceptions_literal;
-    Utf8LiteralValue* InnerClasses_literal;
-    Utf8LiteralValue* Synthetic_literal;
-    Utf8LiteralValue* Deprecated_literal;
-    Utf8LiteralValue* LineNumberTable_literal;
-    Utf8LiteralValue* LocalVariableTable_literal;
-    Utf8LiteralValue* Code_literal;
-    Utf8LiteralValue* SourceFile_literal;
-    Utf8LiteralValue* EnclosingMethod_literal;
-
-    Utf8LiteralValue* null_literal;
-    Utf8LiteralValue* this_literal;
 
     Control(char**, Option&);
     ~Control();
@@ -552,7 +549,7 @@ private:
     void ProcessExtDirs();
     void ProcessClassPath();
     void ProcessSourcePath();
-    TypeSymbol* GetPrimitiveType(const wchar_t*, const char*);
+    TypeSymbol* GetPrimitiveType(const char*, char);
     void ProcessSystemInformation();
     TypeSymbol* ProcessSystemType(PackageSymbol*, const char*);
     MethodSymbol* ProcessSystemMethod(TypeSymbol*, const char*, const char*);
