@@ -834,8 +834,25 @@ void ByteCode::InitializeArray(TypeSymbol *type,
         AstExpression *expr = entry -> ExpressionCast();
         if (expr && (IsZero(expr) || expr -> Type() == control.null_type))
         {
-            EmitExpression(expr, false);
-            continue;
+            bool optimize;
+            if (expr -> Type() == control.float_type)
+            {
+                FloatLiteralValue* value = DYNAMIC_CAST<FloatLiteralValue*>
+                    (expr -> value);
+                optimize = value -> value.IsPositiveZero();
+            }
+            else if (expr -> Type() == control.double_type)
+            {
+                DoubleLiteralValue* value = DYNAMIC_CAST<DoubleLiteralValue*>
+                    (expr -> value);
+                optimize = value -> value.IsPositiveZero();
+            }
+            else optimize = true;
+            if (optimize)
+            {
+                EmitExpression(expr, false);
+                continue;
+            }
         }
 
         if (need_value)

@@ -1,5 +1,9 @@
 2002-12-02  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/bytecode.cpp (InitializeArray): Fix bug 3399.
+
+2002-12-02  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/bytecode.h (EmitBinaryExpression, ConcatenateString),
 	(AppendString): Add need_value argument to emit less code.
 	* src/bytecode.cpp (EmitBinaryExpression): Fix logic in evaluation
