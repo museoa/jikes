@@ -1,5 +1,12 @@
 2001-04-01  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/bytecode.cpp (ByteCode::EmitStringAppendMethod):
+	Do not use append(char[]) because it does not do the same
+	as char[].toString(). Fixes jacks tests 15.18.1.1-runtime-1
+	and 15.26.2-runtime-1
+
+2001-04-01  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/ast.h:
 	* src/lookup.h:
 	* src/lookup.cpp:

@@ -4518,29 +4518,29 @@ void ByteCode::EmitStringAppendMethod(TypeSymbol *type)
 {
     //
     // Find appropriate append routine to add to string buffer
+    // Do not use append(char[]), because that inserts the contents instead
+    // of the correct char[].toString()
     //
     MethodSymbol *append_method =
-            (type -> num_dimensions == 1 && type -> base_type == this_control.char_type
-                   ? this_control.StringBuffer_append_char_arrayMethod()
-                   : type == this_control.char_type
-                          ? this_control.StringBuffer_append_charMethod()
-                          : type == this_control.boolean_type
-                                 ? this_control.StringBuffer_append_booleanMethod()
-                                 : type == this_control.int_type ||
-                                   type == this_control.short_type ||
-                                   type == this_control.byte_type
-                                        ? this_control.StringBuffer_append_intMethod()
-                                        : type == this_control.long_type
-                                               ? this_control.StringBuffer_append_longMethod()
-                                               : type == this_control.float_type
-                                                      ? this_control.StringBuffer_append_floatMethod()
-                                                      : type == this_control.double_type
-                                                             ? this_control.StringBuffer_append_doubleMethod()
-                                                             : type == this_control.String()
-                                                                    ? this_control.StringBuffer_append_stringMethod()
-                                                                    : IsReferenceType(type)
-                                                                          ? this_control.StringBuffer_append_objectMethod()
-                                                                          : this_control.StringBuffer_InitMethod()); // for assertion
+            (type == this_control.char_type
+                  ? this_control.StringBuffer_append_charMethod()
+                  : type == this_control.boolean_type
+                         ? this_control.StringBuffer_append_booleanMethod()
+                         : type == this_control.int_type ||
+                           type == this_control.short_type ||
+                           type == this_control.byte_type
+                                ? this_control.StringBuffer_append_intMethod()
+                                : type == this_control.long_type
+                                       ? this_control.StringBuffer_append_longMethod()
+                                       : type == this_control.float_type
+                                              ? this_control.StringBuffer_append_floatMethod()
+                                              : type == this_control.double_type
+                                                     ? this_control.StringBuffer_append_doubleMethod()
+                                                     : type == this_control.String()
+                                                            ? this_control.StringBuffer_append_stringMethod()
+                                                            : IsReferenceType(type)
+                                                                   ? this_control.StringBuffer_append_objectMethod()
+                                                                   : this_control.StringBuffer_InitMethod()); // for assertion
 
     assert(append_method != this_control.StringBuffer_InitMethod() && "unable to find method for string buffer concatenation");
 
