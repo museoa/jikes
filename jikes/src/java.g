@@ -1260,7 +1260,6 @@ void Parser::Act$rule_number(void)
         root = tail;
         do
         {
-            root = root -> next;
 
             AstFieldDeclaration *field_declaration;
             AstMethodDeclaration *method_declaration;
@@ -1269,6 +1268,8 @@ void Parser::Act$rule_number(void)
             AstClassDeclaration *class_declaration;
             AstInterfaceDeclaration *interface_declaration;
             AstBlock *block;
+
+            root = root -> next;
 
             if ((field_declaration = root -> element -> FieldDeclarationCast()))
             {

@@ -91,8 +91,9 @@ void Semantic::ReportMethodNotFound(Ast *ast, wchar_t *name)
 
     int num_arguments;
     AstExpression **argument;
+    AstMethodInvocation *method_call = ast -> MethodInvocationCast();
 
-    if (AstMethodInvocation *method_call = ast -> MethodInvocationCast())
+    if (method_call)
     {
         kind = SemanticError::METHOD_NOT_FOUND;
         num_arguments = method_call -> NumArguments();
@@ -102,16 +103,19 @@ void Semantic::ReportMethodNotFound(Ast *ast, wchar_t *name)
     }
     else
     {
+        AstClassInstanceCreationExpression *class_creation = ast -> ClassInstanceCreationExpressionCast();
+        AstSuperCall *super_call = ast -> SuperCallCast();
+
         kind = SemanticError::CONSTRUCTOR_NOT_FOUND;
 
-        if (AstClassInstanceCreationExpression *class_creation = ast -> ClassInstanceCreationExpressionCast())
+        if (class_creation)
         {
             num_arguments = class_creation -> NumArguments();
             argument = new AstExpression*[num_arguments + 1];
             for (int i = 0; i < num_arguments; i++)
                 argument[i] = class_creation -> Argument(i);
         }
-        else if (AstSuperCall *super_call = ast -> SuperCallCast())
+        else if (super_call)
         {
             num_arguments = super_call -> NumArguments();
             argument = new AstExpression*[num_arguments + 1];
@@ -120,7 +124,7 @@ void Semantic::ReportMethodNotFound(Ast *ast, wchar_t *name)
         }
         else
         {
-	    AstThisCall *this_call = ast -> ThisCallCast();
+        AstThisCall *this_call = ast -> ThisCallCast();
 
             assert(this_call);
 
@@ -195,15 +199,17 @@ MethodSymbol *Semantic::FindConstructor(TypeSymbol *containing_type, Ast *ast,
 
     int num_arguments;
     AstExpression **argument;
+    AstClassInstanceCreationExpression *class_creation = ast -> ClassInstanceCreationExpressionCast();
+    AstSuperCall *super_call = ast -> SuperCallCast();
 
-    if (AstClassInstanceCreationExpression *class_creation = ast -> ClassInstanceCreationExpressionCast())
+    if (class_creation)
     {
         num_arguments = class_creation -> NumArguments();
         argument = new AstExpression*[num_arguments + 1];
         for (int i = 0; i < num_arguments; i++)
             argument[i] = class_creation -> Argument(i);
     }
-    else if (AstSuperCall *super_call = ast -> SuperCallCast())
+    else if (super_call)
     {
         num_arguments = super_call -> NumArguments();
         argument = new AstExpression*[num_arguments + 1];
@@ -2175,7 +2181,9 @@ void Semantic::FindVariableMember(TypeSymbol *type, TypeSymbol *environment_type
         }
         else
         {
-            if (TypeSymbol *inner_type = FindNestedType(type, field_access -> identifier_token))
+            TypeSymbol *inner_type = FindNestedType(type, field_access -> identifier_token);
+
+            if (inner_type)
                  ReportSemError(SemanticError::FIELD_IS_TYPE,
                                 field_access -> identifier_token,
                                 field_access -> identifier_token,
@@ -2773,7 +2781,9 @@ void Semantic::ProcessFieldAccess(Ast *expr)
 
     if (field_access -> symbol != control.no_type)
     {
-        if (PackageSymbol *package = field_access -> symbol -> PackageCast())
+        PackageSymbol *package = field_access -> symbol -> PackageCast();
+        
+        if (package)
         {
             ReportSemError(SemanticError::UNKNOWN_AMBIGUOUS_NAME,
                            field_access -> LeftToken(),
@@ -3090,12 +3100,14 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
     //        IncompatibleClassChangeError
     //
     SymbolSet *exception_set = TryExceptionTableStack().Top();
+    AstSimpleName *simple_name = method_call -> method -> SimpleNameCast();
+    
     if (exception_set)
     {
         exception_set -> AddElement(control.Error());
     }
 
-    if (AstSimpleName *simple_name = method_call -> method -> SimpleNameCast())
+    if (simple_name)
     {
         SemanticEnvironment *where_found;
         MethodSymbol *method = FindMethodInEnvironment(where_found, state_stack.Top(), method_call);
@@ -4660,7 +4672,10 @@ void Semantic::ProcessPLUS(AstPreUnaryExpression *expr)
 
 void Semantic::ProcessMINUS(AstPreUnaryExpression *expr)
 {
-    if (AstIntegerLiteral *int_literal = expr -> expression -> IntegerLiteralCast())
+    AstIntegerLiteral *int_literal = expr -> expression -> IntegerLiteralCast();
+    AstLongLiteral *long_literal = expr -> expression -> LongLiteralCast();
+
+    if (int_literal)
     {
         LiteralSymbol *literal = lex_stream -> LiteralSymbol(int_literal -> integer_literal_token);
 
@@ -4674,7 +4689,7 @@ void Semantic::ProcessMINUS(AstPreUnaryExpression *expr)
         }
         else expr -> symbol = control.int_type;
     }
-    else if (AstLongLiteral *long_literal = expr -> expression -> LongLiteralCast())
+    else if (long_literal)
     {
         LiteralSymbol *literal = lex_stream -> LiteralSymbol(long_literal -> long_literal_token);
 

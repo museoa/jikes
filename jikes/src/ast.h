@@ -784,7 +784,7 @@ public:
                                    block_tag(NONE),
                                    block_symbol(NULL),
                                    nesting_level(0),
-				   no_braces(false)
+                   no_braces(false)
     {
         Ast::kind = Ast::BLOCK;
         Ast::class_tag = Ast::STATEMENT;
@@ -1338,7 +1338,7 @@ public:
         Ast::kind = Ast::CLASS;
         Ast::class_tag = Ast::NO_TAG;
         Ast::generated = 0;
-	AstStatement::pool = pool_;
+    AstStatement::pool = pool_;
     }
 
     virtual ~AstClassDeclaration();
@@ -5870,44 +5870,52 @@ inline void AstClassBody::AddClassBodyDeclaration(Ast *member)
 // not inline
 void AstClassBody::AddClassBodyDeclarationNicely(Ast *member)
 {
+    AstFieldDeclaration *field_declaration = member -> FieldDeclarationCast();
+    AstMethodDeclaration *method_declaration = member -> MethodDeclarationCast();
+    AstConstructorDeclaration *constructor_declaration = member -> ConstructorDeclarationCast();
+    AstStaticInitializer *static_initializer = member -> StaticInitializerCast();
+    AstClassDeclaration *class_declaration = member -> ClassDeclarationCast();
+    AstInterfaceDeclaration *interface_declaration = member -> InterfaceDeclarationCast();
+    AstBlock *block = member -> BlockCast();
+
     AddClassBodyDeclaration(member);
 
 
     // This is lifted from Parser::Act68.
 
-    if (AstFieldDeclaration *field_declaration = member -> FieldDeclarationCast())
+    if (field_declaration)
     {
-	if (field_declaration -> StaticFieldCast())
-	     AddClassVariable(field_declaration);
-	else AddInstanceVariable(field_declaration);
+        if (field_declaration -> StaticFieldCast())
+            AddClassVariable(field_declaration);
+        else AddInstanceVariable(field_declaration);
     }
-    else if (AstMethodDeclaration *method_declaration = member -> MethodDeclarationCast())
+    else if (method_declaration)
     {
-	AddMethod(method_declaration);
+        AddMethod(method_declaration);
     }
-    else if (AstConstructorDeclaration *constructor_declaration = member -> ConstructorDeclarationCast())
+    else if (constructor_declaration)
     {
-	AddConstructor(constructor_declaration);
+        AddConstructor(constructor_declaration);
     }
-    else if (AstStaticInitializer *static_initializer = member -> StaticInitializerCast())
+    else if (static_initializer)
     {
-	AddStaticInitializer(static_initializer);
+        AddStaticInitializer(static_initializer);
     }
-    else if (AstClassDeclaration *class_declaration = member -> ClassDeclarationCast())
+    else if (class_declaration)
     {
-	AddNestedClass(class_declaration);
+        AddNestedClass(class_declaration);
     }
-    else if (AstInterfaceDeclaration *interface_declaration = member -> InterfaceDeclarationCast())
+    else if (interface_declaration)
     {
-	AddNestedInterface(interface_declaration);
+        AddNestedInterface(interface_declaration);
     }
-    else if (AstBlock *block = member -> BlockCast())
+    else if (block)
     {
-	AddBlock(block);
+        AddBlock(block);
     }
     else // assert(block = member -> EmptyDeclarationCast())
     {
-	AddEmptyDeclaration((AstEmptyDeclaration *) member);
+        AddEmptyDeclaration((AstEmptyDeclaration *) member);
     }
 }
 

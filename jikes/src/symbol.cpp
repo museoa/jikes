@@ -17,7 +17,7 @@
 #include "table.h"
 #include "zip.h"
 #include "set.h"
-#include <strstream.h>
+//#include <strstream.h> TODO - ERNST
 #include "case.h"
 
 #ifdef UNIX_FILE_SYSTEM
@@ -635,7 +635,7 @@ MethodSymbol::~MethodSymbol()
 
 BlockSymbol::BlockSymbol(int hash_size) : max_variable_index(-1),
                                           try_or_synchronized_variable_index(0),
-					  table(hash_size > 0 ? new SymbolTable(hash_size) : (SymbolTable *) NULL)
+                      table(hash_size > 0 ? new SymbolTable(hash_size) : (SymbolTable *) NULL)
 {
     Symbol::_kind = BLOCK;
 }
@@ -1930,22 +1930,26 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member)
 //  * storing it to fully_qualified_name; then caller never deletes the result
 //  * always allocating a new copy; then caller always deletes the result
 char *TypeSymbol::FullyQualifiedName() {
+#ifdef TODO_ERNST
     if (fully_qualified_name)
-	return fully_qualified_name -> value;
+    return fully_qualified_name -> value;
     if (!owner)
-	return Utf8Name();
-    ostrstream result_os_base;
-    Ostream result_os(&result_os_base);
+    return Utf8Name();
+//    ostrstream result_os_base; TODO-ERNST
+//    Ostream result_os(&result_os_base); TODO-ERNST
     Symbol *o = owner;
     if (o -> PackageCast()) {
-	result_os << o -> PackageCast() -> PackageName();
+    result_os << o -> PackageCast() -> PackageName();
     } else if (o -> TypeCast()) {
-	result_os << o -> TypeCast() -> FullyQualifiedName();
+    result_os << o -> TypeCast() -> FullyQualifiedName();
     } else {
-	Ostream() << "Huh?  Parent of type.";
+    Ostream() << "Huh?  Parent of type.";
     }
     result_os << "." << Utf8Name();
     // I'm having trouble with "result_os << ends;", so cheat.
     result_os_base << ends;
     return result_os_base.str();
+#else
+    return NULL;
+#endif
 }

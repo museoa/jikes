@@ -474,6 +474,7 @@ void Control::ProcessPath()
     if (option.classpath)
     {
         int max_path_name_length = strlen(option.classpath) + 1; // The longest possible path name we can encounter
+        char * full_directory_name = NULL;
         wchar_t *path_name = new wchar_t[max_path_name_length + 1]; // +1 for '\0'
 
         wchar_t *input_name = NULL;
@@ -481,7 +482,7 @@ void Control::ProcessPath()
         for (char *path = option.classpath, *path_tail = &path[strlen(path)]; path < path_tail; path++)
         {
 #ifdef WIN32_FILE_SYSTEM
-            delete [] full_directory_name;
+            delete [] full_directory_name; 
             delete [] input_name;
 #endif
             char *head;

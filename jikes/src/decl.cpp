@@ -261,9 +261,9 @@ void Semantic::ProcessTypeNames()
                 }
                 break;
             }
-	    default:
-		assert(false);
-		break;
+        default:
+        assert(false);
+        break;
         }
 
         //
@@ -2029,7 +2029,7 @@ void Semantic::CompleteSymbolTable(AstInterfaceDeclaration *interface_declaratio
 void Semantic::CleanUp()
 {
     if (control.option.nocleanup)
-	return;
+    return;
 
     for (int i = 0; i < compilation_unit -> NumTypeDeclarations(); i++)
     {
@@ -2051,9 +2051,9 @@ void Semantic::CleanUp()
                     type = interface_declaration -> semantic_environment -> Type();
                 break;
             }
-	    default:
-		assert(false);
-		break;
+        default:
+        assert(false);
+        break;
         }
 
         if (type)
@@ -2559,7 +2559,10 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
     int k;
     for (k = 0; k < compilation_unit -> NumTypeDeclarations(); k++)
     {
-        if (AstClassDeclaration *class_declaration = compilation_unit -> TypeDeclaration(k) -> ClassDeclarationCast())
+        AstClassDeclaration *class_declaration = compilation_unit -> TypeDeclaration(k) -> ClassDeclarationCast();
+        AstInterfaceDeclaration *interface_declaration = compilation_unit -> TypeDeclaration(k) -> InterfaceDeclarationCast();
+
+        if (class_declaration)
         {
             if (class_declaration -> semantic_environment)
             {
@@ -2568,7 +2571,7 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
                     break;
             }
         }
-        else if (AstInterfaceDeclaration *interface_declaration = compilation_unit -> TypeDeclaration(k) -> InterfaceDeclarationCast())
+        else if (interface_declaration)
         {
             if (interface_declaration -> semantic_environment)
             {
