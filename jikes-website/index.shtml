@@ -75,8 +75,7 @@
 
 <!-- content, main - still needs cleanup -->
 
- <p>
-<img src="images/4thbd.png" width="244" height="200" alt="[Happy 4th Birthday to Jikes]" border="0" align=left hspace=4 vspace=4></a>
+ <p><img src="images/4thbd.png" width="244" height="200" alt="[Happy 4th Birthday to Jikes]" border="0" align=left hspace=4 vspace=4>
     The Jikes Homepage has been reorganized to take advantage of the new support
     infrastructure offered by <a href="http://ibm.com/?origin=jikes">IBM's</a>
     <a href="http://ibm.com/developerworks/?origin=jikes">developerWorks</a>
