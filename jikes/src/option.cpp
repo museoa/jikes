@@ -301,6 +301,7 @@ Option::Option(ArgumentExpander &arguments) :
                 {
                     bad_options.Next() =
                         new OptionError(SemanticError::UNSUPPORTED_ENCODING, encoding);
+                    encoding = NULL;
                 }
 
                 continue;
