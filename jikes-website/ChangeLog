@@ -1,14 +1,19 @@
-2002-12-07  Chris Abbey <jikes@cabbey.net>
+2002-12-07  Eric Blake  <ebb9@email.byu.edu>
+
+	* faq/user-index.shtml: add entry in jikes vs javac for class
+	literal semantics
+	
+2002-12-07  Chris Abbey  <jikes@cabbey.net>
 
 	* documets/index.shtml: cleanup in prep for public unveiling
 
-2002-12-07  Chris Abbey <jikes@cabbey.net>
+2002-12-07  Chris Abbey  <jikes@cabbey.net>
 
 	* index.shtml:
 	* distribs.shtml: update downloads link to go to the "recent only" view
 	instead of the default view.
 
-2002-12-07  Chris Abbey <jikes@cabbey.net>
+2002-12-07  Chris Abbey  <jikes@cabbey.net>
 
 	* faq/user-index.shtml:
 	* faq/dev-source-control.shtml: fix old broken FRS link.

@@ -79,7 +79,7 @@
             distributions</a> page for a list of Linux distributions known
             to include Jikes as a standard package.  For other platforms,
             go to the
-            <a href="/developerworks/downloads/?group_id=10">
+            <a href="/developerworks/downloads/?group_id=10&recent_only=1">
             downloads</a> page and look for an official binary version of
             Jikes.  A Zip file is provided for Windows users, just unzip
             it and place the bin directory on your PATH.
@@ -232,8 +232,8 @@ jikes options filename...</pre>
               <code>+E</code>
             </dt>
             <dd>
-              List errors in a form commonly used by Emacs to scan
-              for errors.  By default errors are listed in a more readable
+              List errors in a machine readilbe form commonly used by Emacs to scan
+              for errors.  By default errors are listed in a more human readable
               form.
             </dd>
             <dt>
@@ -389,6 +389,7 @@ jikes -classpath .:/opt/jdk1.3/jre/lib/rt.jar ...</pre>
             </p>
           </blockquote>
           <p>
+	  <!-- TODO: kill off JIKESPATH, use the BOOTCLASSPATH instead -->
             Jikes looks for a definition of <code>JIKESPATH</code> in the
             environment before it looks for a definition of
             <code>CLASSPATH</code>.  If <code>JIKESPATH</code> is defined,
@@ -477,7 +478,6 @@ jikes -classpath .:/opt/jdk1.3/jre/lib/rt.jar ...</pre>
             <a href="http://www.lugaru.com/">
             Epsilon</a>.
             For example, consider the mis-typed "hello world" example:
-            <!-- TODO: hello -> Hello -->
           </p>
           <pre class="example">
 class hello {
@@ -606,7 +606,6 @@ the type ... which is contained in an unnamed package</pre>
           <p>
             The option <code>+F</code> directs the compiler to load all other
             types that are referenced within a class file, and causes
-            <!-- TODO: source file is -> source files are? -->
             recompilation of such files if their source file is more
             up-to-date than the class file.  Normally, other types are loaded
             only if required for the current compilation.
@@ -856,6 +855,59 @@ q</pre>
             interpreting the specification.
           </p>
 
+	  <h4>Class Literal Semantics</h4>
+
+	  <p> The Java Language Specification does not allow class literals 
+	  to cause class initialization, even though javac has always
+	  done it this way.  Jikes used to also cause class initialization,
+	  but starting with 1.17 it will not.</p>
+	  
+	  <p>The following example demonstrates the difference in
+	  behaviour between allowing class literals to cause class
+	  initialization, and not
+	  
+	  <pre class="example">
+class Super {
+   static int i = 1;
+   static void m(Class c) {
+     System.out.println(i);
+   }
+   public static void main(String[] args) {
+     m(Sub.class);
+   }
+}
+class Sub extends Super {
+   static { i = 2; }
+}</pre>
+
+          <p>With old versions of jikes, or other buggy compilers,
+	  executing Super will output 2 (since the class
+	  initialization of Sub took place and changed 
+	  the value of i).  But with jikes 1.17 and later, the
+	  executing Super will correctly output 1.</p>
+
+	  <p>To update your code to force class initialization
+	  (and thus preserve the semantics you were used to), an 
+	  explicit call to Class.forName will help.  In the above
+	  example, rewriting Super.m() as shown below will give
+	  the desired behavior of outputting 2. </p>
+
+	  <pre class="example">
+static void m(Class c) {
+  // we aren't sure if c is initialized, hence this try-block
+  try {
+    if (c != null)
+      c.forName(c.getName());
+  } catch (Exception e) {
+    // shouldn't get here, and even if we do, we ignore it
+  }
+  System.out.println(i);
+}</pre>
+
+	  <p>For additional details, see <a
+	  href="/pipermail/jikes-dev/2002-December/003642.html">this
+	  posting</a> to jikes-dev.</p>
+
           <h4>Extraneous Semicolons</h4>
 
           <p>
@@ -913,9 +965,7 @@ class Test {
         <----->
 *** Semantic Error: This statement is unreachable</pre>
           <p>
-            (This is the example referrred to in 
-            <a href="http://www.pcweek.com/news/0414/14ante.html">
-            PC Week (April 14, 1997):  IBM, Netscape Up Web Ante</a>.)
+            (This is the example referrred to in PC Week (April 14, 1997):  IBM, Netscape Up Web Ante.)
           </p>
           <p>
             Another example, and one that confused many users, is shown by the
