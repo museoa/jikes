@@ -2986,6 +2986,9 @@ void ByteCode::EmitCloneArray(AstMethodInvocation *expression)
     PutU2(RegisterMethod(METHOD_CLONE));
     EmitBranch(OP_GOTO, end_label);
     end_pc = code_attribute -> code.Length(); 
+    // indicate that we use at least 2 local variables (this and the exception)
+    if (code_attribute -> max_locals < 2)
+      code_attribute -> max_locals = 2; // CSA fix 08-dec-1998 for PR 294
     // start handler
     // can't count next StoreLocal as pop since in handler
     ChangeStack(1); 
