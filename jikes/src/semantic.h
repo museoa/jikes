@@ -895,7 +895,7 @@ private:
 
     bool CanWideningPrimitiveConvert(TypeSymbol *, TypeSymbol *);
     bool CanNarrowingPrimitiveConvert(TypeSymbol *, TypeSymbol *);
-    bool CanCastConvert(TypeSymbol *, TypeSymbol *, LexStream::TokenIndex);
+    bool CanCastConvert(TypeSymbol *, TypeSymbol *, LexStream::TokenIndex = LexStream::Badtoken());
     bool CanMethodInvocationConvert(TypeSymbol *, TypeSymbol *);
     bool CanAssignmentConvert(TypeSymbol *, AstExpression *);
     bool CanAssignmentConvertReference(TypeSymbol *, TypeSymbol *);
@@ -974,35 +974,36 @@ private:
     void ProcessSuperCall(AstSuperCall *);
     void CheckThrow(AstExpression *);
     void ProcessMethodBody(AstMethodDeclaration *);
-    void ProcessConstructorBody(AstConstructorDeclaration *, bool);
+    void ProcessConstructorBody(AstConstructorDeclaration *);
     bool CatchableException(TypeSymbol *);
-    void ReportMethodNotFound(Ast *ast, wchar_t *);
+    void ReportConstructorNotFound(Ast *, TypeSymbol *);
+    void ReportMethodNotFound(AstMethodInvocation *, TypeSymbol *);
     MethodSymbol *FindConstructor(TypeSymbol *, Ast *, LexStream::TokenIndex, LexStream::TokenIndex);
     bool MoreSpecific(MethodSymbol *, MethodSymbol *);
     bool MoreSpecific(MethodSymbol *, Tuple<MethodSymbol *> &);
     bool NoMethodMoreSpecific(Tuple<MethodSymbol *> &, MethodSymbol *);
-    bool IsMethodAccessible(AstFieldAccess *, TypeSymbol *, MethodSymbol *);
-    void SearchForMethodInEnvironment(Tuple<MethodSymbol *> &, SemanticEnvironment *&, SemanticEnvironment *, AstMethodInvocation *);
+    void FindMethodInEnvironment(Tuple<MethodSymbol *> &, SemanticEnvironment *&, SemanticEnvironment *, AstMethodInvocation *);
     MethodSymbol *FindMisspelledMethodName(TypeSymbol *, AstMethodInvocation *, NameSymbol *);
     MethodSymbol *FindMethodInEnvironment(SemanticEnvironment *&, SemanticEnvironment *, AstMethodInvocation *);
     MethodSymbol *FindMethodInType(TypeSymbol *, AstMethodInvocation *, NameSymbol * = NULL);
 
-    void ReportAccessedFieldNotFound(AstFieldAccess *, TypeSymbol *);
-    void SearchForVariableInEnvironment(Tuple<VariableSymbol *> &, SemanticEnvironment *&,
+    void ReportVariableNotFound(AstExpression *, TypeSymbol *);
+    void FindVariableInEnvironment(Tuple<VariableSymbol *> &, SemanticEnvironment *&,
                                         SemanticEnvironment *, NameSymbol *, LexStream::TokenIndex);
     VariableSymbol *FindMisspelledVariableName(TypeSymbol *, LexStream::TokenIndex);
     VariableSymbol *FindVariableInEnvironment(SemanticEnvironment *&, SemanticEnvironment *, LexStream::TokenIndex);
     VariableSymbol *FindVariableInType(TypeSymbol *, AstFieldAccess *, NameSymbol * = NULL);
-    VariableSymbol *FindInstance(TypeSymbol *, TypeSymbol *);
+    VariableSymbol *FindInstance(TypeSymbol *, TypeSymbol *, bool);
     AstExpression *CreateAccessToType(Ast *, TypeSymbol *);
     void CreateAccessToScopedVariable(AstSimpleName *, TypeSymbol *);
     void CreateAccessToScopedMethod(AstMethodInvocation *, TypeSymbol *);
 
-    void TypeAccessCheck(Ast *, TypeSymbol *);
+    bool TypeAccessCheck(Ast *, TypeSymbol *);
     void TypeNestAccessCheck(AstExpression *);
     void ConstructorAccessCheck(AstClassInstanceCreationExpression *, MethodSymbol *);
-    void MemberAccessCheck(AstFieldAccess *, TypeSymbol *, Symbol *);
+    bool MemberAccessCheck(AstFieldAccess *, TypeSymbol *, Symbol *);
     void SimpleNameAccessCheck(AstSimpleName *, TypeSymbol *, Symbol *);
+    bool ProtectedAccessCheck(TypeSymbol *, TypeSymbol *);
 
     void (Semantic::*ProcessPreUnaryExpr[AstPreUnaryExpression::_num_kinds])(AstPreUnaryExpression *);
     void ProcessPLUS(AstPreUnaryExpression *);
@@ -1033,7 +1034,7 @@ private:
     void ProcessMOD(AstBinaryExpression *);
     void ProcessINSTANCEOF(AstBinaryExpression *);
 
-    MethodSymbol *FindMethodMember(TypeSymbol *, TypeSymbol *, AstMethodInvocation *);
+    void FindMethodMember(TypeSymbol *, AstMethodInvocation *);
     void ProcessMethodName(AstMethodInvocation *);
     void (Semantic::*ProcessExprOrStmt[Ast::_num_kinds])(Ast *);
     inline void ProcessStatement(AstStatement *stmt)
@@ -1087,7 +1088,7 @@ private:
 
     void CheckSimpleName(AstSimpleName *, SemanticEnvironment *where_found);
     void ProcessSimpleName(Ast *);
-    void FindVariableMember(TypeSymbol *, TypeSymbol *, AstFieldAccess *);
+    void FindVariableMember(TypeSymbol *, AstFieldAccess *);
     void ProcessAmbiguousName(Ast *);
     void ProcessFieldAccess(Ast *);
     void ProcessIntegerLiteral(Ast *);

@@ -1978,7 +1978,7 @@ void Semantic::ProcessMethodBody(AstMethodDeclaration *method_declaration)
 }
 
 
-void Semantic::ProcessConstructorBody(AstConstructorDeclaration *constructor_declaration, bool body_reachable)
+void Semantic::ProcessConstructorBody(AstConstructorDeclaration *constructor_declaration)
 {
     TypeSymbol *this_type = ThisType();
     MethodSymbol *this_method = ThisMethod();
@@ -2065,14 +2065,6 @@ void Semantic::ProcessConstructorBody(AstConstructorDeclaration *constructor_dec
             LocalSymbolTable().Pop();
             LocalSymbolTable().Push(this_method -> block_symbol -> Table());
         }
-    }
-
-    if (! (body_reachable || (constructor_block -> explicit_constructor_invocation_opt &&
-                              constructor_block -> explicit_constructor_invocation_opt -> ThisCallCast())))
-    {
-        ReportSemError(SemanticError::UNREACHABLE_CONSTRUCTOR_BODY,
-                       constructor_declaration -> LeftToken(),
-                       constructor_declaration -> RightToken());
     }
 
     //
@@ -2176,7 +2168,7 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment, AstClas
 
             LocalSymbolTable().Push(ThisMethod() -> block_symbol -> Table());
             LocalBlockStack().max_size = 0;
-            ProcessConstructorBody(constructor_decl, ((! last_block_body) || last_block_body -> can_complete_normally));
+            ProcessConstructorBody(constructor_decl);
             LocalSymbolTable().Pop();
             ThisMethod() -> max_block_depth = LocalBlockStack().max_size;
         }
@@ -2207,8 +2199,7 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment, AstClas
                 LocalSymbolTable().Push(this_method -> block_symbol -> Table());
                 LocalBlockStack().max_size = 0;
 
-                int start_num_errors = NumErrors();
-                ProcessConstructorBody(constructor_decl, ((! last_block_body) || last_block_body -> can_complete_normally));
+                ProcessConstructorBody(constructor_decl);
 
                 LocalSymbolTable().Pop();
                 this_method -> max_block_depth = LocalBlockStack().max_size;
@@ -2238,7 +2229,7 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment, AstClas
 
             LocalSymbolTable().Push(this_method -> block_symbol -> Table());
             LocalBlockStack().max_size = 0;
-            ProcessConstructorBody(constructor_decl, true);
+            ProcessConstructorBody(constructor_decl);
             LocalSymbolTable().Pop();
             this_method -> max_block_depth = LocalBlockStack().max_size;
         }

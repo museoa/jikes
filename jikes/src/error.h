@@ -39,10 +39,10 @@ class ErrorInfo : public JikesError
     virtual JikesErrorSeverity getSeverity();
     virtual const char *getFileName();
 
-    virtual int getLeftLineNo      ();
-    virtual int getLeftColumnNo    ();
-    virtual int getRightLineNo     ();
-    virtual int getRightColumnNo   ();
+    virtual int getLeftLineNo();
+    virtual int getLeftColumnNo();
+    virtual int getRightLineNo();
+    virtual int getRightColumnNo();
 
     ErrorInfo();
     virtual ~ErrorInfo();
@@ -50,10 +50,10 @@ class ErrorInfo : public JikesError
  protected:
 
  private:
-    int left_line_no    ;
-    int left_column_no  ;
-    int right_line_no   ;
-    int right_column_no ;
+    int left_line_no;
+    int left_column_no;
+    int right_line_no;
+    int right_column_no;
     
     LexStream::TokenIndex left_token;
     LexStream::TokenIndex right_token;
@@ -68,17 +68,17 @@ class ErrorInfo : public JikesError
         *insert8,
         *insert9;
 
-    wchar_t  *msg;
+    wchar_t *msg;
     unsigned num;
-    short    msg_code;
-    short    right_string_length;
+    short msg_code;
+    short right_string_length;
     JikesErrorSeverity severity;
 
     static bool emacs_style_report;
     LexStream *lex_stream;
 
-    wchar_t *regularErrorString ();
-    wchar_t *emacsErrorString   ();
+    wchar_t *regularErrorString();
+    wchar_t *emacsErrorString();
 
     void PrintLargeSource(ErrorString &s);
     void PrintSmallSource(ErrorString &s);
@@ -88,8 +88,8 @@ class ErrorInfo : public JikesError
 
 class SemanticError
 {
-    friend class ErrorInfo ;
-    friend class JikesAPI  ;
+    friend class ErrorInfo;
+    friend class JikesAPI;
 
  public:
     enum SemanticErrorKind
@@ -186,14 +186,12 @@ class SemanticError
         FIELD_IS_TYPE,
         FIELD_NOT_FOUND,
         FIELD_NAME_MISSPELLED,
-        FIELD_NAME_NOT_FOUND,
         METHOD_NOT_FIELD,
         NAME_NOT_YET_AVAILABLE,
-        NAME_NOT_VARIABLE,
         NAME_NOT_CLASS_VARIABLE,
         NOT_A_NUMERIC_VARIABLE,
+        METHOD_OVERLOAD_NOT_FOUND,
         METHOD_NOT_FOUND,
-        METHOD_NAME_NOT_FOUND,
         METHOD_NAME_MISSPELLED,
         HIDDEN_METHOD_IN_ENCLOSING_CLASS,
         FIELD_NOT_METHOD,
@@ -311,7 +309,6 @@ class SemanticError
         UNREACHABLE_DEFAULT_CATCH_CLAUSE,
         UNREACHABLE_STATEMENT,
         UNREACHABLE_STATEMENTS,
-        UNREACHABLE_CONSTRUCTOR_BODY,
         BLOCKED_CATCH_CLAUSE,
         VARIABLE_NOT_DEFINITELY_ASSIGNED,
         TYPED_METHOD_WITH_NO_RETURN,
@@ -502,14 +499,12 @@ private:
     static wchar_t *PrintFIELD_IS_TYPE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintFIELD_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintFIELD_NAME_MISSPELLED(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintFIELD_NAME_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMETHOD_NOT_FIELD(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNAME_NOT_YET_AVAILABLE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintNAME_NOT_VARIABLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNAME_NOT_CLASS_VARIABLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNOT_A_NUMERIC_VARIABLE(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintMETHOD_OVERLOAD_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMETHOD_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintMETHOD_NAME_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMETHOD_NAME_MISSPELLED(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintHIDDEN_METHOD_IN_ENCLOSING_CLASS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintFIELD_NOT_METHOD(ErrorInfo &, LexStream *, Control &);
@@ -627,7 +622,6 @@ private:
     static wchar_t *PrintUNREACHABLE_DEFAULT_CATCH_CLAUSE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNREACHABLE_STATEMENT(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNREACHABLE_STATEMENTS(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintUNREACHABLE_CONSTRUCTOR_BODY(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintBLOCKED_CATCH_CLAUSE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintVARIABLE_NOT_DEFINITELY_ASSIGNED(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPED_METHOD_WITH_NO_RETURN(ErrorInfo &, LexStream *, Control &);

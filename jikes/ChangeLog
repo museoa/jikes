@@ -1,5 +1,56 @@
 2001-11-08  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/access.h (AccessString): Add, for easier error messages.
+	* src/ast.h (AstClassInstanceCreationExpression): Add field for
+	storing class declaration of anonymous types.
+	* src/body.cpp (ProcessConstructorBody): Constructor bodies are
+	always reachable.
+	* src/bytecode.cpp (CompileClass): Emit some accessor methods
+	directly, instead of generating on the fly.
+	(EmitMethodInvocation): Emit invokespecial instead of invokestatic
+	in accessor method, as needed, bug 169.
+	* src/decl.spp: Minor code cleanup.
+	* src/error.cpp: Lots of reformatting, improved error messages.
+	* src/error.h: Remove dead errors: FIELD_NAME_NOT_FOUND,
+	NAME_NOT_VARIABLE, METHOD_NAME_NOT_FOUND,
+	UNREACHABLE_CONSTRUCTOR_BODY. Add new error:
+	METHOD_OVERLOAD_NOT_FOUND.
+	* src/expr.cpp: Lots of work to improve access of fields and
+	methods (work remains to be done on nested types and constructors,
+	as well as some cleanup of error reporting). Fix at least these
+	bugs:
+	  182: access of inherited protected methods in other packages
+	  does not require an accessor method
+	  213: access of protected static members is legal regardless of
+	  the qualifier
+	  215: when a field is not found, check for a method before a
+	  misspelled field name
+	  219: when a method is not found, check for overloaded versions
+	  before reporting no method found
+	  246: Classname.this.member and Classname.super.member do not
+	  point to subclasses of Classname
+	  427: access of a private field gives better error message
+	  666: Classname.super.member does not point to inaccessible
+	  supertype
+	  2376: correctly grab the only inherited field when a superclass
+	  has two ambiguous fields of differing accessibility
+	* src/lookup.h (HashCode): Add a hash to VariableSymbol for use by
+	symbol.cpp
+	* src/semantic.h: Improve various method calls, consolidating some
+	error reporting, and passing necessary information to do
+	accessibility checks.
+	* src/set.h (class Map): Add new class for more efficient accessor
+	method mapping in symbol.cpp
+	* src/stream.h (Badtoken): Make static
+	* src/symbol.cpp: Update the generation and retrieval of accessor
+	methods, since there can be as many as three accessor methods for
+	an instance variable. The updated accessors can be emitted
+	directly to bytecode, with no extra effort. Work still remains for
+	constructor accessors.
+	* src/symbol.h: Update accessor method storage - patch 142.
+
+2001-11-08  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/bytecode.cpp (LoadImmediateInteger): Comment why we emit ldc
 	instead of sipush if the constant already appears in the pool; but
 	emit sipush instead of ldc_w - bug 220.
@@ -37,12 +88,13 @@
 	(PROTECTED_INSTANCE_METHOD_NOT_ACCESSIBLE): Add to give better
 	error message in protected access violation.
 	(STATIC_PROTECTED_FIELD_ACCESS, STATIC_PROTECTED_METHOD_ACCESS):
-	Delete these errors, as JLS2 made them legal.	
+	Delete these errors, as JLS2 made them legal.
 	* src/symbol.h: 
 	* src/symbol.cpp (GetReadAccessConstructor): Split from
 	GetReadAccessMethod.
 	* src/expr.cpp:
-	* src/body.cpp (ProcessSuperCall): Update to use above changes.
+	* src/body.cpp (ProcessSuperCall): Update to use above changes -
+	patch 226.
 
 2001-11-06  Eric Blake  <ebb9@email.byu.edu>
 

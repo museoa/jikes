@@ -352,6 +352,81 @@ public:
 
 
 //
+// Single-value Mapping from an arbitrary key to an arbitrary value, based
+// on memory location (and not key contents).  At the moment, the Map does
+// not support remapping a key to a new value.
+//
+// class Key must implement a hashing function:
+//   unsigned HashCode();
+//
+template <class Key, class Value>
+class Map
+{
+public:
+    enum
+    {
+        DEFAULT_HASH_SIZE = 13,
+        MAX_HASH_SIZE = 1021
+    };
+
+    Map(unsigned hash_size_ = DEFAULT_HASH_SIZE);
+    virtual ~Map()
+    {
+        for (int i = 0; i < symbol_pool.Length(); i++)
+            delete symbol_pool[i];
+
+        delete [] base;
+
+        return;
+    }
+
+
+
+    //
+    // Has key been mapped to an image, yet? If so, return the image.
+    //
+    inline Value *Image(Key *key)
+    {
+        assert(key);
+
+        unsigned k = key -> HashCode() % hash_size; // unsigned math prevents negative indices
+        for (Element *element = base[k]; element; element = element -> next)
+        {
+            if (element -> key == key)
+                return element -> value;
+        }
+
+        return (Value *) NULL;
+    }
+
+    //
+    // Map or remap key to a given image.
+    //
+    void Add(Key *, Value *);
+
+private:
+
+    class Element
+    {
+    public:
+        Element *next;
+        Key *key;
+        Value *value;
+    };
+
+    Tuple<Element *> symbol_pool;
+
+    Element **base;
+    unsigned hash_size;
+
+    static unsigned primes[];
+    unsigned prime_index;
+
+    void Rehash();
+};
+
+
+//
 // Single-value Mapping from an arbitrary symbol into another arbitrary symbol.
 //
 class SymbolMap
@@ -826,6 +901,93 @@ public:
     inline void AssignElement(int i) { true_pair.AssignElement(i); false_pair.AssignElement(i); }
 
 };
+
+
+template<class Key, class Value>
+unsigned Map<Key, Value>::primes[] = {DEFAULT_HASH_SIZE, 101, 401, MAX_HASH_SIZE};
+
+
+template<class Key, class Value>
+void Map<Key, Value>::Rehash()
+{
+    hash_size = primes[++prime_index];
+
+    delete [] base;
+    base = (Element **) memset(new Element *[hash_size], 0, hash_size * sizeof(Element *));
+
+    for (int i = 0; i < symbol_pool.Length(); i++)
+    {
+        Element *element = symbol_pool[i];
+        unsigned k = element -> key -> HashCode() % hash_size;
+        element -> next = base[k];
+        base[k] = element;
+    }
+
+    return;
+}
+
+
+template<class Key, class Value>
+void Map<Key, Value>::Add(Key *key, Value *value)
+{
+    assert(key);
+
+    Element *element;
+    unsigned k = key -> HashCode() % hash_size;
+    for (element = base[k]; element; element = element -> next)
+    {
+        if (element -> key == key)
+            break;
+    }
+
+    //
+    // If this is a new element, add it to the map.
+    //
+    if (! element)
+    {
+        element = new Element();
+        element -> key = key;
+        element -> next = base[k];
+        base[k] = element;
+
+        symbol_pool.Next() = element;
+
+        //
+        // If the number of unique elements in the map exceeds 2 times
+        // the size of the base, and we have not yet reached the maximum
+        // allowable size for a base, reallocate a larger base and rehash
+        // the elements.
+        //
+        if (((unsigned) symbol_pool.Length() > (hash_size << 1)) && (hash_size < (unsigned) MAX_HASH_SIZE))
+            Rehash();
+    }
+    else
+    {
+	assert(false && "WARNING: Attempt to remap a key, unsupported operation !!!");
+    }
+
+    element -> value = value;
+
+    return;
+}
+
+
+template<class Key, class Value>
+Map<Key, Value>::Map(unsigned hash_size_)
+{
+    hash_size = (hash_size_ <= 0 ? 1 : hash_size_);
+
+    prime_index = -1;
+    do
+    {
+        if (hash_size < primes[prime_index + 1])
+            break;
+        prime_index++;
+    } while (primes[prime_index] < MAX_HASH_SIZE);
+
+    base = (Element **) memset(new Element *[hash_size], 0, hash_size * sizeof(Element *));
+}
+
 
 #ifdef HAVE_JIKES_NAMESPACE
 } // Close namespace Jikes block

@@ -42,6 +42,9 @@ class SymbolSet;
 class SymbolMap;
 class Zip;
 
+template <class Key, class Value>
+class Map;
+
 class PackageSymbol;
 
 class PathSymbol : public Symbol
@@ -859,10 +862,15 @@ public:
 
     VariableSymbol *FindOrInsertAssertVariable();
 
-    MethodSymbol *GetReadAccessMethod(MethodSymbol *);
+    //
+    // Get an accessor method in this class for the given symbol, with
+    // qualifying type defaulting to this type if unspecified
+    //
+    MethodSymbol *GetReadAccessMethod(MethodSymbol *, TypeSymbol * = NULL);
     MethodSymbol *GetReadAccessConstructor(MethodSymbol *);
-    MethodSymbol *GetReadAccessMethod(VariableSymbol *);
-    MethodSymbol *GetWriteAccessMethod(VariableSymbol *);
+    MethodSymbol *GetReadAccessMethod(VariableSymbol *, TypeSymbol * = NULL);
+    MethodSymbol *GetWriteAccessMethod(VariableSymbol *, TypeSymbol * = NULL);
+    MethodSymbol *GetWriteAccessFromReadAccess(MethodSymbol *);
 
     bool IsArray() { return (num_dimensions > 0); }
 
@@ -1142,13 +1150,13 @@ private:
     Tuple<MethodSymbol *> *private_access_methods,
                           *private_access_constructors;
 
-    inline void MapSymbolToReadMethod(Symbol *, MethodSymbol *);
-    inline MethodSymbol *ReadMethod(Symbol *);
-    inline void MapSymbolToWriteMethod(VariableSymbol *, MethodSymbol *);
-    inline MethodSymbol *WriteMethod(VariableSymbol *);
+    inline void MapSymbolToReadMethod(Symbol *, TypeSymbol *, MethodSymbol *);
+    inline MethodSymbol *ReadMethod(Symbol *, TypeSymbol *);
+    inline void MapSymbolToWriteMethod(VariableSymbol *, TypeSymbol *, MethodSymbol *);
+    inline MethodSymbol *WriteMethod(VariableSymbol *, TypeSymbol *);
 
-    SymbolMap *read_methods,
-              *write_methods;
+    Map<Symbol, Map<TypeSymbol, MethodSymbol> > *read_methods;
+    Map<VariableSymbol, Map<TypeSymbol, MethodSymbol> > *write_methods;
 
     //
     // For an accessible inner class the first element in this array

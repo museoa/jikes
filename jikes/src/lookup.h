@@ -291,6 +291,7 @@ public:
     virtual wchar_t *Name()   { return (wchar_t *) NULL; }
     virtual size_t NameLength() { return 0; }
     virtual NameSymbol *Identity() { return (NameSymbol *) NULL; }
+    inline unsigned HashCode();
 
     //
     // These cannot be inline without including symbol.h, because they
@@ -822,6 +823,12 @@ private:
 
     void Rehash();
 };
+
+
+inline unsigned Symbol::HashCode()
+{
+    return (unsigned) Identity() -> index;
+}
 
 #ifdef HAVE_JIKES_NAMESPACE
 } // Close namespace Jikes block

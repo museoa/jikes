@@ -72,6 +72,17 @@ public:
     void SetFlags(AccessFlags af)  { this -> access_flags = af.access_flags; }
     u2 Flags() { return access_flags; }
 
+    inline wchar_t *AccessString()
+    {
+        if (ACC_PUBLIC())
+            return StringConstant::US_public;
+        if (ACC_PROTECTED())
+            return StringConstant::US_protected;
+        if (ACC_PRIVATE())
+            return StringConstant::US_private;
+        return StringConstant::US_default;
+    }
+
     AccessFlags() : access_flags(0) {}
     AccessFlags(u2& _access_flags) : access_flags(_access_flags) {}
 

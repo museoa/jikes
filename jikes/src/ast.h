@@ -3436,12 +3436,15 @@ public:
     LexStream::TokenIndex right_parenthesis_token;
     AstClassBody *class_body_opt;
 
+    AstClassDeclaration *anonymous_declaration;
+
     AstClassInstanceCreationExpression(StoragePool *pool_) : pool(pool_),
                                                              arguments(NULL),
                                                              local_arguments_opt(NULL),
                                                              add_null_argument(false),
                                                              base_opt(NULL),
-                                                             class_body_opt(NULL)
+                                                             class_body_opt(NULL),
+                                                             anonymous_declaration(NULL)
     {
         Ast::kind = Ast::CLASS_CREATION;
         Ast::class_tag = Ast::EXPRESSION;

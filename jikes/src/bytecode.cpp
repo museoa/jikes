@@ -177,8 +177,14 @@ void ByteCode::CompileClass()
             int method_index = methods.NextIndex(); // index for method
 
             MethodSymbol *method_sym = unit_type -> PrivateAccessMethod(i);
+            AstMethodDeclaration *method = (method_sym -> method_or_constructor_declaration
+                                            ? method_sym -> method_or_constructor_declaration -> MethodDeclarationCast()
+                                            : (AstMethodDeclaration *) NULL);
             BeginMethod(method_index, method_sym);
-            GenerateAccessMethod(method_sym);
+            if (method)
+                EmitStatement(method -> method_body);
+            else
+                GenerateAccessMethod(method_sym);
             EndMethod(method_index, method_sym);
         }
     }
@@ -4088,13 +4094,17 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
         AstSimpleName *simple_name = method_call -> method -> SimpleNameCast();
         if (field)
         {
-            AstFieldAccess *sub_field_access = field -> base -> FieldAccessCast();
-            is_super = field -> base -> SuperExpressionCast() ||
-                (sub_field_access && sub_field_access -> IsSuperAccess());
+            //
+            // Note that field will be marked IsSuperAccess only in synthetic
+            // accessor methods.  Code that calls Foo.super.bar() in a nested
+            // class creates an accessor method:
+            // Foo.access$<num>(Foo $1) { $1.bar(); }
+            // but must use invokespecial instead of the regular invokevirtual.
+            //
+            is_super = (field -> base -> IsSuperExpression() ||
+                        field -> IsSuperAccess());
 
-            if (field -> base -> MethodInvocationCast())
-                 EmitMethodInvocation(field -> base -> MethodInvocationCast());
-            else EmitExpression(field -> base);
+            EmitExpression(field -> base);
         }
         else if (simple_name)
         {
@@ -4115,10 +4125,9 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
                 ? OP_INVOKESTATIC
                 : (is_super || msym -> ACC_PRIVATE())
                              ? OP_INVOKESPECIAL
-                             : type -> ACC_INTERFACE() ? OP_INVOKEINTERFACE : OP_INVOKEVIRTUAL);
+                             : type -> ACC_INTERFACE() ? OP_INVOKEINTERFACE
+                                                       : OP_INVOKEVIRTUAL);
     CompleteCall(msym, stack_words, type);
-
-    return;
 }
 
 

@@ -1240,9 +1240,9 @@ bool TypeSymbol::CanAccess(TypeSymbol *type)
 
 
 //
-// Given two types T and T2 in different packages, the type T has protected
-// access to T2 iff T or any class in which T is lexically enclosed is a
-// subclass of T2 or of some other type T3 that lexically encloses T2.
+// Given two types T and T2 in different packages, the type T can access
+// protected members of T2 iff T or any class in which T is lexically enclosed
+// is a subclass of T2 or of some other type T3 that lexically encloses T2.
 //
 // Of course, T2 and all its enclosing classes, if any, must have been declared
 // either public or protected, otherwise they could not be eligible as a
@@ -1252,14 +1252,15 @@ bool TypeSymbol::HasProtectedAccessTo(TypeSymbol *target_type)
 {
     assert(semantic_environment && ! target_type -> IsArray());
 
+    // Loop through T and enclosing classes.
     for (SemanticEnvironment *env = semantic_environment;
-         env != NULL;
-         env = env -> previous)
+         env; env = env -> previous)
     {
         TypeSymbol *main_type = env -> Type();
+        // Loop through T2 and enclosing classes.
         for (TypeSymbol *type = target_type; type; type = type -> owner -> TypeCast())
         {
-            if (main_type -> IsSubclass(type)) // then, check if we reached the type in question or one of its superclasses;
+            if (main_type -> IsSubclass(type))
                 return true;
         }
     }
@@ -1600,87 +1601,213 @@ assert(variable -> accessed_local == local);
 }
 
 
-inline void TypeSymbol::MapSymbolToReadMethod(Symbol *symbol, MethodSymbol *method)
+inline void TypeSymbol::MapSymbolToReadMethod(Symbol *symbol,
+                                              TypeSymbol *base_type,
+                                              MethodSymbol *method)
 {
     if (! read_methods)
-        read_methods = new SymbolMap();
-    read_methods -> Map(symbol, method);
+        read_methods = new Map<Symbol, Map<TypeSymbol, MethodSymbol> >(); // default size
+ 
+    Map<TypeSymbol, MethodSymbol> *map = read_methods -> Image(symbol);
+    if (! map)
+    {
+        map = new Map<TypeSymbol, MethodSymbol>(1); // small size
+        read_methods -> Add(symbol, map);
+    }
 
-    return;
+    map -> Add(base_type, method);
 }
 
-inline MethodSymbol *TypeSymbol::ReadMethod(Symbol *symbol)
+inline MethodSymbol *TypeSymbol::ReadMethod(Symbol *symbol,
+                                            TypeSymbol *base_type)
 {
-    return (MethodSymbol *) (read_methods ? read_methods -> Image(symbol) : NULL);
+    if (read_methods)
+    {
+        Map<TypeSymbol, MethodSymbol> *map = read_methods -> Image(symbol);
+        if (map)
+            return map -> Image(base_type);
+    }
+
+    return (MethodSymbol *) NULL;
 }
 
-inline void TypeSymbol::MapSymbolToWriteMethod(VariableSymbol *symbol, MethodSymbol *method)
+inline void TypeSymbol::MapSymbolToWriteMethod(VariableSymbol *symbol,
+                                               TypeSymbol *base_type,
+                                               MethodSymbol *method)
 {
     if (! write_methods)
-        write_methods = new SymbolMap();
-    write_methods -> Map(symbol, method);
+        write_methods = new Map<VariableSymbol, Map<TypeSymbol, MethodSymbol> >(); // default size
 
-    return;
+    Map<TypeSymbol, MethodSymbol> *map = write_methods -> Image(symbol);
+    if (! map)
+    {
+        map = new Map<TypeSymbol, MethodSymbol>(1); // small size
+        write_methods -> Add(symbol, map);
+    }
+ 
+    map -> Add(base_type, method);
 }
 
-inline MethodSymbol *TypeSymbol::WriteMethod(VariableSymbol *symbol)
+inline MethodSymbol *TypeSymbol::WriteMethod(VariableSymbol *symbol,
+                                             TypeSymbol *base_type)
 {
-    return (MethodSymbol *) (write_methods ? write_methods -> Image(symbol) : NULL);
+    if (write_methods)
+    {
+        Map<TypeSymbol, MethodSymbol> *map = write_methods -> Image(symbol);
+        if (map)
+            return map -> Image(base_type);
+    }
+
+    return (MethodSymbol *) NULL;
 }
 
-MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
+MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
+                                              TypeSymbol *base_type)
 {
-    TypeSymbol *this_type = (TypeSymbol *) this,
-               *containing_type = member -> containing_type;
+    assert(member -> Identity() != semantic_environment -> sem -> control.init_name_symbol); // accessing a method
 
-    assert((member -> ACC_PRIVATE() && this_type == containing_type) || (member -> ACC_PROTECTED() && this_type != containing_type));
+    TypeSymbol *containing_type = member -> containing_type;
+    if (! base_type)
+        base_type = this;
 
-    MethodSymbol *read_method = this_type -> ReadMethod(member);
+    assert((member -> ACC_PRIVATE() && this == containing_type) ||
+           (member -> ACC_PROTECTED() &&
+            (! semantic_environment -> sem -> ProtectedAccessCheck(base_type, containing_type))));
+
+    MethodSymbol *read_method = ReadMethod(member, base_type);
 
     if (! read_method)
     {
-        Semantic *sem = this_type -> semantic_environment -> sem;
-
+        //
+        // BaseType is the qualifying type of we are accessing.  If the method
+        // is private, BaseType should be this type, but for protected
+        // variables, BaseType should be a superclass or subclass of this type
+        // that is not in this package.
+        //
+        // To access
+        // "static Type name(Type1 p1, Type2 p2, ...) throws Exception;",
+        // expand to:
+        //
+        // /*synthetic*/ static Type access$<num>(Type1 p1, Type2 p2, ...)
+        // throws Exception
+        // {
+        //     return BaseType.name(p1, p2, ...);
+        // }
+        //
+        // If we are accessing
+        // "void name(Type1 p1, Type2 p2, ...) throws Throwable;",
+        // expand to:
+        //
+        // /*synthetic*/ static void access$<num>(BaseType $0, Type1 p1,
+        //                                        Type2 p2, ...)
+        // throws Throwable
+        // {
+        //     $0.name(p1, p2, ...);
+        //     return;
+        // }
+        //
+        Semantic *sem = semantic_environment -> sem;
         assert(sem);
 
         Control &control = sem -> control;
         StoragePool *ast_pool = sem -> compilation_unit -> ast_pool;
 
-        IntToWstring value(this_type -> NumPrivateAccessMethods());
+        IntToWstring value(NumPrivateAccessMethods());
 
         int length = 7 + value.Length(); // +7 for access$
         wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
         wcscpy(name, StringConstant::US__access_DOLLAR);
         wcscat(name, value.String());
 
-        BlockSymbol *block_symbol = new BlockSymbol(member -> NumFormalParameters() + 3);
+        //
+        // Use the location of the class name for all elements of this method.
+        //
+        LexStream::TokenIndex loc = LexStream::Badtoken();
+        if (declaration -> ClassDeclarationCast())
+            loc = ((AstClassDeclaration *) declaration) -> identifier_token;
+        else if (declaration -> ClassInstanceCreationExpressionCast())
+        {
+            assert(((AstClassInstanceCreationExpression *) declaration) -> class_body_opt);
+            loc = ((AstClassInstanceCreationExpression *) declaration) -> class_body_opt -> left_brace_token;
+        }
+        assert(loc != LexStream::Badtoken());
 
-        read_method = this_type -> InsertMethodSymbol(control.FindOrInsertName(name, length));
+        int parameter_count = member -> NumFormalParameters();
+
+        read_method = InsertMethodSymbol(control.FindOrInsertName(name, length));
         read_method -> MarkSynthetic();
         read_method -> SetType(member -> Type());
-        read_method -> SetContainingType(this_type);
+        read_method -> SetACC_STATIC();
+        read_method -> SetContainingType(this);
+
+        //
+        // A read access method for a method has a formal parameter per
+        // parameter of the member in question, plus one more if it is not
+        // static.
+        //
+        BlockSymbol *block_symbol = new BlockSymbol(parameter_count +
+                                                    (member -> ACC_STATIC() ? 0 : 1));
+        block_symbol -> max_variable_index = 0;
         read_method -> SetBlockSymbol(block_symbol);
 
         for (int j = 0; j < member -> NumThrows(); j++)
             read_method -> AddThrows(member -> Throws(j));
 
-        //
-        //
-        //
-        read_method -> SetACC_STATIC();
-        block_symbol -> max_variable_index = 0;
+        AstSimpleName *base = ast_pool -> GenSimpleName(loc);
 
-        if (! member -> ACC_STATIC())
+        AstFieldAccess::FieldAccessTag tag = AstFieldAccess::NONE;
+        if (! member -> ACC_STATIC() && member -> ACC_PROTECTED() &&
+            base_type == super)
         {
-            VariableSymbol *instance = block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
+            //
+            // Special case - for Outer.super.m() where m() is a protected
+            // instance method, we mark the field access as a super access, to
+            // make sure we emit invokespecial instead of invokevirtual in
+            // bytecode.cpp.  Notice that in this case,
+            // ((Super) Outer.this).m() is necessarily inaccessible,
+            // so we don't have to worry about a conflict in accessor methods
+            // for the same base type.
+            //
+            tag = AstFieldAccess::SUPER_TAG;
+        }
+
+        AstFieldAccess *field_access     = ast_pool -> GenFieldAccess(tag);
+        field_access -> base             = base;
+        field_access -> dot_token        = loc;
+        field_access -> identifier_token = loc;
+
+        AstMethodInvocation *method_invocation       = ast_pool -> GenMethodInvocation();
+        method_invocation -> method                  = field_access;
+        method_invocation -> left_parenthesis_token  = loc;
+        method_invocation -> right_parenthesis_token = loc;
+        method_invocation -> symbol                  = member;
+        method_invocation -> AllocateArguments(parameter_count);
+
+        AstMethodDeclarator *method_declarator       = ast_pool -> GenMethodDeclarator();
+        method_declarator -> identifier_token        = loc;
+        method_declarator -> left_parenthesis_token  = loc;
+        method_declarator -> right_parenthesis_token = loc;
+
+        if (member -> ACC_STATIC())
+        {
+            method_declarator -> AllocateFormalParameters(parameter_count);
+            base -> symbol = base_type;
+        }
+        else
+        {
+            method_declarator -> AllocateFormalParameters(parameter_count + 1);
+            NameSymbol *instance_name = control.MakeParameter(1);
+
+            VariableSymbol *instance = block_symbol -> InsertVariableSymbol(instance_name);
             instance -> MarkSynthetic();
-            instance -> SetType(this_type);
+            instance -> SetType(base_type);
             instance -> SetOwner(read_method);
             instance -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
             read_method -> AddFormalParameter(instance);
+            base -> symbol = instance;
         }
 
-        for (int i = 0; i < member -> NumFormalParameters(); i++)
+        for (int i = 0; i < parameter_count; i++)
         {
             VariableSymbol *parm = block_symbol -> InsertVariableSymbol(member -> FormalParameter(i) -> Identity());
             parm -> MarkSynthetic();
@@ -1690,14 +1817,53 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
             if (control.IsDoubleWordType(parm -> Type()))
                 block_symbol -> max_variable_index++;
             read_method -> AddFormalParameter(parm);
+
+            AstSimpleName *simple_name = ast_pool -> GenSimpleName(loc);
+            simple_name -> symbol      = parm;
+
+            method_invocation -> AddArgument(simple_name);
         }
         read_method -> SetSignature(control);
-        // A read access method has no throws clause !
 
-        this_type -> AddPrivateAccessMethod(read_method);
+        AstReturnStatement *return_statement = ast_pool -> GenReturnStatement();
+        return_statement -> return_token     = loc;
+        return_statement -> semicolon_token  = loc;
+        return_statement -> is_reachable     = true;
 
+        AstBlock *block            = ast_pool -> GenBlock();
+        block -> left_brace_token  = loc;
+        block -> right_brace_token = loc;
+        block -> block_symbol      = new BlockSymbol(0); // the symbol table associated with this block will contain no element
+        block -> is_reachable      = true;
+
+        if (member -> Type() == control.void_type)
+        {
+            AstExpressionStatement *expression_statement  = ast_pool -> GenExpressionStatement();
+            expression_statement -> expression            = method_invocation;
+            expression_statement -> semicolon_token_opt   = loc;
+            expression_statement -> is_reachable          = true;
+            expression_statement -> can_complete_normally = true;
+
+            block -> AllocateBlockStatements(2); // this block contains two statements
+            block -> AddStatement(expression_statement);
+        }
+        else
+        {
+            return_statement -> expression_opt = method_invocation;
+
+            block -> AllocateBlockStatements(1); // this block contains one statement
+        }
+        block -> AddStatement(return_statement);
+
+        AstMethodDeclaration *method_declaration  = ast_pool -> GenMethodDeclaration();
+        method_declaration -> method_symbol       = read_method;
+        method_declaration -> method_declarator   = method_declarator;
+        method_declaration -> method_body         = block;
+
+        read_method -> method_or_constructor_declaration = method_declaration;
         read_method -> accessed_member = member;
-        this_type -> MapSymbolToReadMethod(member, read_method);
+        MapSymbolToReadMethod(member, base_type, read_method);
+        AddPrivateAccessMethod(read_method);
 
         delete [] name;
     }
@@ -1707,24 +1873,81 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
 
 MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *member)
 {
-    TypeSymbol *this_type = (TypeSymbol *) this,
-               *containing_type = member -> containing_type;
+    assert(member -> Identity() == semantic_environment -> sem -> control.init_name_symbol); // accessing a constructor
+    TypeSymbol *containing_type = member -> containing_type;
+    if (! base_type)
+        base_type = this;
 
-    assert((member -> ACC_PRIVATE() && this_type == containing_type) || (member -> ACC_PROTECTED() && this_type != containing_type));
+    //
+    // Protected superconstructors are always accessible, and class instance
+    // creation expressions can only invoke a protected constructor in the
+    // current package, where an accessor is not needed.
+    //
+    assert(member -> ACC_PRIVATE() && this == containing_type);
 
-    MethodSymbol *read_method = this_type -> ReadMethod(member);
+    MethodSymbol *read_method = ReadMethod(member, base_type);
 
     if (! read_method)
     {
-        Semantic *sem = this_type -> semantic_environment -> sem;
+        //
+        // There are two cases for accessing a private constructor.  First, as
+        // a superclass:
+        //
+        // class Outer {
+        //     private Outer(Type1 $1, Type2 $2, ...) {}
+        //     static class Inner extends Outer {
+        //         Inner() { super(expr1, expr2, ...); }
+        //     }
+        // }
+        //
+        // We must create a synthetic place-holder class, and expand this to:
+        // (TODO: can someone come up with a way to do this without a
+        // placeholder class?)
+        //
+        // class Outer {
+        //     private Outer(Type1 $1, Type2 $2, ...) {}
+        //     /*synthetic*/ Outer(Outer$ $0, Type1 $1, Type2 $2, ...)
+        //     {
+        //         this($1, $2, ...);
+        //     }
+        // }
+        // /*synthetic*/ class Outer$ {} // placeholder only
+        // class Outer$Inner extends Outer {
+        //     Outer$Inner() { super((Outer$) null, expr1, expr2, ...); }
+        // }
+        //
+        // The other use is in class instance creation expressions (recall
+        // that the default constructor for a private class is private):
+        //
+        // class Outer {
+        //     private class Inner {}
+        //     Inner i = new Inner();
+        // }
+        //
+        // Here again, we create a place-holder class for now.  TODO:
+        // alternatives have been proposed, such as using a static generator
+        // method instead of an alternate constructor.
+        //
+        // class Outer {
+        //     Outer$Inner i = new Outer$Inner(this, (Outer$) null);
+        // }
+        // /*synthetic*/ class Outer$ {} // placeholder only
+        // class Outer$Inner {
+        //     private final Outer this$0;
+        //     private Outer$Inner(Outer $0) { super(); this$0 = $0; }
+        //     /*synthetic*/ Outer$Inner(Outer $0, Outer$ $1) { this($0); }
+        // }
+        // 
+        Semantic *sem = semantic_environment -> sem;
 
         assert(sem);
 
         Control &control = sem -> control;
+
         StoragePool *ast_pool = sem -> compilation_unit -> ast_pool;
 
-        IntToWstring value(this_type -> NumPrivateAccessConstructors());
-
+        IntToWstring value(NumPrivateAccessConstructors());
+        
         int length = 7 + value.Length(); // +7 for access$
         wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
         wcscpy(name, StringConstant::US__access_DOLLAR);
@@ -1732,21 +1955,20 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *member)
 
         BlockSymbol *block_symbol = new BlockSymbol(member -> NumFormalParameters() + 3);
 
-        read_method = this_type -> InsertMethodSymbol(control.FindOrInsertName(name, length));
+        read_method = InsertMethodSymbol(control.FindOrInsertName(name, length));
         read_method -> MarkSynthetic();
         read_method -> SetType(member -> Type());
-        read_method -> SetContainingType(this_type);
+        read_method -> SetContainingType(this);
         read_method -> SetBlockSymbol(block_symbol);
 
         for (int j = 0; j < member -> NumThrows(); j++)
             read_method -> AddThrows(member -> Throws(j));
 
         //
-        // A constructor in a local class already has a
-        // "LocalConstructor()" associated with it that can be used as a
-        // read access method.
+        // A constructor in a local class already has a "LocalConstructor()"
+        // associated with it that can be used as a read access method.
         //
-        assert(! this_type -> IsLocal());
+        assert(! IsLocal());
 
         //
         //
@@ -1762,16 +1984,15 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *member)
         LexStream::TokenIndex loc = declarator -> identifier_token;
 
         //
-        // Create a new anonymous type in order to create a unique
-        // substitute constructor.
+        // Create a new anonymous type in order to create a unique substitute
+        // constructor.
         //
+        AstSimpleName *ast_type = ast_pool -> GenSimpleName(loc);
+ 
         AstClassInstanceCreationExpression *class_creation = ast_pool -> GenClassInstanceCreationExpression();
         class_creation -> base_opt      = NULL;
         class_creation -> dot_token_opt = 0;
         class_creation -> new_token = loc;
-
-        AstSimpleName *ast_type = ast_pool -> GenSimpleName(loc);
-
         class_creation -> class_type = ast_pool -> GenTypeExpression(ast_type);
         class_creation -> left_parenthesis_token  = loc;
         class_creation -> right_parenthesis_token = loc;
@@ -1791,8 +2012,9 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *member)
         method_declarator -> identifier_token        = loc;
         method_declarator -> left_parenthesis_token  = declarator -> LeftToken();
         method_declarator -> right_parenthesis_token = declarator -> RightToken();
-
+        
         AstThisCall *this_call = ast_pool -> GenThisCall();
+        this_call -> base_opt                = NULL;
         this_call -> this_token              = loc;
         this_call -> left_parenthesis_token  = loc;
         this_call -> right_parenthesis_token = loc;
@@ -1800,11 +2022,11 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *member)
         this_call -> symbol = member;
 
         VariableSymbol *this0_variable = NULL;
-        if (this_type -> IsInner())
+        if (IsInner())
         {
             this0_variable = block_symbol -> InsertVariableSymbol(control.this0_name_symbol);
             this0_variable -> MarkSynthetic();
-            this0_variable -> SetType(this_type -> ContainingType());
+            this0_variable -> SetType(ContainingType());
             this0_variable -> SetOwner(read_method);
             this0_variable -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
         }
@@ -1846,7 +2068,6 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *member)
             this_call -> AddArgument(simple_name);
         }
         read_method -> SetSignature(control, this0_variable);
-        // A read access method has no throws clause !
 
         AstReturnStatement *return_statement = ast_pool -> GenReturnStatement();
         return_statement -> return_token = loc;
@@ -1877,10 +2098,10 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *member)
         constructor_declaration -> constructor_symbol = read_method;
         read_method -> method_or_constructor_declaration = constructor_declaration;
 
-        this_type -> AddPrivateAccessConstructor(read_method);
+        AddPrivateAccessConstructor(read_method);
 
         read_method -> accessed_member = member;
-        this_type -> MapSymbolToReadMethod(member, read_method);
+        MapSymbolToReadMethod(member, base_type, read_method);
 
         delete [] name;
     }
@@ -1889,61 +2110,139 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *member)
 }
 
 
-MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member)
+MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member,
+                                              TypeSymbol *base_type)
 {
-    TypeSymbol *this_type = (TypeSymbol *) this,
-               *containing_type = member -> owner -> TypeCast();
+    TypeSymbol *containing_type = member -> owner -> TypeCast();
+    if (! base_type)
+        base_type = this;        
 
-    assert((member -> ACC_PRIVATE() && this_type == containing_type) || (member -> ACC_PROTECTED() && this_type != containing_type));
+    assert((member -> ACC_PRIVATE() && this == containing_type) ||
+           (member -> ACC_PROTECTED() &&
+            (! semantic_environment -> sem -> ProtectedAccessCheck(base_type, containing_type))));
 
-
-    MethodSymbol *read_method = this_type -> ReadMethod(member);
+    MethodSymbol *read_method = ReadMethod(member, base_type);
 
     if (! read_method)
     {
-        Semantic *sem = this_type -> semantic_environment -> sem;
-
+        //
+        // BaseType is the qualifying type of we are accessing.  If the
+        // variable is private, BaseType should be this type, but for
+        // protected variables, BaseType should be a superclass or subclass
+        // of this type that is not in this package.
+        //
+        // If we are accessing "static Type name;", expand to:
+        //
+        // /*synthetic*/ static Type access$<num>()
+        // {
+        //     return BaseType.name;
+        // }
+        //
+        // If we are accessing "Type name;", expand to:
+        //
+        // /*synthetic*/ static Type access$<num>(BaseType $1)
+        // {
+        //     return $1.name;
+        // }
+        //
+        Semantic *sem = semantic_environment -> sem;
         assert(sem);
 
         Control &control = sem -> control;
+        StoragePool *ast_pool = sem -> compilation_unit -> ast_pool;
 
-        IntToWstring value(this_type -> NumPrivateAccessMethods());
+        IntToWstring value(NumPrivateAccessMethods());
 
         int length = 7 + value.Length(); // +7 for access$
         wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
         wcscpy(name, StringConstant::US__access_DOLLAR);
         wcscat(name, value.String());
 
-        read_method = this_type -> InsertMethodSymbol(control.FindOrInsertName(name, length));
+        //
+        // Use the location of the class name for all elements of this method
+        //
+        LexStream::TokenIndex loc = LexStream::Badtoken();
+        if (declaration -> ClassDeclarationCast())
+            loc = ((AstClassDeclaration *) declaration) -> identifier_token;
+        else if (declaration -> ClassInstanceCreationExpressionCast())
+        {
+            assert(((AstClassInstanceCreationExpression *) declaration) -> class_body_opt);
+            loc = ((AstClassInstanceCreationExpression *) declaration) -> class_body_opt -> left_brace_token;
+        }
+        assert(loc != LexStream::Badtoken());
+
+        read_method = InsertMethodSymbol(control.FindOrInsertName(name, length));
         read_method -> MarkSynthetic();
         read_method -> SetType(member -> Type());
         read_method -> SetACC_STATIC();
-        read_method -> SetContainingType(this_type);
+        read_method -> SetContainingType(this);
 
         //
         // A read access method for a field has 1 formal parameter if the
         // member in question is not static
         //
-        BlockSymbol *block_symbol = new BlockSymbol(3);
+        BlockSymbol *block_symbol = new BlockSymbol(member -> ACC_STATIC() ? 0 : 1);
         block_symbol -> max_variable_index = 0;
         read_method -> SetBlockSymbol(block_symbol);
 
-        if (! member -> ACC_STATIC())
+        AstSimpleName *base = ast_pool -> GenSimpleName(loc);
+
+        AstFieldAccess *field_access     = ast_pool -> GenFieldAccess();
+        field_access -> base             = base;
+        field_access -> dot_token        = loc;
+        field_access -> identifier_token = loc;
+        field_access -> symbol           = member;
+
+        AstMethodDeclarator *method_declarator       = ast_pool -> GenMethodDeclarator();
+        method_declarator -> identifier_token        = loc;
+        method_declarator -> left_parenthesis_token  = loc;
+        method_declarator -> right_parenthesis_token = loc;
+
+        if (member -> ACC_STATIC())
         {
-            VariableSymbol *instance = block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
+            base -> symbol = base_type;
+        }
+        else
+        {
+            method_declarator -> AllocateFormalParameters(1);
+
+            NameSymbol *instance_name = control.MakeParameter(1);
+
+            VariableSymbol *instance = block_symbol -> InsertVariableSymbol(instance_name);
             instance -> MarkSynthetic();
-            instance -> SetType(this_type);
+            instance -> SetType(base_type);
             instance -> SetOwner(read_method);
             instance -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
             read_method -> AddFormalParameter(instance);
+            base -> symbol = instance;
         }
 
-        read_method -> SetSignature(control);
         // A read access method has no throws clause !
+        read_method -> SetSignature(control);
 
+        AstReturnStatement *return_statement = ast_pool -> GenReturnStatement();
+        return_statement -> return_token     = loc;
+        return_statement -> expression_opt   = field_access;
+        return_statement -> semicolon_token  = loc;
+        return_statement -> is_reachable     = true;
+
+        AstBlock *block            = ast_pool -> GenBlock();
+        block -> left_brace_token  = loc;
+        block -> right_brace_token = loc;
+        block -> block_symbol      = new BlockSymbol(0); // the symbol table associated with this block will contain no element
+        block -> is_reachable      = true;
+        block -> AllocateBlockStatements(1); // this block contains one statement
+        block -> AddStatement(return_statement);
+
+        AstMethodDeclaration *method_declaration = ast_pool -> GenMethodDeclaration();
+        method_declaration -> method_symbol      = read_method;
+        method_declaration -> method_declarator  = method_declarator;
+        method_declaration -> method_body        = block;
+
+        read_method -> method_or_constructor_declaration = method_declaration;
         read_method -> accessed_member = member;
-        this_type -> MapSymbolToReadMethod(member, read_method);
-        this_type -> AddPrivateAccessMethod(read_method);
+        MapSymbolToReadMethod(member, base_type, read_method);
+        AddPrivateAccessMethod(read_method);
 
         delete [] name;
     }
@@ -1952,78 +2251,182 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member)
 }
 
 
-MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member)
+MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
+                                               TypeSymbol *base_type)
 {
-    TypeSymbol *this_type = (TypeSymbol *) this,
-               *containing_type = member -> owner -> TypeCast();
+    TypeSymbol *containing_type = member -> owner -> TypeCast();
+    if (! base_type)
+        base_type = this;
 
-    assert((member -> ACC_PRIVATE() && this_type == containing_type) || (member -> ACC_PROTECTED() && this_type != containing_type));
+    assert((member -> ACC_PRIVATE() && this == containing_type) ||
+           (member -> ACC_PROTECTED() &&
+            (! semantic_environment -> sem -> ProtectedAccessCheck(base_type, containing_type))));
 
-    MethodSymbol *write_method = this_type -> WriteMethod(member);
+    MethodSymbol *write_method = WriteMethod(member, base_type);
 
     if (! write_method)
     {
-        Semantic *sem = this_type -> semantic_environment -> sem;
-
+        //
+        // BaseType is the qualifying type of we are accessing.  If the
+        // variable is private, BaseType should be this type, but for
+        // protected variables, BaseType should be a superclass or subclass
+        // of this type that is not in this package.
+        //
+        // If we are accessing "static Type name;", expand to:
+        //
+        // /*synthetic*/ static void access$<num>(Type name)
+        // {
+        //     BaseType.name = name;
+        //     return;
+        // }
+        //
+        // If we are accessing "Type name;", expand to:
+        //
+        // /*synthetic*/ static void access$<num>(BaseType $1, Type name)
+        // {
+        //     $1.name = name;
+        //     return;
+        // }
+        //
+        Semantic *sem = semantic_environment -> sem;
         assert(sem);
 
         Control &control = sem -> control;
+        StoragePool *ast_pool = sem -> compilation_unit -> ast_pool;
 
-        IntToWstring value(this_type -> NumPrivateAccessMethods());
+        IntToWstring value(NumPrivateAccessMethods());
 
         int length = 7 + value.Length(); // +7 for access$
         wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
         wcscpy(name, StringConstant::US__access_DOLLAR);
         wcscat(name, value.String());
 
-        write_method = this_type -> InsertMethodSymbol(control.FindOrInsertName(name, length));
+        //
+        // Use the location of the class name for all elements of this method
+        //
+        LexStream::TokenIndex loc = LexStream::Badtoken();
+        if (declaration -> ClassDeclarationCast())
+            loc = ((AstClassDeclaration *) declaration) -> identifier_token;
+        else if (declaration -> ClassInstanceCreationExpressionCast())
+        {
+            assert(((AstClassInstanceCreationExpression *) declaration) -> class_body_opt);
+            loc = ((AstClassInstanceCreationExpression *) declaration) -> class_body_opt -> left_brace_token;
+        }
+        assert(loc != LexStream::Badtoken());
+
+        write_method = InsertMethodSymbol(control.FindOrInsertName(name, length));
         write_method -> MarkSynthetic();
         write_method -> SetType(sem -> control.void_type);
         write_method -> SetACC_STATIC();
-        write_method -> SetContainingType(this_type);
+        write_method -> SetContainingType(this);
 
-        BlockSymbol *block_symbol = new BlockSymbol(3);
+        BlockSymbol *block_symbol = new BlockSymbol(member -> ACC_STATIC() ? 1 : 2);
         block_symbol -> max_variable_index = 0;
         write_method -> SetBlockSymbol(block_symbol);
 
-        //
-        // A write access method takes one or two arguments. The first is the
-        // instance, $1, of the object in which to do the writing if the
-        // member in question is not static. The second is a parameter of the
-        // same type as the member. For a member named "m", the body of the
-        // write access method will consist of the single statement:
-        //
-        //    $1.m = m;
-        //
-        if (! member -> ACC_STATIC())
+        AstSimpleName *base = ast_pool -> GenSimpleName(loc);
+
+        AstFieldAccess *left_hand_side     = ast_pool -> GenFieldAccess();
+        left_hand_side -> base             = base;
+        left_hand_side -> dot_token        = loc;
+        left_hand_side -> identifier_token = loc;
+        left_hand_side -> symbol           = member;
+
+        AstMethodDeclarator *method_declarator       = ast_pool -> GenMethodDeclarator();
+        method_declarator -> identifier_token        = loc;
+        method_declarator -> left_parenthesis_token  = loc;
+        method_declarator -> right_parenthesis_token = loc;
+
+        if (member -> ACC_STATIC())
         {
-            VariableSymbol *instance = block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
+            method_declarator -> AllocateFormalParameters(1);
+
+            base -> symbol = base_type;
+        }
+        else
+        {
+            method_declarator -> AllocateFormalParameters(2);
+
+            NameSymbol *instance_name = control.MakeParameter(1);
+                
+            VariableSymbol *instance = block_symbol -> InsertVariableSymbol(instance_name);
             instance -> MarkSynthetic();
-            instance -> SetType(this_type);
+            instance -> SetType(base_type);
             instance -> SetOwner(write_method);
             instance -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
             write_method -> AddFormalParameter(instance);
+            base -> symbol = instance;
         }
 
         VariableSymbol *symbol = block_symbol -> InsertVariableSymbol(member -> Identity());
         symbol -> MarkSynthetic();
         symbol -> SetType(member -> Type());
+        symbol -> SetOwner(write_method);
         symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+
         if (control.IsDoubleWordType(member -> Type()))
             block_symbol -> max_variable_index++;
         write_method -> AddFormalParameter(symbol);
-
-        write_method -> SetSignature(control);
         // A write access method has no throws clause !
+        write_method -> SetSignature(control);
 
+        AstSimpleName *simple_name = ast_pool -> GenSimpleName(loc);
+        simple_name -> symbol      = symbol;
+
+        AstAssignmentExpression *assignment_expression = ast_pool -> GenAssignmentExpression(AstAssignmentExpression::SIMPLE_EQUAL, loc);
+        assignment_expression -> left_hand_side        = left_hand_side;
+        assignment_expression -> expression            = simple_name;
+
+        AstExpressionStatement *expression_statement  = ast_pool -> GenExpressionStatement();
+        expression_statement -> expression            = assignment_expression;
+        expression_statement -> semicolon_token_opt   = loc;
+        expression_statement -> is_reachable          = true;
+        expression_statement -> can_complete_normally = true;
+
+        AstReturnStatement *return_statement = ast_pool -> GenReturnStatement();
+        return_statement -> return_token     = loc;
+        return_statement -> semicolon_token  = loc;
+        return_statement -> is_reachable     = true;
+
+        AstBlock *block            = ast_pool -> GenBlock();
+        block -> left_brace_token  = loc;
+        block -> right_brace_token = loc;
+        block -> block_symbol      = new BlockSymbol(0); // the symbol table associated with this block will contain no element
+        block -> is_reachable      = true;
+        block -> AllocateBlockStatements(2); // this block contains two statements
+        block -> AddStatement(expression_statement);
+        block -> AddStatement(return_statement);
+
+        AstMethodDeclaration *method_declaration  = ast_pool -> GenMethodDeclaration();
+        method_declaration -> method_symbol       = write_method;
+        method_declaration -> method_declarator   = method_declarator;
+        method_declaration -> method_body         = block;
+
+        write_method -> method_or_constructor_declaration = method_declaration;
         write_method -> accessed_member = member;
-        this_type -> MapSymbolToWriteMethod(member, write_method);
-        this_type -> AddPrivateAccessMethod(write_method);
+        MapSymbolToWriteMethod(member, base_type, write_method);
+        AddPrivateAccessMethod(write_method);
 
         delete [] name;
     }
 
     return write_method;
+}
+
+
+MethodSymbol *TypeSymbol::GetWriteAccessFromReadAccess(MethodSymbol *read_method)
+{
+    assert(read_method && read_method -> IsSynthetic() &&
+           read_method -> containing_type == this);
+    VariableSymbol *variable = (VariableSymbol *) read_method -> accessed_member;
+    assert(variable);
+
+    AstMethodDeclaration *method_declaration = (AstMethodDeclaration *) read_method -> method_or_constructor_declaration;
+    AstBlock *block = (AstBlock *) method_declaration -> method_body;
+    AstReturnStatement *return_statement = (AstReturnStatement *) block -> Statement(0);
+    AstFieldAccess *field_access = (AstFieldAccess *) return_statement -> expression_opt;
+
+    return GetWriteAccessMethod(variable, field_access -> base -> Type());
 }
 
 #ifdef HAVE_JIKES_NAMESPACE

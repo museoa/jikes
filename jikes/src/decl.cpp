@@ -824,9 +824,7 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
         {
              ReportSemError(SemanticError::OBJECT_WITH_SUPER_TYPE,
                             class_declaration -> super_opt -> LeftToken(),
-                            class_declaration -> super_opt -> RightToken(),
-                            this_type -> ContainingPackage() -> PackageName(),
-                            this_type -> ExternalName());
+                            class_declaration -> super_opt -> RightToken());
              this_type -> super = NULL;
         }
         else if (this_type -> super -> ACC_INTERFACE())
@@ -2705,9 +2703,9 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
                 if (field_declaration -> VariableModifier(i) -> kind == Ast::STATIC)
                     modifier = field_declaration -> VariableModifier(i);
             }
-            
+
             assert(modifier);
-            
+
             ReportSemError(SemanticError::STATIC_FIELD_IN_INNER_CLASS_NOT_FINAL,
                            modifier -> modifier_kind_token,
                            modifier -> modifier_kind_token,
