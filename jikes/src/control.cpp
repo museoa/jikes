@@ -269,7 +269,10 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
     //
     //
     if (system_semantic -> NumErrors() > 0)
+    {
         system_semantic -> PrintMessages();
+        return_code = system_semantic -> return_code;
+    }
     else
     {
         system_semantic -> PrintMessages(); // there might be some warnings we want to print...
