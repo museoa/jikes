@@ -493,6 +493,7 @@ public:
 
     TypeSymbol *FindType(char *, int);
     void InsertType(TypeSymbol *);
+    void SetEmpty();
 
 private:
     Tuple<TypeSymbol *> symbol_pool;

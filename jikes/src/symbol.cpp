@@ -360,7 +360,8 @@ void TypeSymbol::SetSignature(Control &control)
 
         delete [] type_signature;
 
-        control.type_table.InsertType((TypeSymbol *) this);
+        if (! (this -> Anonymous() || this -> IsLocal()))
+            control.type_table.InsertType((TypeSymbol *) this);
     }
 
     return;
@@ -1679,13 +1680,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
 
             class_creation -> class_body_opt = class_body;
 
-            //
-            // We artificially enter a static region for the creation of this anonymous type
-            // to guarantee that it is a top-level class that does not depend on its surrounding.
-            //
-            sem -> EnterStaticRegion();
             TypeSymbol *anonymous_type = sem -> GetAnonymousType(class_creation, control.Object());
-            sem -> ExitStaticRegion();
 
             //
             //

@@ -222,7 +222,7 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                     classpath[k] = Code::ToASCII(classpath[k]);
 #endif
             }
-            else if (strcmp(arguments.argv[i], "-depend") == 0)
+            else if (strcmp(arguments.argv[i], "-depend") == 0 || strcmp(arguments.argv[i], "-Xdepend") == 0)
                  depend = true;
             else if (strcmp(arguments.argv[i],"-verbose") == 0)
                  verbose = true;

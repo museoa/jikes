@@ -60,6 +60,7 @@ int main(int argc, char *argv[])
                 "-nowrite           do not write any class files\n"
                 "-O                 do not write LineNumberTable\n"
                 "-verbose           list files read and written\n"
+                "-Xdepend           recompile all used classes\n"
                 "-Xstdout           redirect output listings to stdout\n"
                 "+1.0               recognize only 1.0.2 language\n"
                 "++                 compile in incremental mode\n"
@@ -74,9 +75,10 @@ int main(int argc, char *argv[])
                 "+Td...d            set value of tab d...d spaces; each d is a decimal digit\n"
                 "+U                 do full dependence check including Zip and Jar files\n"
                 "+Z                 treat cautions as errors\n"
-                "\nVersion 1.05 (16 Sep 99)"
+                "\nVersion 1.06 (17 Sep 99)"
                 " by Philippe Charles and David Shields, IBM Research.\n"
-                "Please report problems to Jikes Project at http://ibm.com/developerworks/opensource.\n");
+                "Please report problems to:\n"
+                "  Jikes Project at http://ibm.com/developerworks/opensource\n");
 
         return_code = 1;
     }

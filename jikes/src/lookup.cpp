@@ -396,6 +396,7 @@ TypeLookupTable::TypeLookupTable(int estimate) : symbol_pool(estimate),
     base = (TypeSymbol **) memset(new TypeSymbol *[hash_size], 0, hash_size * sizeof(TypeSymbol *));
 }
 
+
 TypeLookupTable::~TypeLookupTable()
 {
 /*
@@ -456,8 +457,11 @@ TypeSymbol *TypeLookupTable::FindType(char *str, int len)
 {
     unsigned hash_address = Hash(str, len);
     int k = hash_address % hash_size;
+
     for (TypeSymbol *type = base[k]; type; type = type -> next_type)
     {
+        assert(type -> fully_qualified_name);
+
         Utf8LiteralValue *fully_qualified_name = type -> fully_qualified_name;
         if (len == fully_qualified_name -> length && memcmp(fully_qualified_name -> value, str, len * sizeof(char)) == 0)
             return type;
@@ -469,6 +473,8 @@ TypeSymbol *TypeLookupTable::FindType(char *str, int len)
 
 void TypeLookupTable::InsertType(TypeSymbol *type)
 {
+    assert(type && type -> fully_qualified_name);
+
     unsigned hash_address = Hash(type -> fully_qualified_name -> value, type -> fully_qualified_name -> length);
     int k = hash_address % hash_size;
 
@@ -493,6 +499,16 @@ void TypeLookupTable::InsertType(TypeSymbol *type)
         Rehash();
 
     return;
+}
+
+
+//
+// Remove all elements from the table.
+//
+void TypeLookupTable::SetEmpty()
+{
+    symbol_pool.Reset();
+    (void) memset(base, 0, hash_size * sizeof(TypeSymbol *));
 }
 
 

@@ -187,8 +187,6 @@ void Semantic::ProcessTypeNames()
 
                         type -> MarkSourceNoLongerPending();
                         type -> semantic_environment = new SemanticEnvironment((Semantic *) this, type, NULL);
-                        type -> supertypes_closure = new SymbolSet;
-                        type -> subtypes = new SymbolSet;
                         type -> declaration = class_declaration;
                         type -> SetFlags(ProcessClassModifiers(class_declaration));
                         //
@@ -246,8 +244,6 @@ void Semantic::ProcessTypeNames()
 
                         type -> MarkSourceNoLongerPending();
                         type -> semantic_environment = new SemanticEnvironment((Semantic *) this, type, NULL);
-                        type -> supertypes_closure = new SymbolSet;
-                        type -> subtypes = new SymbolSet;
                         type -> declaration = interface_declaration;
                         type -> file_symbol = source_file_symbol;
                         type -> SetFlags(ProcessInterfaceModifiers(interface_declaration));
