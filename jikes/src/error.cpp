@@ -735,15 +735,16 @@ bool SemanticError::ProcessWarningSwitch(const char* image)
 {
     StaticInitializer();
 
-    // +Pall turns everything on.
-    bool override = (strcmp(image, "all") == 0);
-
+    // Is this +P<name> or +Pno-<name>?
     bool enable = true;
     if (strncmp(image, "no-", 3) == 0)
     {
         image += 3;
         enable = false;
     }
+
+    // +P[no-]all turns everything on/off.
+    bool override = (strcmp(image, "all") == 0);
 
     bool switch_recognized = false;
     for (unsigned g = 0; g < message_groups.Length(); ++g)

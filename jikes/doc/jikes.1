@@ -319,8 +319,8 @@ naming conventions;
 import statements;
 and \fBunused-package-imports\fP, which warns about unused package
 import statements.
-The option \fB+Pall\fP enables all available groups of named warnings,
-but not the anonymous group controlled by \fB+P\fP.
+In addition, the pseudo-group \fBall\fP stands for all named groups
+of warnings, but not the anonymous group controlled by \fB+P\fP.
 Multiple \fB\+P\fP options are cumulative in effect. For
 example, to get all pedantic warnings except modifier ordering, use
 \fB\+P \+Pall \+Pno-modifier-order\fP. To get just warnings about redundant

@@ -1,5 +1,12 @@
 2004-02-29  Elliott Hughes  <enh@acm.org>
 
+	* src/error.cpp: Also allow +Pno-all to turn off all named groups. This
+	is useful to turn off any named groups enabled by default, without
+	having to know what they are or explicitly list them.
+	* doc/jikes.1: Better document new +Pno-all option.
+
+2004-02-29  Elliott Hughes  <enh@acm.org>
+
 	* src/error.cpp: Fix "jikes --help" to show which +P groups are enabled
 	by default, rather than misleadingly trying (and failing) to show what
 	bare +P does. This whole area is something of a mess, so I expect to
