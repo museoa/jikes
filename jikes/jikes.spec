@@ -8,7 +8,7 @@ Packager: David Shields (shields@watson.ibm.com)
 Prefix: /usr
 Provides: jikes
 Release: 1
-Source: http://www10.software.ibm.com/developerworks/opensource/jikes/project/download/jikes-%{version}_tar.gz 
+Source: http://www10.software.ibm.com/developerworks/opensource/jikes/project/pub/jikes-%{version}.tar.gz 
 URL: http://ibm.com/developerworks/opensource
 Version: %{version}
 
