@@ -27,18 +27,7 @@ void AstCompilationUnit::Unparse(LexStream& lex_stream, char *directory)
     char *suffix = "";
     char *out_file_name = strcat3(directory, in_file_name, suffix);
     // Create the directory if necessary
-    for (int i=strlen(out_file_name); i>=0; i--) {
-       if (out_file_name[i] == U_SLASH) {
-           out_file_name[i] = U_NULL;
-           if (! SystemIsDirectory(out_file_name))
-           {
-               Ostream() << "making directory " << out_file_name << endl;
-               SystemMkdirhier(out_file_name);
-           }
-           out_file_name[i] = U_SLASH;
-           break;
-       }
-    }
+    SystemMkdirhierForFile(out_file_name);
     ofstream os_base(out_file_name);
     if (!os_base)
     {

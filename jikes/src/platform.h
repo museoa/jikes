@@ -330,6 +330,7 @@ extern int SystemIsDirectory(char *name);
 extern char PathSeparator();
 extern int SystemMkdir(char *);
 extern int SystemMkdirhier(char *);
+extern int SystemMkdirhierForFile(char *);
 
 extern char * strcat3(const char *, const char *, const char *);
 extern char * wstring2string(wchar_t * in);

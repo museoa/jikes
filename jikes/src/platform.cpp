@@ -253,6 +253,27 @@ int SystemMkdirhier(char *dirname)
 }
 
 
+// Create the specified directory and also any missing parent directories.
+int SystemMkdirhierForFile(char *filename)
+{
+    for (int i = strlen(filename); i>=0; i--)
+    {
+        if (filename[i] == U_SLASH)
+        {
+            int result = 0;
+            filename[i] = U_NULL;
+            if (! ::SystemIsDirectory(filename))
+            {
+                Ostream() << "making directory " << filename << "\n";
+                result = ::SystemMkdirhier(filename);
+            }
+            filename[i] = U_SLASH;
+            return result;
+        }
+    }
+    return 0;
+}
+
 
 // FIXME: These next two should definitely be inlined; but when I
 // add the "inline" keyword , I get linker problems.

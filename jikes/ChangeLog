@@ -1,3 +1,10 @@
+2001-10-16  Michael Ernst  <mernst@alum.mit.edu>
+
+	* src/platform.h: Add prototype SystemMkdirhierForFile.
+	* src/platform.cpp (SystemMkdirhierForFile): Add definition.
+	* src/unparse.cpp (Unparse): Use SystemMkdirhierForFile - patch
+	199.
+
 2001-10-15  Michael Ernst  <mernst@alum.mit.edu>
 
 	* src/platform.h: Fix typos, and reindent comments to 80 columns -
