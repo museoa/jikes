@@ -1,3 +1,10 @@
+2004-06-21  Elliott Hughes  <enh@acm.org>
+
+	* src/decl.cpp: bug #3986; don't compile covariant return types
+	in .java files when -source is less than 1.5. This breaks
+	the Jacks tests 13.1-covariance-[123], but I think they're wrong
+	and should only be run with "-source 1.5".
+
 2004-06-20  Elliott Hughes  <enh@acm.org>
 
 	* src/system.cpp: bug #3934 and bug #3989; don't try to create

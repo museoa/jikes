@@ -2495,13 +2495,16 @@ void Semantic::CheckMethodOverride(MethodSymbol* method,
         if (hidden_method -> Type() -> IsSubtype(control.Object()) &&
             method -> Type() -> IsSubtype(hidden_method -> Type()))
         {
-            // Silent acceptance. TODO: Should we add a pedantic warning?
-            // This must work, because the 1.5 library (including
+            // Silent acceptance for .class files only.
+            // They must work, because the 1.5 library (including
             // System.out.println("")) is covariant, even for -source 1.4!
-//              if (control.option.source < JikesOption::SDK1_5)
-//                  ReportSemError(SemanticError::COVARIANCE_UNSUPPORTED,
-//                                 left_tok, right_tok, method -> Header(),
-//                                 hidden_method -> Header());
+            if (control.option.source < JikesOption::SDK1_5 &&
+                ! ThisType() -> file_symbol -> IsClassOnly())
+            {
+                ReportSemError(SemanticError::COVARIANCE_UNSUPPORTED,
+                               left_tok, right_tok, method -> Header(),
+                               hidden_method -> Header());
+            }
         }
         else if (method -> containing_type == base_type)
         {
