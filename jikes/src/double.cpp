@@ -911,16 +911,15 @@ bool IEEEfloat::operator< (const IEEEfloat op) const
 #else
     if (IsNaN() || op.IsNaN())
         return false; // NaNs are unordered
-    if (IsZero())
-        return op.IsZero() ? false : op.IsPositive();
-    if (op.IsZero())
-        return IsNegative();
-    if (IsInfinite())
-        return IsPositive() ? false : ! op.IsNegativeInfinity();
-    if (op.IsInfinite())
-        return op.IsPositive();
-    // Exploit fact that remaining IEEE floating point sort as signed ints
-    return value.iword < op.value.iword;
+    if (IsZero() && op.IsZero())
+        return false;
+    // Exploit fact that all other IEEE floating point numbers sort like
+    // ints after worrying about sign.
+    if (IsNegative())
+        return op.IsPositive() ||
+            (value.word & ABS_BITS) > (op.value.word & ABS_BITS);
+    return op.IsPositive() &&
+        (value.word & ABS_BITS) < (op.value.word & ABS_BITS);
 #endif
 }
 
@@ -942,16 +941,15 @@ bool IEEEfloat::operator> (const IEEEfloat op) const
 #else
     if (IsNaN() || op.IsNaN())
         return false; // NaNs are unordered.
-    if (IsZero())
-        return op.IsZero() ? false : op.IsNegative();
-    if (op.IsZero())
-        return IsPositive();
-    if (IsInfinite())
-        return IsPositive() ? ! op.IsPositiveInfinity() : false;
-    if (op.IsInfinite())
-        return op.IsNegative();
-    // Exploit fact that remaining IEEE floating point sort as signed ints
-    return value.iword > op.value.iword;
+    if (IsZero() && op.IsZero())
+        return false;
+    // Exploit fact that all other IEEE floating point numbers sort like
+    // ints after worrying about sign.
+    if (IsPositive())
+        return op.IsNegative() ||
+            (value.word & ABS_BITS) > (op.value.word & ABS_BITS);
+    return op.IsNegative() &&
+        (value.word & ABS_BITS) < (op.value.word & ABS_BITS);
 #endif
 }
 
@@ -2371,17 +2369,16 @@ bool IEEEdouble::operator< (const IEEEdouble op) const
 #else
     if (IsNaN() || op.IsNaN())
         return false; // NaNs are unordered
-    if (IsZero())
-        return op.IsZero() ? false : op.IsPositive();
-    if (op.IsZero())
-        return IsNegative();
-    if (IsInfinite())
-        return IsPositive() ? false : ! op.IsNegativeInfinity();
-    if (op.IsInfinite())
-        return op.IsPositive();
-    // Exploit fact that remaining IEEE floating point sort as signed ints
-    u4 a = HighWord(), b = op.HighWord();
-    return (a < b) || ((a == b) && LowWord() < op.LowWord());
+    if (IsZero() && op.IsZero())
+        return false;
+    // Exploit fact that all other IEEE floating point numbers sort like
+    // ints after worrying about sign.
+    u4 a = HighWord() & ABS_BITS, b = op.HighWord() & ABS_BITS;
+    if (IsNegative())
+        return op.IsPositive() ||
+            (a > b || (a == b && LowWord() > op.LowWord()));
+    return op.IsPositive() &&
+        (a < b || (a == b && LowWord() < op.LowWord()));
 #endif
 }
 
@@ -2403,17 +2400,16 @@ bool IEEEdouble::operator> (const IEEEdouble op) const
 #else
     if (IsNaN() || op.IsNaN())
         return false; // NaNs are unordered.
-    if (IsZero())
-        return op.IsZero() ? false : op.IsNegative();
-    if (op.IsZero())
-        return IsPositive();
-    if (IsInfinite())
-        return IsPositive() ? ! op.IsPositiveInfinity() : false;
-    if (op.IsInfinite())
-        return op.IsNegative();
-    // Exploit fact that remaining IEEE floating point sort as signed ints
-    u4 a = HighWord(), b = op.HighWord();
-    return (a > b) || ((a == b) && LowWord() > op.LowWord());
+    if (IsZero() && op.IsZero())
+        return false;
+    // Exploit fact that all other IEEE floating point numbers sort like
+    // ints after worrying about sign.
+    u4 a = HighWord() & ABS_BITS, b = op.HighWord() & ABS_BITS;
+    if (IsPositive())
+        return op.IsNegative() ||
+            (a < b || (a == b && LowWord() < op.LowWord()));
+    return op.IsNegative() &&
+        (a > b || (a == b && LowWord() > op.LowWord()));
 #endif
 }
 

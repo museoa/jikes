@@ -1,3 +1,8 @@
+2002-03-12  Eric B Blake  <eblake@ee.byu.edu>
+
+	* src/double.cpp (operator<, operator>): The commit on Feb 25 was
+	flawed. THIS patch finally fixes bug 2700.
+
 2002-03-12  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/expr.cpp (ProcessAND_AND): Fix bug 2750.
