@@ -27,91 +27,43 @@ namespace Jikes {	// Open namespace Jikes block
 #endif
 
 //
-// Look for arguments in a file and add them to the passed
-// in tuple. If the file does not exist or cannot be read
-// return false. Return true otherwise.
 //
-bool ArgumentExpander::ExpandAtFileArgument(Tuple<char *> &arguments,
-    char *file_name)
+//
+bool ArgumentExpander::ArgumentExpanded(Tuple<char *> &arguments, char *file_name)
 {
     struct stat status;
-    FILE *afile = SystemFopen(file_name, "r");
-    bool foundFile = false;
-
+    FILE *afile = fopen(file_name, "r");
     if (afile && (SystemStat(file_name, &status) == 0))
     {
-        char *buffer;
-        int file_size;
-        char *start = NULL;
-        char *end = NULL;
-        char *eol = NULL;
-
-        foundFile = true;
-        buffer = new char[status.st_size + 2];
-        file_size = SystemFread(buffer, 1, status.st_size, afile);
-        assert(status.st_size == file_size);
+        char *buffer = new char[status.st_size + 2];
+        int file_size = fread(buffer, 1, status.st_size, afile);
         buffer[file_size] = '\n';
-        buffer[file_size+1] = '\0';
-
-        for (char *ptr = buffer; *ptr; )
+        for (int k = 0; k < file_size; k++)
         {
-            // Skip spaces, tabs, and EOL until we find some text
-
-            while (start == NULL && *ptr) {
-                switch (*ptr) {
-		case U_SPACE:
-                case U_HORIZONTAL_TAB:
-                case U_LINE_FEED:
-                case U_CARRIAGE_RETURN:
-                    break; // Out of the switch not the while
-                default:
-                    start = ptr;
-                    end = ptr;
-                }
-                ptr++;
-            }
-
-            // If at end of the buffer, no arguments are left
-            if (! *ptr)
+            // FIXME : When \r is replaced by \n, we should not need to check for U_CARRIAGE_RETURN.
+            // Skip spaces and line termination characters
+            while (buffer[k] == U_SPACE || buffer[k] == U_LINE_FEED || buffer[k] == U_CARRIAGE_RETURN)
+                k++;
+            // If we are at the end of the file, there must not have been any arguments in the file
+            if (k >= file_size)
                 break;
 
-            // Find the end of this line, save last non space
-            // or tab position in the end ptr
-
-            while(eol == NULL) {
-                switch (*ptr) {
-                case U_LINE_FEED:
-                case U_CARRIAGE_RETURN:
-                    eol = ptr;
-                    break;
-                case U_SPACE:
-                case U_HORIZONTAL_TAB:
-                    break; // ignore tabs and spaces
-                default:
-                    end = ptr;
-                }
-                ptr++;
-
-            }
-
-            // Copy arg into new string and add to tuple
-            *(end+1) = '\0';
-            char *arg = new char[strlen(start) + 1];
-            strcpy(arg, start);
-            arguments.Next() = arg;
-
-            // Reinit the pointers
-            start = NULL;
-            end = NULL;
-            eol = NULL;
+            int n;
+            for (n = k + 1; ! (buffer[n] == U_SPACE || buffer[n] == U_LINE_FEED || buffer[n] == U_CARRIAGE_RETURN); n++)
+                ;
+            buffer[n] = U_NULL;
+            char *str = new char[n - k + 1];
+            strcpy(str, &buffer[k]);
+            arguments.Next() = str;
+            k = n;
         }
-
         delete [] buffer;
-    }
-    if (afile != NULL)
         fclose(afile);
 
-    return foundFile;
+        return true;
+    }
+
+    return false;
 }
 
 
@@ -121,8 +73,7 @@ ArgumentExpander::ArgumentExpander(int argc_, char *argv_[])
     for (int i = 0; i < argc_; i++)
     {
         char *argument = argv_[i];
-        if (argument[0] != '@' ||
-            (! ExpandAtFileArgument(arguments, argument + 1)))
+        if (argument[0] != '@' || (! ArgumentExpanded(arguments, argument + 1)))
         {
             char *str = new char[strlen(argument) + 1];
             strcpy(str, argument);
@@ -160,15 +111,9 @@ ArgumentExpander::ArgumentExpander(Tuple<char> &line)
                 argument[i] = line[k];
             argument[length] = U_NULL;
 
-            if (argument[0] == '@' &&
-                ExpandAtFileArgument(arguments, argument + 1))
-            {
-                delete [] argument;
-            }
-            else
-            {
-                arguments.Next() = argument;
-            }
+            if (argument[0] == '@' && ArgumentExpanded(arguments, argument + 1))
+                 delete argument;
+            else arguments.Next() = argument;
         }
     } while(end < line.Length());
 

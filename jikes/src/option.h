@@ -41,8 +41,7 @@ public:
         delete [] argv;
     }
 
-    bool ExpandAtFileArgument(Tuple<char *> & arguments,
-        char * file_name);
+    bool ArgumentExpanded(Tuple<char *> &, char *);
 };
 
 
