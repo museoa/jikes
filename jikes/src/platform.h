@@ -941,7 +941,15 @@ public:
 
     Ostream &operator<<(const unsigned char *c)
     {
+#ifndef HAVE_OSTREAM_CONST_UNSIGNED_CHAR_PTR
+# ifdef HAVE_CONST_CAST
+        *os << const_cast<unsigned char *> (c);
+# else
+        *os << (unsigned char *) c;
+# endif
+#else
         *os << c;
+#endif
         return *this;
     }
 

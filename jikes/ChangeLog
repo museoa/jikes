@@ -1,3 +1,9 @@
+2001-02-30  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/platform.h (operator<<): Add a cast
+	to work around broken ostream << const unsigned
+	char * with aCC on HP-UX.
+
 2001-03-30  Mo DeJong  <mdejong@redhat.com>
 
 	* configure.in: Add --enable-fp-emulation
