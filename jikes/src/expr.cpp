@@ -3142,6 +3142,16 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
         else // The qualifier might be a complex String constant
             ProcessExpressionOrStringConstant(base);
 
+        if (base -> symbol -> PackageCast())
+        {
+            ReportSemError(SemanticError::UNKNOWN_AMBIGUOUS_NAME,
+                           base -> LeftToken(),
+                           base -> RightToken(),
+                           base -> symbol -> PackageCast() -> PackageName());
+            method_call -> symbol = control.no_type;
+            return;
+        }
+
         TypeSymbol *type = base -> Type();
         assert(type);
 

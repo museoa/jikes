@@ -1,3 +1,8 @@
+2001-12-14  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/expr.cpp (ProcessMethodName): Fix another core dump from my
+	recent patching frenzy.
+
 2001-12-13  Mo DeJong  <supermo@bayarea.net>
 
 	* src/zip.cpp (Zip): Avoid core dump when zip file on CLASSPATH
