@@ -37,6 +37,7 @@
           General Interest
           <ul>
             <li><a href="people.shtml">People</a>
+	    <li><a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf">Old discusion database at IBM Research</a><small>includes the queries to Sun about the JLS</small>
           </ul>
           <hr>
           Related Links
@@ -128,7 +129,7 @@ to replace it over time.</p>
 
 
 <!--
-more crap from various sources to merge into main body or fork into seperate pages.
+more crud from various sources to merge into main body or fork into seperate pages.
 
 
 <P>The fact that Jikes is a high-performance, highly compatible Java
