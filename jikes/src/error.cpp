@@ -1290,7 +1290,7 @@ void SemanticError::InitializeMessages()
         "Use names ThatLookLikeThis for classes such as \"%1\". "
         "(See item 38 of \"Effective Java\".)";
     messages[UNCONVENTIONAL_CONSTANT_FIELD_NAME] =
-        "Use names THAT_LOOK_LIKE_THIS for fields such as \"%1\". "
+        "Use names THAT_LOOK_LIKE_THIS for final fields such as \"%1\". "
         "(See item 38 of \"Effective Java\".)";
     messages[UNCONVENTIONAL_FIELD_NAME] =
         "Use names thatLookLikeThis for fields such as \"%1\". "
@@ -1745,6 +1745,9 @@ void SemanticError::InitializeMessages()
         "class \"%T2\".";
     messages[SYNTHETIC_TYPE_ACCESS] =
         "Illegal attempt to use the synthetic type \"%T1\".";
+    messages[UNNAMED_TYPE_ACCESS] =
+        "Illegal attempt to use the type \"%T1\" which does not have a fully "
+        "qualified name since it is local or anonymous.";
     messages[SELF_IN_EXPLICIT_CONSTRUCTOR] =
         "The expression \"%1\" is not yet initialized here.";
     messages[EXPRESSION_NOT_CONSTANT] =
@@ -1761,8 +1764,7 @@ void SemanticError::InitializeMessages()
         "The constructor in the anonymous subclass of \"%1\" can throw the "
         "checked exception \"%T2\", so the class creation%4";
     messages[UNCAUGHT_THROWN_EXCEPTION] =
-        "This throw statement throws the checked exception \"%T1\", "
-        "so it%3";
+        "This throw statement throws the checked exception \"%T1\", so it%3";
     messages[UNCAUGHT_EXPLICIT_THIS_EXCEPTION] =
         "This constructor must declare the checked exception \"%T1\" "
         "thrown by the explicit this() call.";
@@ -1777,8 +1779,7 @@ void SemanticError::InitializeMessages()
     messages[UNREACHABLE_STATEMENTS] = "These statements are unreachable.";
     messages[BLOCKED_CATCH_CLAUSE] =
         "This catch block is unreachable: the exception \"%T1\" "
-        "is a subclass of the type \"%T3\", caught previously at "
-        "location %5.";
+        "is a subclass of the type \"%T3\", caught previously at location %5.";
     messages[VARIABLE_NOT_DEFINITELY_ASSIGNED] =
         "The variable \"%1\" may be accessed here before having been "
         "definitely assigned a value.";
@@ -1799,13 +1800,11 @@ void SemanticError::InitializeMessages()
     messages[DEPRECATED_TYPE] =
         "The type \"%T1\" has been deprecated.";
     messages[DEPRECATED_FIELD] =
-        "The variable \"%1\" declared in type \"%T2\" has "
-        "been deprecated.";
+        "The variable \"%1\" declared in type \"%T2\" has been deprecated.";
     messages[DEPRECATED_METHOD] =
         "The method \"%1\" declared in type \"%T2\" has been deprecated.";
     messages[DEPRECATED_CONSTRUCTOR] = 
-        "The constructor \"%1\" declared in type \"%T2\" has been "
-        "deprecated.";
+        "The constructor \"%1\" declared in type \"%T2\" has been deprecated.";
 
     // Inner type related errors.
     messages[INTERFACE_NOT_INNER_CLASS] =

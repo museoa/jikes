@@ -2138,7 +2138,7 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration* construc
         this0_variable -> SetLocalVariableIndex(block_symbol ->
                                                 max_variable_index++);
         this0_variable -> MarkComplete();
-        this0_variable -> MarkSynthetic();
+        this0_variable -> SetACC_SYNTHETIC();
     }
 
     for (unsigned i = 0;
@@ -2202,7 +2202,7 @@ void Semantic::AddDefaultConstructor(TypeSymbol* type)
         this0_variable -> SetLocalVariableIndex(block_symbol ->
                                                 max_variable_index++);
         this0_variable -> MarkComplete();
-        this0_variable -> MarkSynthetic();
+        this0_variable -> SetACC_SYNTHETIC();
     }
 
     constructor -> SetSignature(control);
@@ -2708,7 +2708,7 @@ void Semantic::AddInheritedFields(TypeSymbol* base_type,
         // the base_type.
         //
         else if (! variable -> ACC_PRIVATE() &&
-                 ! variable -> IsSynthetic() &&
+                 ! variable -> ACC_SYNTHETIC() &&
                  variable_shadow_symbol -> NumConflicts())
         {
             assert(variable -> owner != super_type);
@@ -2767,7 +2767,7 @@ void Semantic::AddInheritedMethods(TypeSymbol* base_type,
         if ((base_type -> ACC_INTERFACE() &&
              super_type -> ACC_INTERFACE() &&
              method -> containing_type == control.Object()) ||
-            method -> IsSynthetic())
+            method -> ACC_SYNTHETIC())
         {
             continue;
         }
@@ -2929,7 +2929,7 @@ void Semantic::AddInheritedMethods(TypeSymbol* base_type,
                 super_expanded_table -> symbol_pool[i];
             MethodSymbol* method = method_shadow_symbol -> method_symbol;
             if (! method -> ACC_PUBLIC() && ! method -> ACC_PROTECTED() &&
-                ! method -> ACC_PRIVATE() && ! method -> IsSynthetic() &&
+                ! method -> ACC_PRIVATE() && ! method -> ACC_SYNTHETIC() &&
                 method_shadow_symbol -> NumConflicts() == 0)
             {
                 // found a non-inherited package scope method
@@ -3657,7 +3657,13 @@ TypeSymbol* Semantic::MustFindType(AstName* name)
                            type -> ExternalName());
         }
     }
-    if (type -> IsSynthetic() && ! type -> Bad())
+    if (type -> Anonymous() && ! type -> Bad())
+    {
+        ReportSemError(SemanticError::UNNAMED_TYPE_ACCESS, name,
+                       type -> ContainingPackageName(),
+                       type -> ExternalName());
+    }
+    if (type -> ACC_SYNTHETIC() && ! type -> Bad())
     {
         ReportSemError(SemanticError::SYNTHETIC_TYPE_ACCESS, name,
                        type -> ContainingPackageName(),
@@ -3844,9 +3850,9 @@ MethodSymbol* Semantic::GetStaticInitializerMethod(int estimate)
 
     // The method symbol.
     init_method -> SetType(control.void_type);
-    init_method -> SetACC_PRIVATE();
-    init_method -> SetACC_FINAL();
-    init_method -> SetACC_STATIC();
+    init_method -> SetFlags(AccessFlags::ACCESS_PRIVATE |
+                            AccessFlags::ACCESS_FINAL |
+                            AccessFlags::ACCESS_STATIC);
     if (this_type -> ACC_STRICTFP())
         init_method -> SetACC_STRICTFP();
     init_method -> SetContainingType(this_type);
@@ -3999,11 +4005,11 @@ void Semantic::ProcessInstanceInitializers(AstClassBody* class_body)
 
     // The method symbol.
     init_method -> SetType(control.void_type);
-    init_method -> SetACC_PRIVATE();
-    init_method -> SetACC_FINAL();
+    init_method -> SetFlags(AccessFlags::ACCESS_PRIVATE |
+                            AccessFlags::ACCESS_FINAL |
+                            AccessFlags::ACCESS_SYNTHETIC);
     if (this_type -> ACC_STRICTFP())
         init_method -> SetACC_STRICTFP();
-    init_method -> MarkSynthetic();
     init_method -> SetContainingType(this_type);
     init_method -> SetBlockSymbol(block_symbol);
     init_method -> SetSignature(control);

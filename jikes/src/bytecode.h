@@ -834,10 +834,22 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
                                        (control.Deprecated_literal));
     }
 
-
     SyntheticAttribute* CreateSyntheticAttribute()
     {
         return new SyntheticAttribute(RegisterUtf8(control.Synthetic_literal));
+    }
+
+    EnclosingMethodAttribute* CreateEnclosingMethodAttribute(MethodSymbol* sym)
+    {
+        u2 attr_name = RegisterUtf8(control.EnclosingMethod_literal);
+        u2 type_index = RegisterClass(sym -> containing_type);
+        u2 name_type_index =
+            (sym -> name_symbol == control.block_init_name_symbol ||
+             sym -> name_symbol == control.clinit_name_symbol) ? 0
+            : RegisterNameAndType(sym -> ExternalIdentity() -> Utf8_literal,
+                                  sym -> signature);
+        return new EnclosingMethodAttribute(attr_name, type_index,
+                                            name_type_index);
     }
 
 

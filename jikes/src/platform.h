@@ -701,18 +701,6 @@ public:
     //
     // Constant pool entries.
     //
-    static const int U8S_ConstantValue_length,
-        U8S_Exceptions_length,
-        U8S_InnerClasses_length,
-        U8S_Synthetic_length,
-        U8S_Deprecated_length,
-        U8S_LineNumberTable_length,
-        U8S_LocalVariableTable_length,
-        U8S_Code_length,
-        U8S_SourceFile_length,
-        U8S_null_length,
-        U8S_this_length;
-
     static const char U8S_AnnotationDefault[], // "AnnotationDefault"
         U8S_B[], // "B"
         U8S_C[], // "C"

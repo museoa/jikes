@@ -1705,21 +1705,6 @@ const char StringConstant::U8S_pos_Zero[] = {U_0, U_DOT, U_0, U_NU}; // "0.0"
 const char StringConstant::U8S_neg_Zero[] = {
     U_MINUS, U_0, U_DOT, U_0, U_NU}; // "-0.0"
 
-const int StringConstant::U8S_ConstantValue_length = strlen(U8S_ConstantValue);
-const int StringConstant::U8S_Exceptions_length = strlen(U8S_Exceptions);
-const int StringConstant::U8S_InnerClasses_length = strlen(U8S_InnerClasses);
-const int StringConstant::U8S_Synthetic_length = strlen(U8S_Synthetic);
-const int StringConstant::U8S_Deprecated_length = strlen(U8S_Deprecated);
-const int StringConstant::U8S_LineNumberTable_length =
-    strlen(U8S_LineNumberTable);
-const int StringConstant::U8S_LocalVariableTable_length =
-    strlen(U8S_LocalVariableTable);
-const int StringConstant::U8S_Code_length = strlen(U8S_Code);
-const int StringConstant::U8S_SourceFile_length = strlen(U8S_SourceFile);
-const int StringConstant::U8S_null_length = strlen(U8S_null);
-const int StringConstant::U8S_this_length = strlen(U8S_this);
-
-
 Ostream Coutput;
 
 #ifdef HAVE_JIKES_NAMESPACE

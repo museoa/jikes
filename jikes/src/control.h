@@ -504,6 +504,7 @@ public:
     Utf8LiteralValue* LocalVariableTable_literal;
     Utf8LiteralValue* Code_literal;
     Utf8LiteralValue* SourceFile_literal;
+    Utf8LiteralValue* EnclosingMethod_literal;
 
     Utf8LiteralValue* null_literal;
     Utf8LiteralValue* this_literal;

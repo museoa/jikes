@@ -1,3 +1,48 @@
+2004-02-06  Eric Blake  <ebb9@byu.net>
+
+	* src/access.h (ACCESS_BRIDGE, ACCESS_VARARGS, ACCESS_ENUM),
+	(ACCESS_SYNTHETIC): New access flags in JDK 1.5. (If only JSR 202
+	were public already...).
+	(Print): Take an argument now, adjust all callers.
+	* src/bytecode.cpp (DeclareField, BeginMethod),
+	(MethodTypeResolution, ByteCode, FinishCode): Use .class file and
+	symbol updates; emit EnclosingMethod attribute now.
+	(EmitTryStatement): Debug catch clause parameters.
+	* src/bytecode.h (CreateEnclosingMethodAttribute): New method.
+	* src/class.h (ATTRIBUTE_RuntimeVisibleAnnotations),
+	(ATTRIBUTE_RuntimeInvisibleAnnotations),
+	(ATTRIBUTE_RuntimeVisibleParameterAnnotations),
+	(ATTRIBUTE_RuntimeInvisibleParameterAnnotations),
+	(ATTRIBUTE_AnnotationDefault, ATTRIBUTE_EnclosingMethod): New,
+	from JSR 175 and 202.
+	* src/class.cpp: Implement.
+	* src/control.h (EnclosingMethod_literal): New field.
+	* src/decl.cpp (ProcessConstructorDeclaration),
+	(AddDefaultConstructor, AddInheritedFields, AddInheritedMethods),
+	(MustFindType, GetStaticInitializer, ProcessInstanceInitializer):
+	Use symbol updates.
+	* src/definite.cpp (DefiniteName, DefinitePLUSPLUSOrMINUSMINUS),
+	(DefiniteSetup): Ditto.
+	* src/error.h (UNNAMED_TYPE_ACCESS): New error.
+	* src/error.cpp: Implement.
+	* src/expr.cpp (FindConstructor, FindMethodInType),
+	(FindMethodInEnvironment, FindVariableInType),
+	(FindVariableInEnvironment, GetAnonymousConstructor): Use symbol
+	updates.
+	* src/platform.h (U8S_*_length): Delete, unneeded.
+	* src/platform.cpp: Ditto.
+	* src/symbol.cpp (GetArrayType, InsertThis0),
+	(FindOrInsertClassLiteralMethod, FindOrInsertClassLiteral),
+	(FindOrInsertAssertVariable, FindOrInsertLocalShadow),
+	(GetReadAccessMethod, GetReadAccessConstructor),
+	(GetWriteAccessMethod, GetWriteAccessFromReadAccess): Use symbol
+	updates.
+	* src/symbol.h (PackageSymbol::DEPRECATED): Add, in preparation
+	for JSR 175 allowing package modifiers.
+	(MarkDeprecated, IsDeprecated): Delete, as now covered by
+	AccessFlags.
+	* src/system.cpp (EnclosingMethod_literal): Initialize.
+
 2004-02-02  Eric Blake  <ebb9@byu.net>
 
 	* NEWS (1.19a): Placeholder for changes to future 1.20.

@@ -207,7 +207,8 @@ void Control::ProcessGlobals()
                                          wcslen(US_class_DOLLAR));
     equals_name_symbol = FindOrInsertName(US_equals, wcslen(US_equals));
     hashCode_name_symbol = FindOrInsertName(US_hashCode, wcslen(US_hashCode));
-    serialVersionUID_name_symbol = FindOrInsertName(US_serialVersionUID, wcslen(US_serialVersionUID));
+    serialVersionUID_name_symbol =
+        FindOrInsertName(US_serialVersionUID, wcslen(US_serialVersionUID));
     toString_name_symbol = FindOrInsertName(US_toString, wcslen(US_toString));
     append_name_symbol = FindOrInsertName(US_append, wcslen(US_append));
     forName_name_symbol = FindOrInsertName(US_forName, wcslen(US_forName));
@@ -215,8 +216,7 @@ void Control::ProcessGlobals()
                                               wcslen(US_getMessage));
     getClass_name_symbol = FindOrInsertName(US_getClass, wcslen(US_getClass));
     getComponentType_name_symbol =
-        FindOrInsertName(US_getComponentType,
-                         wcslen(US_getComponentType));
+        FindOrInsertName(US_getComponentType, wcslen(US_getComponentType));
     desiredAssertionStatus_name_symbol =
         FindOrInsertName(US_desiredAssertionStatus,
                          wcslen(US_desiredAssertionStatus));
@@ -224,27 +224,30 @@ void Control::ProcessGlobals()
                                              wcslen(US_initCause));
 
     ConstantValue_literal = Utf8_pool.FindOrInsert(U8S_ConstantValue,
-                                                   U8S_ConstantValue_length);
+                                                   strlen(U8S_ConstantValue));
     Exceptions_literal = Utf8_pool.FindOrInsert(U8S_Exceptions,
-                                                U8S_Exceptions_length);
+                                                strlen(U8S_Exceptions));
     InnerClasses_literal = Utf8_pool.FindOrInsert(U8S_InnerClasses,
-                                                  U8S_InnerClasses_length);
+                                                  strlen(U8S_InnerClasses));
     Synthetic_literal = Utf8_pool.FindOrInsert(U8S_Synthetic,
-                                               U8S_Synthetic_length);
+                                               strlen(U8S_Synthetic));
     Deprecated_literal = Utf8_pool.FindOrInsert(U8S_Deprecated,
-                                                U8S_Deprecated_length);
+                                                strlen(U8S_Deprecated));
     LineNumberTable_literal =
         Utf8_pool.FindOrInsert(U8S_LineNumberTable,
-                               U8S_LineNumberTable_length);
+                               strlen(U8S_LineNumberTable));
     LocalVariableTable_literal =
         Utf8_pool.FindOrInsert(U8S_LocalVariableTable,
-                               U8S_LocalVariableTable_length);
-    Code_literal = Utf8_pool.FindOrInsert(U8S_Code, U8S_Code_length);
+                               strlen(U8S_LocalVariableTable));
+    Code_literal = Utf8_pool.FindOrInsert(U8S_Code, strlen(U8S_Code));
     SourceFile_literal = Utf8_pool.FindOrInsert(U8S_SourceFile,
-                                                U8S_SourceFile_length);
+                                                strlen(U8S_SourceFile));
+    EnclosingMethod_literal =
+        Utf8_pool.FindOrInsert(U8S_EnclosingMethod,
+                               strlen(U8S_EnclosingMethod));
 
-    null_literal = Utf8_pool.FindOrInsert(U8S_null, U8S_null_length);
-    this_literal = Utf8_pool.FindOrInsert(U8S_this, U8S_this_length);
+    null_literal = Utf8_pool.FindOrInsert(U8S_null, strlen(U8S_null));
+    this_literal = Utf8_pool.FindOrInsert(U8S_this, strlen(U8S_this));
 }
 
 

@@ -358,6 +358,11 @@ public:
 
 class PackageSymbol : public Symbol
 {
+    enum
+    {
+        DEPRECATED = 0x01
+    };
+
 public:
     Tuple<DirectorySymbol*> directory;
     PackageSymbol* owner;
@@ -368,6 +373,7 @@ public:
         , name_symbol(name_symbol_)
         , table(NULL)
         , package_name(NULL)
+        , status(0)
     {
         Symbol::_kind = PACKAGE;
     }
@@ -412,6 +418,9 @@ public:
     inline TypeSymbol* InsertOuterTypeSymbol(NameSymbol*);
     inline void DeleteTypeSymbol(TypeSymbol*);
 
+    void MarkDeprecated() { status |= DEPRECATED; }
+    bool IsDeprecated() { return (status & DEPRECATED) != 0; }
+
 private:
     const NameSymbol* name_symbol;
     SymbolTable* table;
@@ -419,6 +428,7 @@ private:
 
     wchar_t* package_name;
     unsigned package_name_length;
+    u1 status;
 };
 
 
@@ -426,8 +436,7 @@ class MethodSymbol : public Symbol, public AccessFlags
 {
     enum
     {
-        SYNTHETIC = 0x01,
-        DEPRECATED = 0x02
+        DEPRECATED = 0x01
     };
 
 public:
@@ -622,9 +631,6 @@ public:
 
     void CleanUp();
 
-    void MarkSynthetic() { status |= SYNTHETIC; }
-    bool IsSynthetic() { return (status & SYNTHETIC) != 0; }
-
     void MarkDeprecated() { status |= DEPRECATED; }
     bool IsDeprecated() { return (status & DEPRECATED) != 0; }
 
@@ -656,9 +662,8 @@ class TypeSymbol : public Symbol, public AccessFlags
         HEADER_PROCESSED = 0x0040,
         PRIMITIVE = 0x0080,
         DEPRECATED = 0x0100,
-        SYNTHETIC = 0x0200,
-        BAD = 0x0400,
-        CIRCULAR = 0x0800
+        BAD = 0x0200,
+        CIRCULAR = 0x0400
     };
 
 public:
@@ -1187,9 +1192,6 @@ public:
     void ResetDeprecated() { status &= ~DEPRECATED; }
     bool IsDeprecated() const { return (status & DEPRECATED) != 0; }
 
-    void MarkSynthetic() { status |= SYNTHETIC; }
-    bool IsSynthetic() const { return (status & SYNTHETIC) != 0; }
-
     void MarkBad()
     {
         SetACC_PUBLIC();
@@ -1372,6 +1374,13 @@ private:
 
 class VariableSymbol : public Symbol, public AccessFlags
 {
+    enum
+    {
+        COMPLETE = 0x01, // Used to prevent use of field before declaration
+        DEPRECATED = 0x02, // Used to mark deprecated fields
+        INITIALIZED = 0x04 // Used when initial value of final field is known
+    };
+
 public:
     AstVariableDeclarator* declarator;
     FileLocation* file_location;
@@ -1533,9 +1542,6 @@ public:
     void MarkComplete() { status |= COMPLETE; }
     bool IsDeclarationComplete() { return (status & COMPLETE) != 0; }
 
-    void MarkSynthetic() { status |= SYNTHETIC; }
-    bool IsSynthetic() { return (status & SYNTHETIC) != 0; }
-
     void MarkDeprecated() { status |= DEPRECATED; }
     bool IsDeprecated() { return (status & DEPRECATED) != 0; }
 
@@ -1543,12 +1549,6 @@ public:
     bool IsInitialized() { return (status & INITIALIZED) != 0; }
 
 private:
-    enum {
-        COMPLETE = 0x01, // Used to prevent use of field before declaration
-        SYNTHETIC = 0x02, // Used to mark compiler-created variables
-        DEPRECATED = 0x04, // Used to mark deprecated fields
-        INITIALIZED = 0x08 // Used when initial value of final field is known
-    };
     const NameSymbol* external_name_symbol;
 
     unsigned char status;

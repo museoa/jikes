@@ -409,8 +409,11 @@ void ByteCode::DeclareField(VariableSymbol* symbol)
             AddAttribute(new ConstantValueAttribute(attribute_index, index));
     }
 
-    if (symbol -> IsSynthetic())
+    if (symbol -> ACC_SYNTHETIC() &&
+        control.option.target < JikesOption::SDK1_5)
+    {
         fields[field_index] -> AddAttribute(CreateSyntheticAttribute());
+    }
 
     if (symbol -> IsDeprecated())
         fields[field_index] -> AddAttribute(CreateDeprecatedAttribute());
@@ -444,8 +447,11 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol* msym)
         SetDescriptorIndex(RegisterUtf8(msym -> signature));
     methods[method_index] -> SetFlags(msym -> Flags());
 
-    if (msym -> IsSynthetic())
+    if (msym -> ACC_SYNTHETIC() &&
+        control.option.target < JikesOption::SDK1_5)
+    {
         methods[method_index] -> AddAttribute(CreateSyntheticAttribute());
+    }
 
     if (msym -> IsDeprecated())
         methods[method_index] -> AddAttribute(CreateDeprecatedAttribute());
@@ -1730,11 +1736,21 @@ void ByteCode::EmitTryStatement(AstTryStatement* statement)
             u2 handler_pc = code_attribute -> CodeLength();
 
             AstCatchClause* catch_clause = statement -> CatchClause(i);
-            VariableSymbol* parameter_symbol = catch_clause -> parameter_symbol;
+            VariableSymbol* parameter_symbol =
+                catch_clause -> parameter_symbol;
 
             assert(stack_depth == 0);
             stack_depth = 1; // account for the exception already on the stack
-            if (! IsNop(catch_clause -> block))
+            line_number_table_attribute ->
+                AddLineNumber(code_attribute -> CodeLength(),
+                              semantic.lex_stream -> Line(catch_clause ->
+                                                          catch_token));
+            //
+            // Unless debugging, we don't need to waste a variable on an
+            // empty catch.
+            //
+            if ((control.option.g & JikesOption::VARS) ||
+                ! IsNop(catch_clause -> block))
             {
                 StoreLocal(parameter_symbol -> LocalVariableIndex(),
                            parameter_symbol -> Type());
@@ -3158,7 +3174,7 @@ TypeSymbol* ByteCode::MethodTypeResolution(AstExpression* method_name,
     assert(field || name);
 
     TypeSymbol* owner_type = msym -> containing_type;
-    TypeSymbol* base_type = msym -> IsSynthetic() ? owner_type
+    TypeSymbol* base_type = msym -> ACC_SYNTHETIC() ? owner_type
         : field ? field -> base -> Type()
         : name -> resolution_opt ? name -> resolution_opt -> Type()
         : name -> base_opt ? name -> base_opt -> Type() : unit_type;
@@ -4605,7 +4621,7 @@ void ByteCode::EmitCheckForNull(AstExpression* expression, bool need_value)
         expression -> ThisExpressionCast() ||
         expression -> SuperExpressionCast() ||
         expression -> ClassLiteralCast() ||
-        (variable && variable -> IsSynthetic() &&
+        (variable && variable -> ACC_SYNTHETIC() &&
          variable -> Identity() == control.this0_name_symbol))
     {
         EmitExpression(expression, need_value);
@@ -6001,6 +6017,10 @@ ByteCode::ByteCode(TypeSymbol* type)
         major_version = 48;
         minor_version = 0;
         break;
+    case JikesOption::SDK1_5:
+        major_version = 49;
+        minor_version = 0;
+        break;
     default:
         assert(false && "unknown version for target");
     }
@@ -6649,8 +6669,16 @@ void ByteCode::FinishCode()
 
     if (unit_type -> IsDeprecated())
         AddAttribute(CreateDeprecatedAttribute());
-    if (unit_type -> IsSynthetic())
+    if (unit_type -> ACC_SYNTHETIC() &&
+        control.option.target < JikesOption::SDK1_5)
+    {
         AddAttribute(CreateSyntheticAttribute());
+    }
+    if (unit_type -> owner -> MethodCast())
+    {
+        MethodSymbol* enclosing = (MethodSymbol*) unit_type -> owner;
+        AddAttribute(CreateEnclosingMethodAttribute(enclosing));
+    }
 }
 
 

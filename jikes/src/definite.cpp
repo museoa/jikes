@@ -115,7 +115,7 @@ DefiniteAssignmentSet* Semantic::DefiniteName(AstExpression* expression,
     //
     VariableSymbol* variable = name -> symbol
         ? name -> symbol -> VariableCast() : (VariableSymbol*) NULL;
-    if (variable && ! variable -> IsSynthetic() && ! name -> base_opt &&
+    if (variable && ! variable -> ACC_SYNTHETIC() && ! name -> base_opt &&
         (variable -> IsLocal(ThisMethod()) || variable -> IsFinal(ThisType())))
     {
         int index = variable -> LocalVariableIndex(this);
@@ -268,7 +268,7 @@ DefiniteAssignmentSet* Semantic::DefinitePLUSPLUSOrMINUSMINUS(AstExpression* exp
     {
         if ((variable -> IsLocal(ThisMethod()) ||
              variable -> IsFinal(ThisType())) &&
-            ! variable -> IsSynthetic() &&
+            ! variable -> ACC_SYNTHETIC() &&
             (*BlankFinals())[variable -> LocalVariableIndex(this)])
         {
             ReportSemError(SemanticError::VARIABLE_NOT_DEFINITELY_UNASSIGNED,
@@ -285,7 +285,7 @@ DefiniteAssignmentSet* Semantic::DefinitePLUSPLUSOrMINUSMINUS(AstExpression* exp
         }
 
         // Mark it assigned, to catch further errors.
-        if (variable -> IsFinal(ThisType()) && ! variable -> IsSynthetic())
+        if (variable -> IsFinal(ThisType()) && ! variable -> ACC_SYNTHETIC())
             def_pair.du_set.RemoveElement(variable -> LocalVariableIndex(this));
     }
     return NULL;
@@ -1670,7 +1670,7 @@ void Semantic::DefiniteSetup()
     {
         VariableSymbol* variable_symbol = this_type -> VariableSym(i);
         if (variable_symbol -> ACC_FINAL() &&
-            ! variable_symbol -> IsSynthetic())
+            ! variable_symbol -> ACC_SYNTHETIC())
         {
             variable_symbol -> SetLocalVariableIndex(size++);
             FinalFields() -> Next() = variable_symbol;

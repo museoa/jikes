@@ -96,64 +96,62 @@ CPInfo* CPInfo::AllocateCPInfo(ClassFile& buffer)
 
 
 CPClassInfo::CPClassInfo(ClassFile& buffer)
-    : CPInfo(CONSTANT_Class),
-      name_index(buffer.GetU2()),
-      type(NULL)
+    : CPInfo(CONSTANT_Class)
+    , name_index(buffer.GetU2())
+    , type(NULL)
 {}
 
 
 CPMemberInfo::CPMemberInfo(u1 _tag, ClassFile& buffer)
-    : CPInfo(_tag),
-      class_index(buffer.GetU2()),
-      name_and_type_index(buffer.GetU2())
+    : CPInfo(_tag)
+    , class_index(buffer.GetU2())
+    , name_and_type_index(buffer.GetU2())
 {}
 
 
 CPStringInfo::CPStringInfo(ClassFile& buffer)
-    : CPInfo(CONSTANT_String),
-      string_index(buffer.GetU2())
+    : CPInfo(CONSTANT_String)
+    , string_index(buffer.GetU2())
 {}
 
 
 CPIntegerInfo::CPIntegerInfo(ClassFile& buffer)
-    : CPInfo(CONSTANT_Integer),
-      bytes(buffer.GetU4())
+    : CPInfo(CONSTANT_Integer)
+    , bytes(buffer.GetU4())
 {}
 
 
 CPFloatInfo::CPFloatInfo(ClassFile& buffer)
-    : CPInfo(CONSTANT_Float),
-      value(buffer.GetU4())
+    : CPInfo(CONSTANT_Float)
+    , value(buffer.GetU4())
 {}
 
 
 CPLongInfo::CPLongInfo(ClassFile& buffer)
-    : CPInfo(CONSTANT_Long),
-      value(buffer.GetU8())
+    : CPInfo(CONSTANT_Long)
+    , value(buffer.GetU8())
 {}
 
 
 CPDoubleInfo::CPDoubleInfo(ClassFile& buffer)
-    : CPInfo(CONSTANT_Double),
-      value(buffer.GetU8())
+    : CPInfo(CONSTANT_Double)
+    , value(buffer.GetU8())
 {}
 
 
 CPNameAndTypeInfo::CPNameAndTypeInfo(ClassFile& buffer)
-    : CPInfo(CONSTANT_NameAndType),
-      name_index(buffer.GetU2()),
-      descriptor_index(buffer.GetU2())
+    : CPInfo(CONSTANT_NameAndType)
+    , name_index(buffer.GetU2())
+    , descriptor_index(buffer.GetU2())
 {}
 
 
 CPUtf8Info::CPUtf8Info(ClassFile& buffer)
-    : CPInfo(CONSTANT_Utf8),
-      len(buffer.GetU2())
+    : CPInfo(CONSTANT_Utf8)
+    , len(buffer.GetU2())
 {
-    int i;
     bytes = new u1[len];
-    for (i = 0; i < len; i++)
-        bytes[i] = buffer.GetU1();
+    buffer.GetN(bytes, len);
     Init();
     if (! valid)
         buffer.MarkInvalid();
@@ -235,7 +233,7 @@ void CPUtf8Info::Init()
                 contents.Next() = tmp[1];
                 contents.Next() = tmp[2];
                 contents.Next() = tmp[3];
-            }                
+            }
             else // 3-byte source
             {
                 assert((bytes[i] & 0xf0) == 0xe0);
@@ -280,13 +278,15 @@ void CPUtf8Info::Init()
 
 
 FieldInfo::FieldInfo(ClassFile& buffer)
-    : AccessFlags(buffer.GetU2()),
-      name_index(buffer.GetU2()),
-      descriptor_index(buffer.GetU2()),
-      attr_synthetic(NULL),
-      attr_deprecated(NULL),
-      attr_signature(NULL),
-      attr_constantvalue(NULL)
+    : AccessFlags(buffer.GetU2())
+    , name_index(buffer.GetU2())
+    , descriptor_index(buffer.GetU2())
+    , attr_synthetic(NULL)
+    , attr_deprecated(NULL)
+    , attr_signature(NULL)
+    , attr_constantvalue(NULL)
+    , attr_visible_annotations(NULL)
+    , attr_invisible_annotations(NULL)
 {
     unsigned count = buffer.GetU2();
     while (count--)
@@ -299,6 +299,7 @@ FieldInfo::FieldInfo(ClassFile& buffer)
             if (attr_synthetic)
                 buffer.MarkInvalid();
             attr_synthetic = (SyntheticAttribute*) attr;
+            SetACC_SYNTHETIC();
             break;
         case AttributeInfo::ATTRIBUTE_Deprecated:
             if (attr_deprecated)
@@ -315,6 +316,16 @@ FieldInfo::FieldInfo(ClassFile& buffer)
                 buffer.MarkInvalid();
             attr_signature = (SignatureAttribute*) attr;
             break;
+        case AttributeInfo::ATTRIBUTE_RuntimeVisibleAnnotations:
+            if (attr_visible_annotations)
+                buffer.MarkInvalid();
+            attr_visible_annotations = (AnnotationsAttribute*) attr;
+            break;
+        case AttributeInfo::ATTRIBUTE_RuntimeInvisibleAnnotations:
+            if (attr_invisible_annotations)
+                buffer.MarkInvalid();
+            attr_invisible_annotations = (AnnotationsAttribute*) attr;
+            break;
         case AttributeInfo::ATTRIBUTE_Generic:
             // ignore
             break;
@@ -327,14 +338,20 @@ FieldInfo::FieldInfo(ClassFile& buffer)
 
 
 MethodInfo::MethodInfo(ClassFile& buffer)
-    : AccessFlags(buffer.GetU2()),
-      name_index(buffer.GetU2()),
-      descriptor_index(buffer.GetU2()),
-      attr_synthetic(NULL),
-      attr_deprecated(NULL),
-      attr_signature(NULL),
-      attr_code(NULL),
-      attr_exceptions(NULL)
+    : AccessFlags(buffer.GetU2())
+    , name_index(buffer.GetU2())
+    , descriptor_index(buffer.GetU2())
+    , attr_synthetic(NULL)
+    , attr_deprecated(NULL)
+    , attr_signature(NULL)
+    , attr_bridge(NULL)
+    , attr_code(NULL)
+    , attr_exceptions(NULL)
+    , attr_visible_annotations(NULL)
+    , attr_invisible_annotations(NULL)
+    , attr_param_visible_annotations(NULL)
+    , attr_param_invisible_annotations(NULL)
+    , attr_annotation_default(NULL)
 {
     unsigned count = buffer.GetU2();
     while (count--)
@@ -347,6 +364,7 @@ MethodInfo::MethodInfo(ClassFile& buffer)
             if (attr_synthetic)
                 buffer.MarkInvalid();
             attr_synthetic = (SyntheticAttribute*) attr;
+            SetACC_SYNTHETIC();
             break;
         case AttributeInfo::ATTRIBUTE_Deprecated:
             if (attr_deprecated)
@@ -363,10 +381,42 @@ MethodInfo::MethodInfo(ClassFile& buffer)
                 buffer.MarkInvalid();
             attr_signature = (SignatureAttribute*) attr;
             break;
+        case AttributeInfo::ATTRIBUTE_Bridge:
+            if (attr_bridge)
+                buffer.MarkInvalid();
+            attr_bridge = (BridgeAttribute*) attr;
+            break;
         case AttributeInfo::ATTRIBUTE_Exceptions:
             if (attr_exceptions)
                 buffer.MarkInvalid();
             attr_exceptions = (ExceptionsAttribute*) attr;
+            break;
+        case AttributeInfo::ATTRIBUTE_RuntimeVisibleAnnotations:
+            if (attr_visible_annotations)
+                buffer.MarkInvalid();
+            attr_visible_annotations = (AnnotationsAttribute*) attr;
+            break;
+        case AttributeInfo::ATTRIBUTE_RuntimeInvisibleAnnotations:
+            if (attr_invisible_annotations)
+                buffer.MarkInvalid();
+            attr_invisible_annotations = (AnnotationsAttribute*) attr;
+            break;
+        case AttributeInfo::ATTRIBUTE_RuntimeVisibleParameterAnnotations:
+            if (attr_param_visible_annotations)
+                buffer.MarkInvalid();
+            attr_param_visible_annotations =
+                (ParameterAnnotationsAttribute*) attr;
+            break;
+        case AttributeInfo::ATTRIBUTE_RuntimeInvisibleParameterAnnotations:
+            if (attr_param_invisible_annotations)
+                buffer.MarkInvalid();
+            attr_param_invisible_annotations =
+                (ParameterAnnotationsAttribute*) attr;
+            break;
+        case AttributeInfo::ATTRIBUTE_AnnotationDefault:
+            if (attr_annotation_default || ! ACC_ABSTRACT() || ! ACC_PUBLIC())
+                buffer.MarkInvalid();
+            attr_annotation_default = (AnnotationDefaultAttribute*) attr;
             break;
         case AttributeInfo::ATTRIBUTE_Generic:
             // ignore
@@ -382,15 +432,14 @@ MethodInfo::MethodInfo(ClassFile& buffer)
 
 
 AttributeInfo::AttributeInfo(AttributeInfoTag _tag, ClassFile& buffer)
-    : tag(_tag),
-      attribute_name_index(buffer.GetU2()),
-      attribute_length(buffer.GetU4())
+    : tag(_tag)
+    , attribute_name_index(buffer.GetU2())
+    , attribute_length(buffer.GetU4())
 {
     if (tag == ATTRIBUTE_Generic)
     {
         info = new u1[attribute_length];
-        for (unsigned i = 0; i < attribute_length; i++)
-            info[i] = buffer.GetU1();
+        buffer.GetN(info, attribute_length);
     }
     else info = NULL;
 }
@@ -476,7 +525,10 @@ AttributeInfo* AttributeInfo::AllocateAttributeInfo(ClassFile& buffer)
 {
     u2 index = buffer.PeekU2();
     if (buffer.Pool()[index] -> Tag() != CPInfo::CONSTANT_Utf8)
+    {
+        buffer.MarkInvalid();
         return new AttributeInfo(ATTRIBUTE_Generic, buffer);
+    }
     switch (Tag((CPUtf8Info*) buffer.Pool()[index]))
     {
     case ATTRIBUTE_ConstantValue:
@@ -499,8 +551,22 @@ AttributeInfo* AttributeInfo::AllocateAttributeInfo(ClassFile& buffer)
         return new DeprecatedAttribute(buffer);
     case ATTRIBUTE_Signature:
         return new SignatureAttribute(buffer);
+    case ATTRIBUTE_Bridge:
+        return new BridgeAttribute(buffer);
     case ATTRIBUTE_StackMap:
         return new StackMapAttribute(buffer);
+    case ATTRIBUTE_RuntimeVisibleAnnotations:
+        return new AnnotationsAttribute(buffer, true);
+    case ATTRIBUTE_RuntimeInvisibleAnnotations:
+        return new AnnotationsAttribute(buffer, false);
+    case ATTRIBUTE_RuntimeVisibleParameterAnnotations:
+        return new ParameterAnnotationsAttribute(buffer, true);
+    case ATTRIBUTE_RuntimeInvisibleParameterAnnotations:
+        return new ParameterAnnotationsAttribute(buffer, false);
+    case ATTRIBUTE_AnnotationDefault:
+        return new AnnotationDefaultAttribute(buffer);
+    case ATTRIBUTE_EnclosingMethod:
+        return new EnclosingMethodAttribute(buffer);
     default:
         return new AttributeInfo(ATTRIBUTE_Generic, buffer);
     }
@@ -508,8 +574,8 @@ AttributeInfo* AttributeInfo::AllocateAttributeInfo(ClassFile& buffer)
 
 
 ConstantValueAttribute::ConstantValueAttribute(ClassFile& buffer)
-    : AttributeInfo(ATTRIBUTE_ConstantValue, buffer),
-      constantvalue_index(buffer.GetU2())
+    : AttributeInfo(ATTRIBUTE_ConstantValue, buffer)
+    , constantvalue_index(buffer.GetU2())
 {
     if (attribute_length != 2 ||
         ! buffer.Pool()[constantvalue_index] -> Constant())
@@ -520,23 +586,22 @@ ConstantValueAttribute::ConstantValueAttribute(ClassFile& buffer)
 
 
 CodeAttribute::CodeAttribute(ClassFile& buffer)
-    : AttributeInfo(ATTRIBUTE_Code, buffer),
-      max_stack(buffer.GetU2()),
-      max_locals(buffer.GetU2()),
-      code(8, 4),
-      exception_table(6, 16),
-      attributes(6, 16),
-      attr_linenumbers(NULL),
-      attr_locals(NULL),
-      attr_stackmap(NULL)
+    : AttributeInfo(ATTRIBUTE_Code, buffer)
+    , max_stack(buffer.GetU2())
+    , max_locals(buffer.GetU2())
+    , code(8, 4)
+    , exception_table(6, 16)
+    , attributes(6, 16)
+    , attr_linenumbers(NULL)
+    , attr_locals(NULL)
+    , attr_stackmap(NULL)
 {
     unsigned remaining = attribute_length - 12;
     // +2 for max_stack, +2 for max_locals, +4 for code_length,
     // +2 for exception_table_length, +2 for attributes_count
     u4 code_length = buffer.GetU4();
     remaining -= code_length;
-    while (code_length--)
-        code.Next() = buffer.GetU1();
+    buffer.SkipN(code_length);
 
     u2 exception_table_length = buffer.GetU2();
     remaining -= exception_table_length * 8;
@@ -616,7 +681,7 @@ void CodeAttribute::Print(const ConstantPool& constant_pool, int fill) const
             constant_pool[exception_table[i].catch_type] ->
                 Describe(constant_pool);
         }
-        else Coutput << "(invalid)";                    
+        else Coutput << "(invalid)";
         Coutput << endl;
     }
     Coutput << " attribute_count: " << (unsigned) attributes.Length() << endl;
@@ -627,8 +692,8 @@ void CodeAttribute::Print(const ConstantPool& constant_pool, int fill) const
 
 
 ExceptionsAttribute::ExceptionsAttribute(ClassFile& buffer)
-    : AttributeInfo(ATTRIBUTE_Exceptions, buffer),
-      exception_index_table(6, 16)
+    : AttributeInfo(ATTRIBUTE_Exceptions, buffer)
+    , exception_index_table(6, 16)
 {
     unsigned count = buffer.GetU2();
     if (attribute_length != count * 2 + 2)
@@ -644,8 +709,8 @@ ExceptionsAttribute::ExceptionsAttribute(ClassFile& buffer)
 
 
 InnerClassesAttribute::InnerClassesAttribute(ClassFile& buffer)
-    : AttributeInfo(ATTRIBUTE_InnerClasses, buffer),
-      classes(6, 16)
+    : AttributeInfo(ATTRIBUTE_InnerClasses, buffer)
+    , classes(6, 16)
 {
     unsigned count = buffer.GetU2();
     if (attribute_length != count * 8 + 2)
@@ -682,8 +747,8 @@ SyntheticAttribute::SyntheticAttribute(ClassFile& buffer)
 
 
 SourceFileAttribute::SourceFileAttribute(ClassFile& buffer)
-    : AttributeInfo(ATTRIBUTE_SourceFile, buffer),
-      sourcefile_index(buffer.GetU2())
+    : AttributeInfo(ATTRIBUTE_SourceFile, buffer)
+    , sourcefile_index(buffer.GetU2())
 {
     if (attribute_length != 2 ||
         buffer.Pool()[sourcefile_index] -> Tag() != CPInfo::CONSTANT_Utf8)
@@ -694,8 +759,8 @@ SourceFileAttribute::SourceFileAttribute(ClassFile& buffer)
 
 
 LineNumberTableAttribute::LineNumberTableAttribute(ClassFile& buffer)
-    : AttributeInfo(ATTRIBUTE_LineNumberTable, buffer),
-      line_number_table(6, 16)
+    : AttributeInfo(ATTRIBUTE_LineNumberTable, buffer)
+    , line_number_table(6, 16)
 {
     unsigned count = buffer.GetU2();
     if(attribute_length != count * 4 + 2)
@@ -706,12 +771,12 @@ LineNumberTableAttribute::LineNumberTableAttribute(ClassFile& buffer)
         entry.start_pc = buffer.GetU2();
         entry.line_number = buffer.GetU2();
     }
-}        
+}
 
 
 LocalVariableTableAttribute::LocalVariableTableAttribute(ClassFile& buffer)
-    : AttributeInfo(ATTRIBUTE_LocalVariableTable, buffer),
-      local_variable_table(6, 16)
+    : AttributeInfo(ATTRIBUTE_LocalVariableTable, buffer)
+    , local_variable_table(6, 16)
 {
     unsigned count = buffer.GetU2();
     if (attribute_length != count * 10 + 2)
@@ -744,14 +809,22 @@ DeprecatedAttribute::DeprecatedAttribute(ClassFile& buffer)
 
 
 SignatureAttribute::SignatureAttribute(ClassFile& buffer)
-    : AttributeInfo(ATTRIBUTE_Signature, buffer),
-      signature_index(buffer.GetU2())
+    : AttributeInfo(ATTRIBUTE_Signature, buffer)
+    , signature_index(buffer.GetU2())
 {
     if (attribute_length != 2 ||
         buffer.Pool()[signature_index] -> Tag() != CPInfo::CONSTANT_Utf8)
     {
         buffer.MarkInvalid();
     }
+}
+
+
+BridgeAttribute::BridgeAttribute(ClassFile& buffer)
+    : AttributeInfo(ATTRIBUTE_Bridge, buffer)
+{
+    if (attribute_length)
+        buffer.MarkInvalid();
 }
 
 
@@ -776,10 +849,10 @@ void StackMapAttribute::StackMapFrame::VerificationTypeInfo::Read(ClassFile& buf
 }
 
 StackMapAttribute::StackMapFrame::StackMapFrame(ClassFile& buffer)
-    : offset(buffer.GetU2()),
-      locals(6, 16),
-      stack(6, 16),
-      frame_size(6)
+    : offset(buffer.GetU2())
+    , locals(6, 16)
+    , stack(6, 16)
+    , frame_size(6)
     // +2 for offset, +2 for locals_size, +2 for stack_size
 {
     unsigned count = buffer.GetU2();
@@ -799,8 +872,8 @@ StackMapAttribute::StackMapFrame::StackMapFrame(ClassFile& buffer)
 }
 
 StackMapAttribute::StackMapAttribute(ClassFile& buffer)
-    : AttributeInfo(ATTRIBUTE_StackMap, buffer),
-      frames(6, 16)
+    : AttributeInfo(ATTRIBUTE_StackMap, buffer)
+    , frames(6, 16)
 {
     unsigned remaining = attribute_length - 2; // -2 for frame_count
     unsigned count = buffer.GetU2();
@@ -815,23 +888,274 @@ StackMapAttribute::StackMapAttribute(ClassFile& buffer)
 }
 
 
+AnnotationMemberValue::AnnotationMemberValue(ClassFile& buffer)
+    : tag((AnnotationMemberValueTag) buffer.GetU1())
+    , annotation_value(NULL)
+    , values(NULL)
+{
+    switch(tag)
+    {
+    case MEMBER_boolean: case MEMBER_byte: case MEMBER_char: case MEMBER_short:
+    case MEMBER_int:
+        info = buffer.GetU2();
+        if (buffer.Pool()[info] -> Tag() != CPInfo::CONSTANT_Integer)
+            buffer.MarkInvalid();
+        break;
+    case MEMBER_long:
+        info = buffer.GetU2();
+        if (buffer.Pool()[info] -> Tag() != CPInfo::CONSTANT_Long)
+            buffer.MarkInvalid();
+        break;
+    case MEMBER_float:
+        info = buffer.GetU2();
+        if (buffer.Pool()[info] -> Tag() != CPInfo::CONSTANT_Float)
+            buffer.MarkInvalid();
+        break;
+    case MEMBER_double:
+        info = buffer.GetU2();
+        if (buffer.Pool()[info] -> Tag() != CPInfo::CONSTANT_Double)
+            buffer.MarkInvalid();
+        break;
+    case MEMBER_string:
+        info = buffer.GetU2();
+        if (buffer.Pool()[info] -> Tag() != CPInfo::CONSTANT_Utf8)
+            buffer.MarkInvalid();
+        break;
+    case MEMBER_class:
+        info = buffer.GetU2();
+        if (buffer.Pool()[info] -> Tag() != CPInfo::CONSTANT_Class)
+            buffer.MarkInvalid();
+        break;
+    case MEMBER_enum:
+        info = buffer.GetU2();
+        const_name_index = buffer.GetU2();
+        if (buffer.Pool()[info] -> Tag() != CPInfo::CONSTANT_Utf8 ||
+            buffer.Pool()[const_name_index] -> Tag() != CPInfo::CONSTANT_Utf8)
+        {
+            buffer.MarkInvalid();
+        }
+        break;
+    case MEMBER_annotation:
+        annotation_value = new AnnotationValue(buffer);
+        break;
+    case MEMBER_array:
+        info = buffer.GetU2();
+        if (info)
+            values = new AnnotationMemberValue*[info];
+        for (unsigned i = 0; i < info; i++)
+            values[i] = new AnnotationMemberValue(buffer);
+        break;
+    default:
+        buffer.MarkInvalid();
+    }
+}
+
+AnnotationMemberValue::~AnnotationMemberValue()
+{
+    delete annotation_value;
+    if (values)
+    {
+        assert(tag == MEMBER_array);
+        while (info--)
+            delete values[info];
+        delete [] values;
+    }
+}
+
+u2 AnnotationMemberValue::Size() const
+{
+    switch(tag)
+    {
+    case MEMBER_boolean: case MEMBER_byte: case MEMBER_char: case MEMBER_short:
+    case MEMBER_int: case MEMBER_long: case MEMBER_float: case MEMBER_double:
+    case MEMBER_string: case MEMBER_class:
+        return 3; // +1 tag, +2 info
+    case MEMBER_enum:
+        return 5; // +1 tag, +2 info, +2 const_name_index
+    case MEMBER_annotation:
+        return 1 + annotation_value -> Size(); // +1 tag, recurse
+    case MEMBER_array:
+        {
+            u2 size = 3; // +1 tag, +2 info
+            for (unsigned i = 0; i < info; i++)
+                size += values[i] -> Size(); // recurse
+            return size;
+        }
+    }
+    return 1; // previously marked invalid, +1 tag
+}
+
+void AnnotationMemberValue::Put(OutputBuffer& out) const
+{
+    out.PutU1(tag);
+    switch(tag)
+    {
+    case MEMBER_boolean: case MEMBER_byte: case MEMBER_char: case MEMBER_short:
+    case MEMBER_int: case MEMBER_long: case MEMBER_float: case MEMBER_double:
+    case MEMBER_string: case MEMBER_class:
+        out.PutU2(info);
+        break;
+    case MEMBER_enum:
+        out.PutU2(info);
+        out.PutU2(const_name_index);
+        break;
+    case MEMBER_annotation:
+        annotation_value -> Put(out);
+        break;
+    case MEMBER_array:
+        out.PutU2(info);
+        for (unsigned i = 0; i < info; i++)
+            values[i] -> Put(out);
+    }
+}
+
+#ifdef JIKES_DEBUG
+void AnnotationMemberValue::Print(const ConstantPool& pool) const
+{
+    switch(tag)
+    {
+    case MEMBER_boolean: case MEMBER_byte: case MEMBER_char: case MEMBER_short:
+    case MEMBER_int: case MEMBER_long: case MEMBER_float: case MEMBER_double:
+    case MEMBER_string: case MEMBER_class:
+        Coutput << (unsigned) info << '=';
+        pool[info] -> Describe(pool);
+        break;
+    case MEMBER_enum:
+        Coutput << (unsigned) info << '.' << (unsigned) const_name_index
+                << '=';
+        pool[info] -> Describe(pool);
+        Coutput << '.';
+        pool[const_name_index] -> Describe(pool);
+        break;
+    case MEMBER_annotation:
+        annotation_value -> Print(pool);
+        break;
+    case MEMBER_array:
+        Coutput << '{';
+        if (info)
+            values[0] -> Print(pool);
+        for (unsigned i = 1; i < info; i++)
+        {
+            Coutput << ", ";
+            values[i] -> Print(pool);
+        }
+        Coutput << '}';
+        break;
+    default:
+        Coutput << "unknown tag: " << (unsigned) tag;
+    }
+}
+#endif // JIKES_DEBUG
+
+
+AnnotationValue::AnnotationValue(ClassFile& buffer)
+    : type_index(buffer.GetU2())
+    , num_member_value_pairs(buffer.GetU2())
+{
+    if (buffer.Pool()[type_index] -> Tag() != CPInfo::CONSTANT_Class)
+        buffer.MarkInvalid();
+    if (num_member_value_pairs)
+        member_value_pairs = new MemberValuePair[num_member_value_pairs];
+    for (unsigned i = 0; i < num_member_value_pairs; i++)
+    {
+        u2 index = buffer.GetU2();
+        member_value_pairs[i].member_name_index = index;
+        if (buffer.Pool()[index] -> Tag() != CPInfo::CONSTANT_Class)
+            buffer.MarkInvalid();
+        member_value_pairs[i].value = new AnnotationMemberValue(buffer);
+    }
+}
+
+
+AnnotationsAttribute::AnnotationsAttribute(ClassFile& buffer, bool visible)
+    : AttributeInfo((visible ? ATTRIBUTE_RuntimeVisibleAnnotations
+                     : ATTRIBUTE_RuntimeInvisibleAnnotations), buffer)
+    , annotations(6, 16)
+{
+    unsigned count = buffer.GetU2();
+    unsigned length = 2; // +2 num_annotations
+    while (count--)
+    {
+        AnnotationValue* value = new AnnotationValue(buffer);
+        annotations.Next() = value;
+        length += value -> Size();
+    }
+    if (length != attribute_length)
+        buffer.MarkInvalid();
+}
+
+
+ParameterAnnotationsAttribute::ParameterAnnotationsAttribute(ClassFile& buffer,
+                                                             bool visible)
+    : AttributeInfo((visible ? ATTRIBUTE_RuntimeVisibleParameterAnnotations
+                     : ATTRIBUTE_RuntimeInvisibleParameterAnnotations), buffer)
+    , num_parameters(buffer.GetU1())
+    , parameters(NULL)
+{
+    unsigned length = 1 + 2 * num_parameters;
+    // +1 num_parameters, +2 num_annotations * num_parameters
+    if (num_parameters)
+        parameters = new Tuple<AnnotationValue*>[num_parameters];
+    for (unsigned i = 0; i < num_parameters; i++)
+    {
+        unsigned count = buffer.GetU2();
+        while (count--)
+        {
+            AnnotationValue* value = new AnnotationValue(buffer);
+            parameters[i].Next() = value;
+            length += value -> Size();
+        }
+    }
+    if (length != attribute_length)
+        buffer.MarkInvalid();
+}
+
+
+AnnotationDefaultAttribute::AnnotationDefaultAttribute(ClassFile& buffer)
+    : AttributeInfo(ATTRIBUTE_AnnotationDefault, buffer)
+{
+    default_value = new AnnotationMemberValue(buffer);
+    if (default_value -> Size() != attribute_length)
+        buffer.MarkInvalid();
+}
+
+
+EnclosingMethodAttribute::EnclosingMethodAttribute(ClassFile& buffer)
+    : AttributeInfo(ATTRIBUTE_EnclosingMethod, buffer)
+    , class_index(buffer.GetU2())
+    , name_and_type_index(buffer.GetU2())
+{
+    if (attribute_length != 4 ||
+        buffer.Pool()[class_index] -> Tag() != CPInfo::CONSTANT_Class ||
+        (name_and_type_index &&
+         (buffer.Pool()[name_and_type_index] -> Tag() !=
+          CPInfo::CONSTANT_NameAndType)))
+    {
+        buffer.MarkInvalid();
+    }
+}
+
+
 ClassFile::ClassFile(const char* buf, unsigned buf_size)
-    : valid(true),
-      buffer(buf),
-      buffer_tail(buf + buf_size),
-      magic(GetU4()),
-      minor_version(GetU2()),
-      major_version(GetU2()),
-      constant_pool(8, 4),
-      interfaces(6, 16),
-      fields(6, 16),
-      methods(6, 16),
-      attributes(6, 16),
-      attr_synthetic(NULL),
-      attr_deprecated(NULL),
-      attr_signature(NULL),
-      attr_sourcefile(NULL),
-      attr_innerclasses(NULL)
+    : valid(true)
+    , buffer(buf)
+    , buffer_tail(buf + buf_size)
+    , magic(GetU4())
+    , minor_version(GetU2())
+    , major_version(GetU2())
+    , constant_pool(8, 4)
+    , interfaces(6, 16)
+    , fields(6, 16)
+    , methods(6, 16)
+    , attributes(6, 16)
+    , attr_synthetic(NULL)
+    , attr_deprecated(NULL)
+    , attr_signature(NULL)
+    , attr_sourcefile(NULL)
+    , attr_innerclasses(NULL)
+    , attr_visible_annotations(NULL)
+    , attr_invisible_annotations(NULL)
+    , attr_enclosing_method(NULL)
 {
     if (magic != MAGIC || major_version < 45) // Unknown class format.
         valid = false;
@@ -888,6 +1212,7 @@ ClassFile::ClassFile(const char* buf, unsigned buf_size)
             if (attr_synthetic)
                 valid = false;
             attr_synthetic = (SyntheticAttribute*) attr;
+            SetACC_SYNTHETIC();
             break;
         case AttributeInfo::ATTRIBUTE_Deprecated:
             if (attr_deprecated)
@@ -909,6 +1234,21 @@ ClassFile::ClassFile(const char* buf, unsigned buf_size)
                 valid = false;
             attr_innerclasses = (InnerClassesAttribute*) attr;
             break;
+        case AttributeInfo::ATTRIBUTE_RuntimeVisibleAnnotations:
+            if (attr_visible_annotations)
+                valid = false;
+            attr_visible_annotations = (AnnotationsAttribute*) attr;
+            break;
+        case AttributeInfo::ATTRIBUTE_RuntimeInvisibleAnnotations:
+            if (attr_invisible_annotations)
+                valid = false;
+            attr_invisible_annotations = (AnnotationsAttribute*) attr;
+            break;
+        case AttributeInfo::ATTRIBUTE_EnclosingMethod:
+            if (attr_enclosing_method)
+                valid = false;
+            attr_enclosing_method = (EnclosingMethodAttribute*) attr;
+            break;
         case AttributeInfo::ATTRIBUTE_Generic:
             // ignore
             break;
@@ -917,7 +1257,7 @@ ClassFile::ClassFile(const char* buf, unsigned buf_size)
             valid = false;
         }
     }
-}          
+}
 
 void ClassFile::Write(TypeSymbol* unit_type) const
 {
@@ -972,9 +1312,7 @@ void ClassFile::Write(TypeSymbol* unit_type) const
         name[length] = U_NULL;
 
         sem -> ReportSemError(SemanticError::CANNOT_WRITE_FILE,
-                              unit_type -> declaration -> LeftToken(),
-                              unit_type -> declaration -> RightToken(),
-                              name);
+                              unit_type -> declaration, name);
         delete [] name;
     }
 }
@@ -1223,9 +1561,7 @@ TypeSymbol* Semantic::ReadTypeFromSignature(TypeSymbol* base_type,
 
             if (package -> directory.Length() == 0)
             {
-                ReportSemError(SemanticError::PACKAGE_NOT_FOUND,
-                               tok,
-                               tok,
+                ReportSemError(SemanticError::PACKAGE_NOT_FOUND, tok,
                                package -> PackageName());
             }
             delete [] package_name;
@@ -1396,11 +1732,11 @@ void Semantic::ProcessClassFile(TypeSymbol* type, const char* buffer,
         wchar_t* str =
             new wchar_t[class_info -> TypeNameLength(constant_pool) + 1];
         control.
-            ConvertUtf8ToUnicode(str, class_info -> TypeName(constant_pool), 
+            ConvertUtf8ToUnicode(str, class_info -> TypeName(constant_pool),
                                  class_info -> TypeNameLength(constant_pool));
         // Passing NULL as the filename allows the error format to use the
         // platform dependent directory delimiter.
-        ReportSemError(SemanticError::WRONG_TYPE_IN_CLASSFILE, tok, tok,
+        ReportSemError(SemanticError::WRONG_TYPE_IN_CLASSFILE, tok,
                        type -> ExternalName(),
                        type -> file_symbol -> PathSym() -> Name(),
                        NULL, str);
@@ -1409,14 +1745,14 @@ void Semantic::ProcessClassFile(TypeSymbol* type, const char* buffer,
         delete class_data;
         return;
     }
-                       
+
     type -> MarkHeaderProcessed();
     type -> MarkConstructorMembersProcessed();
     type -> MarkMethodMembersProcessed();
     type -> MarkFieldMembersProcessed();
     type -> MarkLocalClassProcessingCompleted();
     type -> MarkSourceNoLongerPending();
-                       
+
     //
     // Since the unnamed packages includes all directories on the CLASSPATH,
     // check that types are not duplicated between directories.
@@ -1431,8 +1767,7 @@ void Semantic::ProcessClassFile(TypeSymbol* type, const char* buffer,
         else
         {
             ReportSemError(SemanticError::DUPLICATE_TYPE_DECLARATION,
-                           tok, tok, type -> Name(),
-                           old_type -> FileLoc());
+                           tok, type -> Name(), old_type -> FileLoc());
         }
     }
 
@@ -1479,8 +1814,6 @@ void Semantic::ProcessClassFile(TypeSymbol* type, const char* buffer,
     //
     type -> SetFlags(class_data -> Flags());
     type -> ResetACC_SUPER();
-    if (class_data -> Synthetic())
-        type -> MarkSynthetic();
     if (class_data -> Deprecated())
         type -> MarkDeprecated();
     if (inner_classes)
@@ -1496,13 +1829,13 @@ void Semantic::ProcessClassFile(TypeSymbol* type, const char* buffer,
                 type -> SetFlags(inner_classes -> Flags(i));
                 if (! outer)
                 {
-                    // TODO: Make this nicer?
-                    // This type is local or anonymous, so we shouldn't be
-                    // reading it from the .class file. Marking it synthetic
-                    // works to make it unusable (but the error message is not
-                    // the best).
                     //
-                    type -> MarkSynthetic();
+                    // This type is local or anonymous, so we shouldn't be
+                    // reading it from the .class file. Marking it anonymous
+                    // is our clue to report an error for trying to use the
+                    // type by qualified name.
+                    //
+                    type -> MarkAnonymous();
                 }
             }
             else if (outer == class_info &&
@@ -1568,7 +1901,7 @@ void Semantic::ProcessClassFile(TypeSymbol* type, const char* buffer,
     for (i = class_data -> FieldsCount() - 1; i >= 0; i--)
     {
         const FieldInfo* field = class_data -> Field(i);
-        if (field -> Synthetic())
+        if (field -> ACC_SYNTHETIC())
             continue; // No point reading these - the user can't access them.
         NameSymbol* name_symbol =
             control.ConvertUtf8ToUnicode(field -> Name(constant_pool),
@@ -1632,8 +1965,11 @@ void Semantic::ProcessClassFile(TypeSymbol* type, const char* buffer,
         NameSymbol* name_symbol =
             control.ConvertUtf8ToUnicode(method -> Name(constant_pool),
                                          method -> NameLength(constant_pool));
-        if (method -> Synthetic() || name_symbol == control.clinit_name_symbol)
+        if (method -> ACC_SYNTHETIC() ||
+            name_symbol == control.clinit_name_symbol)
+        {
             continue; // No point reading these - the user can't access them.
+        }
         MethodSymbol* symbol = new MethodSymbol(name_symbol);
         symbol -> SetContainingType(type);
         symbol -> SetFlags(method -> Flags());

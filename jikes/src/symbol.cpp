@@ -377,16 +377,14 @@ TypeSymbol* TypeSymbol::GetArrayType(Semantic* sem, unsigned dims)
             type -> InsertMethodSymbol(sem -> control.clone_name_symbol);
         method -> SetType(sem -> control.Object());
         method -> SetContainingType(type);
-        method -> SetACC_PUBLIC();
-        method -> SetACC_FINAL();
+        method -> SetFlags(ACCESS_PUBLIC | ACCESS_FINAL);
         // the associated symbol table will remain empty
         method -> SetBlockSymbol(new BlockSymbol(1));
         method -> SetSignature(sem -> control);
 
         VariableSymbol* symbol =
             type -> InsertVariableSymbol(sem -> control.length_name_symbol);
-        symbol -> SetACC_PUBLIC();
-        symbol -> SetACC_FINAL();
+        symbol -> SetFlags(ACCESS_PUBLIC | ACCESS_FINAL);
         symbol -> SetOwner(type);
         symbol -> SetType(sem -> control.int_type);
         symbol -> MarkComplete();
@@ -1465,11 +1463,10 @@ VariableSymbol* TypeSymbol::InsertThis0()
     VariableSymbol* variable_symbol =
         InsertVariableSymbol(control.this0_name_symbol);
     variable_symbol -> SetType(ContainingType());
-    variable_symbol -> SetACC_FINAL();
+    variable_symbol -> SetFlags(ACCESS_FINAL | ACCESS_SYNTHETIC);
     variable_symbol -> SetOwner(this);
     variable_symbol -> MarkComplete();
     variable_symbol -> MarkInitialized();
-    variable_symbol -> MarkSynthetic();
 
     enclosing_instance = variable_symbol;
     return variable_symbol;
@@ -1511,16 +1508,15 @@ MethodSymbol* TypeSymbol::FindOrInsertClassLiteralMethod(Control& control)
         block_symbol -> max_variable_index = 2;
 
         class_literal_method = InsertMethodSymbol(control.class_name_symbol);
-        class_literal_method -> MarkSynthetic();
         class_literal_method -> SetType(control.Class());
-        class_literal_method -> SetACC_STATIC();
+        class_literal_method -> SetFlags(ACCESS_STATIC | ACCESS_SYNTHETIC);
         // No need to worry about strictfp, since this method avoids fp math
         class_literal_method -> SetContainingType(this);
         class_literal_method -> SetBlockSymbol(block_symbol);
 
         VariableSymbol* variable_symbol =
             block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
-        variable_symbol -> MarkSynthetic();
+        variable_symbol -> SetACC_SYNTHETIC();
         variable_symbol -> SetType(control.String());
         variable_symbol -> SetOwner(class_literal_method);
         variable_symbol -> SetLocalVariableIndex(block_symbol ->
@@ -1530,7 +1526,7 @@ MethodSymbol* TypeSymbol::FindOrInsertClassLiteralMethod(Control& control)
 
         variable_symbol =
             block_symbol -> InsertVariableSymbol(control.MakeParameter(2));
-        variable_symbol -> MarkSynthetic();
+        variable_symbol -> SetACC_SYNTHETIC();
         variable_symbol -> SetType(control.boolean_type);
         variable_symbol -> SetOwner(class_literal_method);
         variable_symbol -> SetLocalVariableIndex(block_symbol ->
@@ -1648,10 +1644,9 @@ VariableSymbol* TypeSymbol::FindOrInsertClassLiteral(TypeSymbol* type)
         //
         variable_symbol = owner -> InsertVariableSymbol(name_symbol);
         variable_symbol -> SetType(control.Class());
-        variable_symbol -> SetACC_STATIC();
+        variable_symbol -> SetFlags(ACCESS_STATIC | ACCESS_SYNTHETIC);
         variable_symbol -> SetOwner(owner);
         variable_symbol -> MarkComplete();
-        variable_symbol -> MarkSynthetic();
 
         owner -> AddClassLiteral(variable_symbol);
     }
@@ -1677,13 +1672,11 @@ VariableSymbol* TypeSymbol::FindOrInsertAssertVariable()
 
         assert_variable = InsertVariableSymbol(name_symbol);
         assert_variable -> SetType(control.boolean_type);
-        assert_variable -> SetACC_PRIVATE();
-        assert_variable -> SetACC_STATIC();
-        assert_variable -> SetACC_FINAL();
+        assert_variable -> SetFlags(ACCESS_PRIVATE | ACCESS_STATIC |
+                                    ACCESS_FINAL | ACCESS_SYNTHETIC);
         assert_variable -> SetOwner(this);
         assert_variable -> MarkComplete();
         assert_variable -> MarkInitialized();
-        assert_variable -> MarkSynthetic();
 
         //
         // We'll create the field initializer later in bytecode.cpp, but we
@@ -1756,11 +1749,10 @@ VariableSymbol* TypeSymbol::FindOrInsertLocalShadow(VariableSymbol* local)
 
         variable = InsertVariableSymbol(name_symbol);
         variable -> SetType(local -> Type());
-        variable -> SetACC_FINAL();
+        variable -> SetFlags(ACCESS_FINAL | ACCESS_SYNTHETIC);
         variable -> SetOwner(this);
         variable -> MarkComplete();
         variable -> MarkInitialized();
-        variable -> MarkSynthetic();
 
         if (ContainingType() == local -> ContainingType())
             variable -> accessed_local = local;
@@ -1924,9 +1916,8 @@ MethodSymbol* TypeSymbol::GetReadAccessMethod(MethodSymbol* member,
         //
         read_method = new MethodSymbol(control.FindOrInsertName(name, length));
         Table() -> AddMethodSymbol(read_method);
-        read_method -> MarkSynthetic();
         read_method -> SetType(member -> Type());
-        read_method -> SetACC_STATIC();
+        read_method -> SetFlags(ACCESS_STATIC | ACCESS_SYNTHETIC);
         if (member -> ACC_STRICTFP())
             read_method -> SetACC_STRICTFP();
         if (member -> ACC_FINAL() || ACC_FINAL())
@@ -1995,7 +1986,7 @@ MethodSymbol* TypeSymbol::GetReadAccessMethod(MethodSymbol* member,
 
             VariableSymbol* instance =
                 block_symbol -> InsertVariableSymbol(instance_name);
-            instance -> MarkSynthetic();
+            instance -> SetACC_SYNTHETIC();
             instance -> SetType(base_type == super ? this : base_type);
             instance -> SetOwner(read_method);
             instance -> SetLocalVariableIndex(block_symbol ->
@@ -2010,7 +2001,7 @@ MethodSymbol* TypeSymbol::GetReadAccessMethod(MethodSymbol* member,
         {
             VariableSymbol* parm = block_symbol ->
                 InsertVariableSymbol(member -> FormalParameter(i) -> Identity());
-            parm -> MarkSynthetic();
+            parm -> SetACC_SYNTHETIC();
             parm -> SetType(member -> FormalParameter(i) -> Type());
             parm -> SetOwner(read_method);
             parm -> SetLocalVariableIndex(block_symbol ->
@@ -2164,10 +2155,10 @@ MethodSymbol* TypeSymbol::GetReadAccessConstructor(MethodSymbol* ctor)
         //
         read_method = new MethodSymbol(control.init_name_symbol);
         Table() -> AddMethodSymbol(read_method);
-        read_method -> MarkSynthetic();
         read_method -> SetType(this);
         read_method -> SetContainingType(this);
         read_method -> SetBlockSymbol(block_symbol);
+        read_method -> SetACC_SYNTHETIC();
         if (ctor -> ACC_STRICTFP())
             read_method -> SetACC_STRICTFP();
 
@@ -2205,7 +2196,7 @@ MethodSymbol* TypeSymbol::GetReadAccessConstructor(MethodSymbol* ctor)
         {
             this0_variable = block_symbol ->
                 InsertVariableSymbol(control.this0_name_symbol);
-            this0_variable -> MarkSynthetic();
+            this0_variable -> SetACC_SYNTHETIC();
             this0_variable -> SetType(ContainingType());
             this0_variable -> SetOwner(read_method);
             this0_variable -> SetLocalVariableIndex(block_symbol ->
@@ -2222,7 +2213,7 @@ MethodSymbol* TypeSymbol::GetReadAccessConstructor(MethodSymbol* ctor)
         for (unsigned i = 0; i < ctor -> NumFormalParameters(); i++)
         {
             parm = block_symbol -> InsertVariableSymbol(ctor -> FormalParameter(i) -> Identity());
-            parm -> MarkSynthetic();
+            parm -> SetACC_SYNTHETIC();
             parm -> SetType(ctor -> FormalParameter(i) -> Type());
             parm -> SetOwner(read_method);
             parm -> SetLocalVariableIndex(block_symbol ->
@@ -2342,9 +2333,8 @@ MethodSymbol* TypeSymbol::GetReadAccessMethod(VariableSymbol* member,
         //
         read_method = new MethodSymbol(control.FindOrInsertName(name, length));
         Table() -> AddMethodSymbol(read_method);
-        read_method -> MarkSynthetic();
         read_method -> SetType(member -> Type());
-        read_method -> SetACC_STATIC();
+        read_method -> SetFlags(ACCESS_STATIC | ACCESS_SYNTHETIC);
         if (ACC_STRICTFP())
             read_method -> SetACC_STRICTFP();
         if (ACC_FINAL())
@@ -2400,7 +2390,7 @@ MethodSymbol* TypeSymbol::GetReadAccessMethod(VariableSymbol* member,
 
             VariableSymbol* instance =
                 block_symbol -> InsertVariableSymbol(instance_name);
-            instance -> MarkSynthetic();
+            instance -> SetACC_SYNTHETIC();
             instance -> SetType(base_type == super ? this : base_type);
             instance -> SetOwner(read_method);
             instance -> SetLocalVariableIndex(block_symbol ->
@@ -2509,9 +2499,8 @@ MethodSymbol* TypeSymbol::GetWriteAccessMethod(VariableSymbol* member,
         write_method =
             new MethodSymbol(control.FindOrInsertName(name, length));
         Table() -> AddMethodSymbol(write_method);
-        write_method -> MarkSynthetic();
         write_method -> SetType(sem -> control.void_type);
-        write_method -> SetACC_STATIC();
+        write_method -> SetFlags(ACCESS_STATIC | ACCESS_SYNTHETIC);
         if (ACC_STRICTFP())
             write_method -> SetACC_STRICTFP();
         if (ACC_FINAL())
@@ -2564,7 +2553,7 @@ MethodSymbol* TypeSymbol::GetWriteAccessMethod(VariableSymbol* member,
 
             VariableSymbol* instance =
                 block_symbol -> InsertVariableSymbol(instance_name);
-            instance -> MarkSynthetic();
+            instance -> SetACC_SYNTHETIC();
             instance -> SetType(base_type == super ? this : base_type);
             instance -> SetOwner(write_method);
             instance -> SetLocalVariableIndex(block_symbol ->
@@ -2577,7 +2566,7 @@ MethodSymbol* TypeSymbol::GetWriteAccessMethod(VariableSymbol* member,
 
         VariableSymbol* symbol =
             block_symbol -> InsertVariableSymbol(member -> Identity());
-        symbol -> MarkSynthetic();
+        symbol -> SetACC_SYNTHETIC();
         symbol -> SetType(member -> Type());
         symbol -> SetOwner(write_method);
         symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
@@ -2639,7 +2628,7 @@ MethodSymbol* TypeSymbol::GetWriteAccessMethod(VariableSymbol* member,
 
 MethodSymbol* TypeSymbol::GetWriteAccessFromReadAccess(MethodSymbol* read_method)
 {
-    assert(read_method && read_method -> IsSynthetic() &&
+    assert(read_method && read_method -> ACC_SYNTHETIC() &&
            read_method -> containing_type == this);
     VariableSymbol* variable =
         DYNAMIC_CAST<VariableSymbol*> (read_method -> accessed_member);
@@ -2689,7 +2678,7 @@ TypeSymbol* TypeSymbol::GetPlaceholderType()
         sem -> GetAnonymousType(class_creation, control.Object());
         sem -> state_stack.Pop();
         assert(placeholder_type);
-        placeholder_type -> MarkSynthetic();
+        placeholder_type -> SetACC_SYNTHETIC();
     }
     return placeholder_type;
 }

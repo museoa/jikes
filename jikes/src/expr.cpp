@@ -697,7 +697,7 @@ MethodSymbol* Semantic::FindConstructor(TypeSymbol* containing_type, Ast* ast,
     }
 
     ctor = constructor_set[0];
-    if (ctor -> IsSynthetic())
+    if (ctor -> ACC_SYNTHETIC())
     {
         ReportSemError(SemanticError::SYNTHETIC_CONSTRUCTOR_INVOCATION,
                        left_tok, right_tok, ctor -> Header(),
@@ -935,7 +935,7 @@ MethodShadowSymbol* Semantic::FindMethodInType(TypeSymbol* type,
     }
 
     MethodSymbol* method = method_set[0] -> method_symbol;
-    if (method -> IsSynthetic())
+    if (method -> ACC_SYNTHETIC())
     {
         ReportSemError(SemanticError::SYNTHETIC_METHOD_INVOCATION,
                        method_call, method -> Header(),
@@ -1072,7 +1072,7 @@ MethodShadowSymbol* Semantic::FindMethodInEnvironment(SemanticEnvironment*& wher
         //
         // The method was inherited.
         //
-        if (method_symbol -> IsSynthetic())
+        if (method_symbol -> ACC_SYNTHETIC())
         {
             ReportSemError(SemanticError::SYNTHETIC_METHOD_INVOCATION,
                            method_call, method_symbol -> Header(),
@@ -1194,7 +1194,7 @@ VariableSymbol* Semantic::FindVariableInType(TypeSymbol* type,
     }
 
     variable = variable_set[0];
-    if (variable -> IsSynthetic())
+    if (variable -> ACC_SYNTHETIC())
     {
         ReportSemError(SemanticError::SYNTHETIC_VARIABLE_ACCESS, expr,
                        variable -> Name(),
@@ -1438,7 +1438,7 @@ VariableSymbol* Semantic::FindVariableInEnvironment(SemanticEnvironment*& where_
             // The field was inherited.
             //
             TypeSymbol* type = (TypeSymbol*) variable_symbol -> owner;
-            if (variable_symbol -> IsSynthetic())
+            if (variable_symbol -> ACC_SYNTHETIC())
             {
                 ReportSemError(SemanticError::SYNTHETIC_VARIABLE_ACCESS,
                                identifier_token,
@@ -3560,10 +3560,10 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class
     {
         VariableSymbol* this0_variable =
             block_symbol -> InsertVariableSymbol(control.this0_name_symbol);
-        this0_variable -> MarkSynthetic();
         this0_variable -> SetType(anonymous_type -> EnclosingType());
         this0_variable -> SetOwner(constructor);
-        this0_variable -> SetACC_FINAL();
+        this0_variable -> SetFlags(AccessFlags::ACCESS_FINAL |
+                                   AccessFlags::ACCESS_SYNTHETIC);
         this0_variable -> SetLocalVariableIndex(block_symbol ->
                                                 max_variable_index++);
         this0_variable -> MarkComplete();
@@ -3636,7 +3636,7 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class
     {
         VariableSymbol* super_this0_variable =
             block_symbol -> InsertVariableSymbol(control.MakeParameter(0));
-        super_this0_variable -> MarkSynthetic();
+        super_this0_variable -> SetACC_SYNTHETIC();
         super_this0_variable -> SetType(super_call -> base_opt -> Type());
         super_this0_variable -> SetOwner(constructor);
         super_this0_variable -> SetLocalVariableIndex(block_symbol ->
@@ -3778,8 +3778,27 @@ TypeSymbol* Semantic::GetAnonymousType(AstClassInstanceCreationExpression* class
     anon_type -> declaration -> semantic_environment =
         anon_type -> semantic_environment;
     anon_type -> file_symbol = source_file_symbol;
-    anon_type -> SetOwner(ThisMethod() ? (Symbol*) ThisMethod()
-                          : (Symbol*) this_type);
+    if (ThisMethod())
+        anon_type -> SetOwner(ThisMethod());
+    else
+    {
+        //
+        // Creating an anonymous class in a field initializer necessarily
+        // requires non-trivial code, so the initializer method should
+        // exist as the owner of this type.
+        //
+        assert(ThisVariable() &&
+               (ThisVariable() -> ACC_STATIC()
+                ? this_type -> static_initializer_method
+                : (this_type ->
+                   FindMethodSymbol(control.block_init_name_symbol))));
+        anon_type ->
+            SetOwner(ThisVariable() -> ACC_STATIC()
+                     ? this_type -> static_initializer_method
+                     : (this_type ->
+                        FindMethodSymbol(control.block_init_name_symbol)));
+    }
+
     //
     // Add 3 extra elements for padding. Need a default constructor and
     // other support elements.
