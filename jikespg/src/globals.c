@@ -1,7 +1,7 @@
 /* $Id$ */
 /*
- This software is subject to the terms of the IBM Jikes Compiler
- License Agreement available at the following URL:
+ This software is subject to the terms of the IBM Jikes Parser
+ Generator License Agreement available at the following URL:
  http://www.ibm.com/research/jikes.
  Copyright (C) 1983, 1999, International Business Machines Corporation
  and others.  All Rights Reserved.
@@ -19,7 +19,7 @@ static char hostfile[] = __FILE__;
 /*******************************************************************/
 /*******************************************************************/
 const char HEADER_INFO[]  = "IBM Research Jikes Parser Generator";
-const char VERSION[] = "1.2";
+const char VERSION[] = "1.1";
 const char BLANK[]        = " ";
 const long MAX_TABLE_SIZE = MIN((long) USHRT_MAX, INT_MAX) - 1;
 

@@ -1,8 +1,8 @@
 %Options nogoto-default,esc=$,os=100,action,actfile=lpgact.i,noem
 %Options fp=lpg,gp,nodefer,suffix=_TK,stack_size=21,hactfile=lpgact.h
 -- $Id$
--- This software is subject to the terms of the IBM Jikes Compiler
--- License Agreement available at the following URL:
+-- This software is subject to the terms of the IBM Jikes Parser
+-- Generator License Agreement available at the following URL:
 -- http://www.ibm.com/research/jikes.
 -- Copyright (C) 1983, 1999, International Business Machines Corporation
 -- and others.  All Rights Reserved.
