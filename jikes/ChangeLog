@@ -1,3 +1,8 @@
+2002-12-13  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/getclass.cpp (ProcessClassFile): Fix segfault when class
+	file has invalid (or missing) supertype - bug 3404.
+
 2002-12-10  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/platform.cpp (DoubleToString):
