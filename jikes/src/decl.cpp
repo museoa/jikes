@@ -1399,7 +1399,7 @@ void Semantic::ProcessNestedTypeHeaders(TypeSymbol *type, AstClassBody *class_bo
     if (type -> expanded_type_table && (type -> super != control.Object() || type -> NumInterfaces() > 0))
     {
         delete type -> expanded_type_table;
-        type  -> expanded_type_table = NULL;
+        type -> expanded_type_table = NULL;
     }
 
     if (! type -> expanded_type_table)
@@ -2266,7 +2266,7 @@ void Semantic::ProcessTypeImportOnDemandDeclaration(AstImportDeclaration *import
 
 
 //
-// The Ast name is a name expression (either a qualified name or a simplename)
+// The Ast name is a name expression (either a qualified or simple name).
 // FindFirstType traverses the name tree and returns the first subtree that it
 // finds that matches a type. As a side-effect, each subtree that matches a
 // package or a type has that package or type recorded in its "symbol" field.
@@ -3317,12 +3317,15 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
         //
         // Note that since all methods in an interface are implicitly
         // public, all other methods encountered here are enclosed in a
-        // type that is a super class of base_type.
+        // type that is a super class of base_type. Since synthetic methods
+        // cannot be called in user code, we can safely ignore them here.
         //
         if (method -> ACC_PUBLIC() ||
             method -> ACC_PROTECTED() ||
             (! method -> ACC_PRIVATE() &&
-             super_type -> ContainingPackage() == base_type -> ContainingPackage()))
+             super_type -> ContainingPackage() ==
+             base_type -> ContainingPackage()) &&
+            ! method -> IsSynthetic())
         {
             MethodShadowSymbol *shadow =
                 base_expanded_table.FindOverloadMethodShadow(method, this,

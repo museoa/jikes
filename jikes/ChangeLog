@@ -1,5 +1,10 @@
 2002-06-17  Eric B Blake  <eblake@ee.byu.edu>
 
+	* src/decl.cpp (AddInheritedMethods): Synthetic methods do not
+	need to be inherited - bug 2924.
+
+2002-06-17  Eric B Blake  <eblake@ee.byu.edu>
+
 	* src/bytecode.cpp (EmitSwitchStatement, EmitBlockStatement),
 	(DeclareLocalVariable):
 	* src/bytecode.h (Push, Pop): Mark local variables uninitialized
