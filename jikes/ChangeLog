@@ -1,3 +1,12 @@
+2003-06-29  Musachy Barroso  <insanus@bellsouth.net>
+
+	* src/decl.cpp:
+	* src/error.cpp:
+	* src/symbol.cpp:
+	* src/symbol.h: When a duplicate method or constructor
+	is found, add information(location) about the original
+	method or constructor declaration to the error message
+
 2003-05-31  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/case.h:

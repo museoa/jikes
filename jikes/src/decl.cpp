@@ -1924,7 +1924,8 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration* construc
                                             constructor_declarator))
         {
             ReportSemError(SemanticError::DUPLICATE_CONSTRUCTOR,
-                           constructor_declarator, this_type -> Name());
+                           constructor_declarator, this_type -> Name(),
+						   constructor -> FileLoc());
             delete block_symbol;
             return;
         }
@@ -1941,7 +1942,7 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration* construc
     constructor -> SetContainingType(this_type);
     constructor -> SetBlockSymbol(block_symbol);
     constructor -> declaration = constructor_declaration;
-
+	constructor -> SetLocation();
     if (this_type -> EnclosingType())
     {
         VariableSymbol* this0_variable =
@@ -3021,9 +3022,12 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration* method_declaration
     {
         if (this_type -> FindOverloadMethod(method, method_declarator))
         {
-            ReportSemError(SemanticError::DUPLICATE_METHOD,
-                           method_declarator, name_symbol -> Name(),
-                           this_type -> Name());
+           ReportSemError(SemanticError::DUPLICATE_METHOD,
+                           method_declarator -> LeftToken(),
+                           method_declarator -> RightToken(),
+                           name_symbol -> Name(),
+                           this_type -> Name(),
+						   method -> FileLoc());
             delete block_symbol;
             return;
         }
@@ -3041,6 +3045,7 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration* method_declaration
     method -> SetContainingType(this_type);
     method -> SetBlockSymbol(block_symbol);
     method -> declaration = method_declaration;
+	method-> SetLocation();
     for (unsigned i = 0; i < method_declarator -> NumFormalParameters(); i++)
     {
         AstVariableDeclarator* formal_declarator =

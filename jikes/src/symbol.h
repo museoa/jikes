@@ -432,7 +432,7 @@ public:
     BlockSymbol* block_symbol;
     MethodSymbol* next_method;
     Utf8LiteralValue* signature;
-
+    FileLocation *file_location;
     unsigned max_block_depth;
 
     //
@@ -455,7 +455,11 @@ public:
         return name_symbol -> Utf8_literal
             ? name_symbol -> Utf8_literal -> length : 0;
     }
-
+    wchar_t *FileLoc()
+    {
+        return (wchar_t *) (file_location ? file_location -> location : NULL);
+    }	   
+    void SetLocation();
     MethodSymbol(const NameSymbol* name_symbol_)
         : declaration(NULL),
           name_symbol(name_symbol_),

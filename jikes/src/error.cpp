@@ -1232,9 +1232,9 @@ void SemanticError::InitializeMessages()
     messages[DUPLICATE_FIELD] =
         "Duplicate declaration of field \"%1\" in type \"%2\".";
     messages[DUPLICATE_METHOD] =
-        "Duplicate declaration of method \"%1\" in type \"%2\".";
+        "Duplicate declaration of method \"%1\" in type \"%2\". The other occurrence is at location \"%3\".";
     messages[DUPLICATE_CONSTRUCTOR] =
-        "Duplicate declaration of this constructor signature in type \"%1\".";
+        "Duplicate declaration of this constructor signature in type \"%1\". The other occurrence is at location \"%2\".";
     messages[MISMATCHED_INHERITED_METHOD] =
         "The return type of method \"%1\" does not match the return type of "
         "the accessible method \"%2\" declared in type \"%T3\".";

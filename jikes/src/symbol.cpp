@@ -226,7 +226,26 @@ wchar_t* MethodSymbol::Header()
     return header;
 }
 
+void MethodSymbol::SetLocation()
+{
+    //AstMethodDeclaration or AstConstructorDeclaration
+    if (! declaration)
+        file_location = new FileLocation(containing_type ->file_symbol);
+    else
+    {
+        AstMethodDeclaration  *method_declaration =
+            declaration -> MethodDeclarationCast();
+        AstConstructorDeclaration *constructor_declaration =
+            declaration -> ConstructorDeclarationCast();
 
+        file_location =
+			new FileLocation(containing_type -> semantic_environment -> sem -> lex_stream,
+                             (method_declaration
+                              ? method_declaration -> LeftToken()
+							  : constructor_declaration -> LeftToken()));
+    }
+}        
+	
 MethodSymbol* SymbolTable::FindOverloadMethod(MethodSymbol* base_method,
                                               AstMethodDeclarator* method_declarator)
 {
