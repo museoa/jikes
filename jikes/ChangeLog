@@ -1,3 +1,7 @@
+2002-02-26  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.cpp (ProcessAbruptExit): Fix bug 2713.
+
 2002-02-25  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/double.cpp (operator>, operator<): Fix bug 2700.

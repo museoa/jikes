@@ -2082,11 +2082,11 @@ bool ByteCode::ProcessAbruptExit(int level, u2 width, TypeSymbol *return_type)
 
     if (variable_index >= 0)
         LoadLocal(variable_index, return_type);
-    for (int i = method_stack -> Size() - 1;
-         i > 0 && method_stack -> NestingLevel(i) != level; i--)
+    for (int j = method_stack -> Size() - 1;
+         j > 0 && method_stack -> NestingLevel(j) != level; j--)
     {
-        int nesting_level = method_stack -> NestingLevel(i),
-            enclosing_level = method_stack -> NestingLevel(i - 1);
+        int nesting_level = method_stack -> NestingLevel(j),
+            enclosing_level = method_stack -> NestingLevel(j - 1);
         AstBlock *block = method_stack -> Block(nesting_level);
         if (block -> block_tag == AstBlock::SYNCHRONIZED)
             method_stack -> MonitorStartPc(enclosing_level) =
