@@ -1,5 +1,10 @@
 2001-11-08  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/double.h (NAN_BITS): Rename from NAN, which happened to
+	expand as a pre-processor macro in gcc 3.0.1 - bug 2255.
+
+2001-11-08  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/decl.cpp (CompleteSymbolTable): Improve the tests for
 	abstract method implementations, bug 2382.
 	(AddInherited*): Improve tests for ambiguous names, as the public
@@ -35,9 +40,9 @@
 
 2001-11-06  Eric Blake  <ebb9@email.byu.edu>
 
-	* src/body.cpp (ProcessExecutableBodies): Supress spurious warning
-	messages about finals not assigned in a constructor which contains
-	semantic errors, bug 669.
+	* src/body.cpp (ProcessExecutableBodies): Suppress spurious
+	warning messages about finals not assigned in a constructor which
+	contains semantic errors, bug 669.
 	* src/symbol.cpp (CleanUp): Fix core dump from patch 225.
 
 2001-11-05  Eric Blake  <ebb9@email.byu.edu>
