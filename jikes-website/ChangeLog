@@ -1,5 +1,11 @@
 2001-03-02  Christopher Abbey  <cabbey@tweedle.cabbey.net>
 
+	* /usr/cvs/jikes/jikes-website/ChangeLog, /usr/cvs/jikes/jikes-website/faq/bug-reporting.shtml:
+	fixed bad table border, left over from debug mode... should not have been commited
+	also tested the emacs changelog generator.
+
+2001-03-02  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+
 	* /usr/cvs/jikes/jikes-website/ChangeLog,
 	/usr/cvs/jikes/jikes-website/faq/dev-mac.shtml,
 	/usr/cvs/jikes/jikes-website/faq/dev-win32.shtml:
