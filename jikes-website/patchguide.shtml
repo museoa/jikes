@@ -1,0 +1,29 @@
+<HTML>
+  <head>
+    <TITLE>IBM - developerWorks - Open Source Software - Jikes - Patch Guide</TITLE>
+  </head>
+  <BODY bgcolor="ffffff">
+    <p align="center"><img src="images/jikes.png" width=600 height=54 border=0 align=center alt="Jikes<sup><small>TM</small></sup>"><BR>&nbsp;</p>
+
+<h1>Jikes Patches Guidlines</h1>
+
+<p>The Jikes project welcomes patches, but cannot promise that every
+patch submitted will be accepted. Patches should be submitted to the
+<a href="/developerworks/patch/?group_id=10">patch queue</a>.
+
+<p>Here are some guidelines on submitting a patch. If you make it
+hard for us to evaluate and incorporate the patch, then it is less
+likely we will include it; for example, please:
+<ul>
+<li>Patch against current version of source.
+<li>Use same coding conventions: indenting levels, position of braces, ...
+<li>Provide a description of patch in the <code>ChangeLog</code> file style.
+<li>Include your e-mail address in the <code>ChangeLog</code> notice.
+<li>Provide the patch in <code>diff</code> unified output format 
+(<code>-u</code> option of GNU <code>diff</code>).
+</ul>
+
+    <!--#include file="footer.shtml" -->
+  </BODY>
+</HTML>
+

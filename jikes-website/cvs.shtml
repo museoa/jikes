@@ -11,8 +11,17 @@
     <dl>
       <dt>CVSROOT</dt><dd><code>:pserver:anoncvs@oss.software.ibm.com:/usr/cvs/jikes</code></dd>
       <dt>password</dt><dd>anoncvs</dd>
-      <dt>modules</dt><dd>jikes, jacks</dd>
+      <dt>modules</dt><dd>
+        <dl>
+          <dt>jikes</dt><dd>The main compiler source code</dd>
+          <dt>jacks</dt><dd>Jacks is an Automated Compiler Killing Suite</dd>
+          <dt>jikestst</dt><dd>The old jikes test package code</dd>
+          <dt>jikespg</dt><dd>The Jikes Parser Generator source code</dd>
+          <dt>jikes-website</dt><dd>The project webpages</dd>
+        </dl>
+      </dd>
       <dt>CVSWeb</dt><dd><a href="http://oss.software.ibm.com/developerworks/opensource/cvs/jikes/">Browsable here</a></dd>
+      <dt>.cvsrc</dt><dd>The following values are suggested for Jikes developers:<br>cvs -q -z3<br>diff -uN<br>update -P<br>checkout -P</dd>
     </dl>
 
     <!--#include file="footer.shtml" -->

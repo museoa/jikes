@@ -30,10 +30,11 @@
           <ul>
             <li><a href="cvs.shtml">CVS</a>
             <li><a href="/developerworks/patch/?group_id=10">Patches</a>
+	    <li><a href="patchguide.shtml">patch submission guidelines</a>
             <li><a href="todo.shtml">Todo list</a>
             <li>...
           </ul>
-	  <hr>
+	      <hr>
           General Interest
           <ul>
             <li><a href="people.shtml">People</a>
