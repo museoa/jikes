@@ -435,6 +435,7 @@ public:
                                              next_method(NULL),
                                              signature(NULL),
                                              type_(NULL),
+                                             status(0),
                                              header(NULL),
                                              max_block_depth(1), // there must be at least one block in a method
                                                                  // this default is useful for default constructors.
@@ -574,9 +575,13 @@ assert(! base_method -> local_constructor);
 
     void CleanUp();
 
+    void MarkSynthetic() { status |= (unsigned char) 0x08; }
+    bool IsSynthetic()   { return status & (unsigned char) 0x08; }
+
 private:
     NameSymbol *external_name_symbol;
 
+    unsigned char status;
     wchar_t *header;
 
     TypeSymbol *type_;
@@ -1250,6 +1255,9 @@ assert(type_);
 
     void MarkPossiblyAssigned() { status |= (unsigned char) 0x04; }
     bool IsPossiblyAssigned()   { return status & (unsigned char) 0x04; }
+
+    void MarkSynthetic() { status |= (unsigned char) 0x08; }
+    bool IsSynthetic()   { return status & (unsigned char) 0x08; }
 
 private:
     NameSymbol *external_name_symbol;
@@ -2232,8 +2240,8 @@ inline SymbolTable *PackageSymbol::Table()
 
 inline void TypeSymbol::SetSymbolTable(int estimate)
 {
-assert(! table);
-    table = new SymbolTable(estimate);
+    if (! table) // If table was not yet allocated, allocate one based on the estimate
+        table = new SymbolTable(estimate);
 }
 
 inline SymbolTable *TypeSymbol::Table()

@@ -225,6 +225,8 @@ public:
         CIRCULAR_THIS_CALL,
         INSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
         INSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
+        SYNTHETIC_VARIABLE_ACCESS,
+        SYNTHETIC_METHOD_INVOCATION,
         THIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
         SUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
         EXPRESSION_NOT_CONSTANT,
@@ -540,6 +542,8 @@ private:
     static void PrintCIRCULAR_THIS_CALL(ErrorInfo &, LexStream *, Control &);
     static void PrintINSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static void PrintINSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
+    static void PrintSYNTHETIC_VARIABLE_ACCESS(ErrorInfo &, LexStream *, Control &);
+    static void PrintSYNTHETIC_METHOD_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static void PrintTHIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static void PrintSUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static void PrintEXPRESSION_NOT_CONSTANT(ErrorInfo &, LexStream *, Control &);

@@ -1253,6 +1253,7 @@ assert(NumEnclosingInstances() == 0);
         // Create a this0 pointer for an inner class.
         //
         variable_symbol = InsertVariableSymbol(control.this0_name_symbol);
+        variable_symbol -> MarkSynthetic();
         variable_symbol -> SetType(ContainingType());
         variable_symbol -> SetACC_PRIVATE();
 //        variable_symbol -> SetACC_FINAL();
@@ -1269,6 +1270,7 @@ assert(NumEnclosingInstances() == n);
         // Create a this$n pointer.
         //
         variable_symbol = InsertVariableSymbol(GetThisName(control, n));
+        variable_symbol -> MarkSynthetic();
         variable_symbol -> SetType(EnclosingInstance(n - 1) -> Type() -> ContainingType());
         variable_symbol -> SetACC_PRIVATE();
 //        variable_symbol -> SetACC_FINAL();
@@ -1338,6 +1340,7 @@ MethodSymbol *TypeSymbol::FindOrInsertClassLiteralMethod(Control &control)
         class_literal_method -> SetBlockSymbol(block_symbol);
 
             VariableSymbol *variable_symbol = block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
+            variable_symbol -> MarkSynthetic();
             variable_symbol -> SetType(control.String());
             variable_symbol -> SetOwner(class_literal_method);
             variable_symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
@@ -1418,6 +1421,7 @@ assert(IsTopLevel() && (! type -> Primitive()));
     if (! variable_symbol)
     {
         variable_symbol = InsertVariableSymbol(name_symbol);
+        variable_symbol -> MarkSynthetic();
         variable_symbol -> SetType(control.Class());
         variable_symbol -> SetACC_PRIVATE();
         variable_symbol -> SetACC_STATIC();
@@ -1453,6 +1457,7 @@ assert(this -> IsLocal());
     if (! variable)
     {
         variable = InsertVariableSymbol(local -> Identity());
+        variable -> MarkSynthetic();
         variable -> accessed_local = local;
         variable -> SetType(local -> Type());
         variable -> SetACC_PRIVATE();
@@ -1477,6 +1482,7 @@ assert(this -> IsLocal());
             if (! symbol)
             {
                 symbol = constructor -> block_symbol -> InsertVariableSymbol(local -> Identity());
+                symbol -> MarkSynthetic();
                 symbol -> SetType(variable -> Type());
                 symbol -> SetOwner(constructor);
                 symbol -> SetExternalIdentity(external_name_symbol);
@@ -1520,6 +1526,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
         BlockSymbol *block_symbol = new BlockSymbol(member -> NumFormalParameters() + 3);
 
         MethodSymbol *method = type -> InsertMethodSymbol(control.FindOrInsertName(name, length));
+        method -> MarkSynthetic();
         method -> SetType(member -> Type());
         if (member -> ACC_STATIC())
         {
@@ -1541,6 +1548,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
             for (int i = 0; i < member -> NumFormalParameters(); i++)
             {
                 VariableSymbol *parm = method -> block_symbol -> InsertVariableSymbol(member -> FormalParameter(i) -> Identity());
+                parm -> MarkSynthetic();
                 parm -> SetType(member -> FormalParameter(i) -> Type());
                 parm -> SetOwner(method);
                 parm -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
@@ -1581,6 +1589,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
             if (type -> IsInner())
             {
                 this0_variable = block_symbol -> InsertVariableSymbol(control.this0_name_symbol);
+                this0_variable -> MarkSynthetic();
                 this0_variable -> SetType(type -> ContainingType());
                 this0_variable -> SetOwner(method);
                 this0_variable -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
@@ -1588,6 +1597,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
             for (int i = 0; i < member -> NumFormalParameters(); i++)
             {
                 VariableSymbol *parm = method -> block_symbol -> InsertVariableSymbol(member -> FormalParameter(i) -> Identity());
+                parm -> MarkSynthetic();
                 parm -> SetType(member -> FormalParameter(i) -> Type());
                 parm -> SetOwner(method);
                 parm -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
@@ -1675,6 +1685,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member)
         wcscat(name, str);
 
         MethodSymbol *method = type -> InsertMethodSymbol(control.FindOrInsertName(name, length));
+        method -> MarkSynthetic();
         method -> SetType(member -> Type());
         if (member -> ACC_STATIC())
             method -> SetACC_STATIC();
@@ -1719,6 +1730,7 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member)
         wcscat(name, str);
 
         MethodSymbol *method = type -> InsertMethodSymbol(control.FindOrInsertName(name, length));
+        method -> MarkSynthetic();
         method -> SetType(sem -> control.void_type);
         if (member -> ACC_STATIC())
             method -> SetACC_STATIC();
@@ -1732,6 +1744,7 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member)
         //    this.m = m;
         //
         VariableSymbol *symbol = method -> block_symbol -> InsertVariableSymbol(member -> Identity());
+        symbol -> MarkSynthetic();
         symbol -> SetType(member -> Type());
         method -> AddFormalParameter(symbol);
 

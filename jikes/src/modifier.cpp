@@ -61,6 +61,15 @@ AccessFlags Semantic::ProcessClassModifiers(AstClassDeclaration *class_declarati
                  }
                  else access_flags.SetACC_PUBLIC();
                  break;
+            case Ast::STRICTFP:
+                 if (access_flags.ACC_STRICTFP())
+                 {
+                     ReportSemError(SemanticError::DUPLICATE_MODIFIER,
+                                    modifier -> modifier_kind_token,
+                                    modifier -> modifier_kind_token);
+                 }
+                 else access_flags.SetACC_STRICTFP();
+                 break;
             default:
                  ReportSemError(SemanticError::INVALID_TOP_LEVEL_CLASS_MODIFIER,
                                 modifier -> modifier_kind_token,
@@ -116,6 +125,15 @@ AccessFlags Semantic::ProcessLocalClassModifiers(AstClassDeclaration *class_decl
                                     modifier -> modifier_kind_token,
                                     modifier -> modifier_kind_token);
                  }
+                 break;
+            case Ast::STRICTFP:
+                 if (access_flags.ACC_STRICTFP())
+                 {
+                     ReportSemError(SemanticError::DUPLICATE_MODIFIER,
+                                    modifier -> modifier_kind_token,
+                                    modifier -> modifier_kind_token);
+                 }
+                 else access_flags.SetACC_STRICTFP();
                  break;
             default:
                  ReportSemError(SemanticError::INVALID_LOCAL_CLASS_MODIFIER,
@@ -208,6 +226,15 @@ AccessFlags Semantic::ProcessNestedClassModifiers(AstClassDeclaration *class_dec
                  }
                  else access_flags.SetACC_STATIC();
                  break;
+            case Ast::STRICTFP:
+                 if (access_flags.ACC_STRICTFP())
+                 {
+                     ReportSemError(SemanticError::DUPLICATE_MODIFIER,
+                                    modifier -> modifier_kind_token,
+                                    modifier -> modifier_kind_token);
+                 }
+                 else access_flags.SetACC_STRICTFP();
+                 break;
             default:
                  ReportSemError(SemanticError::INVALID_INNER_CLASS_MODIFIER,
                                 modifier -> modifier_kind_token,
@@ -295,6 +322,15 @@ AccessFlags Semantic::ProcessStaticNestedClassModifiers(AstClassDeclaration *cla
                      access_flags.SetACC_STATIC();
                  }
                  break;
+            case Ast::STRICTFP:
+                 if (access_flags.ACC_STRICTFP())
+                 {
+                     ReportSemError(SemanticError::DUPLICATE_MODIFIER,
+                                    modifier -> modifier_kind_token,
+                                    modifier -> modifier_kind_token);
+                 }
+                 else access_flags.SetACC_STRICTFP();
+                 break;
             default:
                  ReportSemError(SemanticError::INVALID_INNER_CLASS_MODIFIER,
                                 modifier -> modifier_kind_token,
@@ -348,6 +384,15 @@ AccessFlags Semantic::ProcessInterfaceModifiers(AstInterfaceDeclaration *interfa
                                     modifier -> modifier_kind_token);
                  }
                  else access_flags.SetACC_PUBLIC();
+                 break;
+            case Ast::STRICTFP:
+                 if (access_flags.ACC_STRICTFP())
+                 {
+                     ReportSemError(SemanticError::DUPLICATE_MODIFIER,
+                                    modifier -> modifier_kind_token,
+                                    modifier -> modifier_kind_token);
+                 }
+                 else access_flags.SetACC_STRICTFP();
                  break;
             default:
                  ReportSemError(SemanticError::INVALID_INTERFACE_MODIFIER,
@@ -432,6 +477,15 @@ AccessFlags Semantic::ProcessNestedInterfaceModifiers(AstInterfaceDeclaration *i
                                         modifier -> modifier_kind_token);
                      access_flags.SetACC_STATIC();
                  }
+                 break;
+            case Ast::STRICTFP:
+                 if (access_flags.ACC_STRICTFP())
+                 {
+                     ReportSemError(SemanticError::DUPLICATE_MODIFIER,
+                                    modifier -> modifier_kind_token,
+                                    modifier -> modifier_kind_token);
+                 }
+                 else access_flags.SetACC_STRICTFP();
                  break;
             default:
                  ReportSemError(SemanticError::INVALID_INTERFACE_MODIFIER,
@@ -673,6 +727,15 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
                                     modifier -> modifier_kind_token,
                                     lex_stream -> Name(modifier -> modifier_kind_token));
                  }
+                 break;
+            case Ast::STRICTFP:
+                 if (access_flags.ACC_STRICTFP())
+                 {
+                     ReportSemError(SemanticError::DUPLICATE_MODIFIER,
+                                    modifier -> modifier_kind_token,
+                                    modifier -> modifier_kind_token);
+                 }
+                 else access_flags.SetACC_STRICTFP();
                  break;
             case Ast::ABSTRACT:
                  if (access_flags.ACC_ABSTRACT())

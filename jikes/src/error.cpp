@@ -490,6 +490,8 @@ void SemanticError::StaticInitializer()
     print_message[CIRCULAR_THIS_CALL] = PrintCIRCULAR_THIS_CALL;
     print_message[INSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintINSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATION;
     print_message[INSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintINSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION;
+    print_message[SYNTHETIC_VARIABLE_ACCESS] = PrintSYNTHETIC_VARIABLE_ACCESS;
+    print_message[SYNTHETIC_METHOD_INVOCATION] = PrintSYNTHETIC_METHOD_INVOCATION;
     print_message[THIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintTHIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION;
     print_message[SUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintSUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION;
     print_message[EXPRESSION_NOT_CONSTANT] = PrintEXPRESSION_NOT_CONSTANT;
@@ -2393,7 +2395,7 @@ void SemanticError::PrintTYPE_NOT_PRIMITIVE(ErrorInfo &err, LexStream *lex_strea
 
 void SemanticError::PrintTYPE_NOT_INTEGRAL(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type of this expression,\"";
+    cout << "The type of this expression, \"";
     Unicode::Cout(err.insert1);
     cout << "\", is not an integral type";
 
@@ -2403,7 +2405,7 @@ void SemanticError::PrintTYPE_NOT_INTEGRAL(ErrorInfo &err, LexStream *lex_stream
 
 void SemanticError::PrintTYPE_NOT_NUMERIC(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type of this expression,\"";
+    cout << "The type of this expression, \"";
     Unicode::Cout(err.insert1);
     cout << "\", is not numeric";
 
@@ -3624,6 +3626,40 @@ void SemanticError::PrintINSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(Erro
     cout << "\" declared in this class, \"";
     Unicode::Cout(err.insert2);
     cout << "\", or one of its super classes, is not accessible in an explicit constructor invocation";
+
+    return;
+}
+
+
+void SemanticError::PrintSYNTHETIC_VARIABLE_ACCESS(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "Illegal attempt to access the synthetic field \"";
+    Unicode::Cout(err.insert1);
+    cout << "\" contained in class \"";
+    if (NotDot(err.insert2))
+    {
+        Unicode::Cout(err.insert2);
+        cout << "/";
+    }
+    Unicode::Cout(err.insert3);
+    cout << "\"";
+
+    return;
+}
+
+
+void SemanticError::PrintSYNTHETIC_METHOD_INVOCATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "Illegal attempt to invoke the synthetic method \"";
+    Unicode::Cout(err.insert1);
+    cout << "\" contained in class \"";
+    if (NotDot(err.insert2))
+    {
+        Unicode::Cout(err.insert2);
+        cout << "/";
+    }
+    Unicode::Cout(err.insert3);
+    cout << "\"";
 
     return;
 }

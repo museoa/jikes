@@ -214,24 +214,39 @@ DefiniteAssignmentSet *Semantic::DefinitePLUSPLUSOrMINUSMINUS(AstExpression *exp
         delete definite;
     }
 
-    AstSimpleName *simple_name = expr -> SimpleNameCast();
-    if (simple_name && simple_name -> resolution_opt)
+    VariableSymbol *variable = NULL;
+    if (! expr -> ArrayAccessCast()) // some kind of name
     {
-        expr = simple_name -> resolution_opt;
-        simple_name = expr -> SimpleNameCast();
+        MethodSymbol *read_method = NULL;
+        AstSimpleName *simple_name = expr -> SimpleNameCast();
+        if (simple_name)
+        {
+            if (simple_name -> resolution_opt)
+               read_method = simple_name -> resolution_opt -> symbol -> MethodCast();
+        }
+        else
+        {
+            AstFieldAccess *field_access = expr -> FieldAccessCast();
+assert(field_access);
+            if (field_access -> resolution_opt)
+                read_method = field_access -> resolution_opt -> symbol -> MethodCast();
+        }
+
+        variable = (read_method ? (VariableSymbol *) read_method -> accessed_member : expr -> symbol -> VariableCast());
     }
 
-    VariableSymbol *variable = (simple_name ? (simple_name -> symbol ? simple_name -> symbol -> VariableCast() : (VariableSymbol *) NULL)
-                                            : (expr -> FieldAccessCast() ? DefiniteFinal(expr -> FieldAccessCast()) : (VariableSymbol *) NULL)
-                               );
-
+    //
+    // If we have a variable and it is final then...
+    //
     if (variable && variable -> ACC_FINAL())
     {
         ReportSemError(SemanticError::TARGET_VARIABLE_IS_FINAL,
                        expr -> LeftToken(),
                        expr -> RightToken(),
                        variable -> Name());
-        possibly_assigned_finals -> AddElement(variable -> LocalVariableIndex());
+
+        if (variable -> IsFinal(ThisType())) // if the final variable in contained in this type, then mark it assigned
+            possibly_assigned_finals -> AddElement(variable -> LocalVariableIndex());
     }
 
     return (DefiniteAssignmentSet *) NULL;
@@ -1416,7 +1431,7 @@ void Semantic::DefiniteReturnStatement(Ast *stmt)
 
     //
     // Compute the set of variables that are definitely assigned prior to executing
-    // this return statement.  Note that this set is only relevant to the method or
+    // this return statement. Note that this set is only relevant to the method or
     // constructor block containing this statement.
     //
     definite_block_stack -> TopReturnSet() *= (*definitely_assigned_variables);
@@ -1426,7 +1441,8 @@ void Semantic::DefiniteReturnStatement(Ast *stmt)
     // We have a few cases to consider:
     //
     //    1. The return statement is not contained in a try statement - the possibly-assigned set is only relevant
-    //       to the enclosing method (or constructor) block
+    //       to the enclosing method (or constructor) block. The definitely assigned set is updated as if the return
+    //       statement was a break statement out of the method (or constructor) block.
     //
     //    2. If the return statement is contained in a try main block or a try
     //       catch block that contains a finally clause - the possibly-assigned
@@ -1434,33 +1450,33 @@ void Semantic::DefiniteReturnStatement(Ast *stmt)
     //
     //    3. otherwise, treat the return statement as if it immediately followed its containing try statement
     //
-    int i;
-    for (i = definite_try_stack -> Size() - 1; i >= 0; i--)
+    if (definite_try_stack -> Size() == 0)
+        definite_block_stack -> ReturnSet(0) *= (*definitely_assigned_variables);
+    else
     {
-        AstTryStatement *try_statement = definite_try_stack -> TryStatement(i);
-        //
-        // Is the return statement enclosed in a try main block or catch block
-        // that  contains a finally clause. Note that a try statement is removed from
-        // the definite_try_stack before its finally clause is processed. thus, a return
-        // statement that is enclosed in a finally clause will appear in an enclosing
-        // try statement, if any...
-        //
-        if (try_statement -> finally_clause_opt)
+        for (int i = definite_try_stack -> Size() - 1; i >= 0; i--)
         {
-            int k;
-            for (k = definite_block_stack -> Size() - 1; definite_block_stack -> Block(k) != definite_try_stack -> Block(i); k--)
-                ;
+            AstTryStatement *try_statement = definite_try_stack -> TryStatement(i);
+            //
+            // Is the return statement enclosed in a try main block or catch block
+            // that  contains a finally clause. Note that a try statement is removed from
+            // the definite_try_stack before its finally clause is processed. thus, a return
+            // statement that is enclosed in a finally clause will appear in an enclosing
+            // try statement, if any...
+            //
+            if (try_statement -> finally_clause_opt)
+            {
+                int k;
+                for (k = definite_block_stack -> Size() - 1;
+                     definite_block_stack -> Block(k) != definite_try_stack -> Block(i);
+                     k--)
+                    ;
 assert(k >= 0);
-            definite_block_stack -> FinalReturnSet(k) += (*possibly_assigned_finals);
-            break;
+                definite_block_stack -> FinalReturnSet(k) += (*possibly_assigned_finals);
+                break;
+            }
         }
     }
-
-    //
-    // TODO: Don't think we need this. Reevaluate
-    //
-    //    if (i < 0)
-    //        definite_block_stack -> FinalReturnSet(0) += (*possibly_assigned_finals);
 
     //
     // After execution of a return statement, it is vacuously true 
@@ -1497,7 +1513,8 @@ void Semantic::DefiniteThrowStatement(Ast *stmt)
     // We have a few cases to consider:
     //
     //    1. The throw statement is not contained in a try statement - the possibly-assigned set is only relevant to
-    //       to the enclosing method (or constructor) block
+    //       to the enclosing method (or constructor) block. The definitely assigned set is updated as if the throw
+    //       statement was a break statement out of the method (or constructor) block.
     //
     //    2. The throw statement is enclosed in a try statement main block or catch clause.
     //
@@ -1509,42 +1526,42 @@ void Semantic::DefiniteThrowStatement(Ast *stmt)
     //
     //        2c. otherwise, treat the throw statement as if it immediately followed its containing try statement
     //
-    int i;
-    for (i = definite_try_stack -> Size() - 1; i >= 0; i--)
+    if (definite_try_stack -> Size() == 0)
+        definite_block_stack -> ThrowSet(0) *= (*definitely_assigned_variables);
+    else
     {
-        AstTryStatement *try_statement = definite_try_stack -> TryStatement(i);
-        //
-        // Is the return statement enclosed in a try main block or catch block
-        // that  contains a finally clause. Note that a try statement is removed from
-        // the definite_try_stack before its finally clause is processed. thus, a return
-        // statement that is enclosed in a finally clause will appear in an enclosing
-        // try statement, if any...
-        //
-        if (try_statement -> block == definite_try_stack -> Block(i)) // is the throw statement enclosed in the main try block?
+        for (int i = definite_try_stack -> Size() - 1; i >= 0; i--)
         {
-            int k;
-            for (k = definite_block_stack -> Size() - 1; definite_block_stack -> Block(k) != try_statement -> block; k--)
-                ;
+            AstTryStatement *try_statement = definite_try_stack -> TryStatement(i);
+            //
+            // Is the return statement enclosed in a try main block or catch block
+            // that  contains a finally clause. Note that a try statement is removed from
+            // the definite_try_stack before its finally clause is processed. thus, a return
+            // statement that is enclosed in a finally clause will appear in an enclosing
+            // try statement, if any...
+            //
+            if (try_statement -> block == definite_try_stack -> Block(i)) // Is the throw statement enclosed in main try block?
+            {
+                int k;
+                for (k = definite_block_stack -> Size() - 1; definite_block_stack -> Block(k) != try_statement -> block; k--)
+                    ;
 assert(k >= 0);
-            definite_block_stack -> FinalThrowSet(k) += (*possibly_assigned_finals);
-            break;
-        }
-        else if (try_statement -> finally_clause_opt)
-        {
-            int k;
-            for (k = definite_block_stack -> Size() - 1; definite_block_stack -> Block(k) != definite_try_stack -> Block(i); k--)
-                ;
+                definite_block_stack -> FinalThrowSet(k) += (*possibly_assigned_finals);
+                break;
+            }
+            else if (try_statement -> finally_clause_opt)
+            {
+                int k;
+                for (k = definite_block_stack -> Size() - 1;
+                     definite_block_stack -> Block(k) != definite_try_stack -> Block(i);
+                     k--)
+                    ;
 assert(k >= 0);
-            definite_block_stack -> FinalThrowSet(k) += (*possibly_assigned_finals);
-            break;
+                definite_block_stack -> FinalThrowSet(k) += (*possibly_assigned_finals);
+                break;
+            }
         }
     }
-
-    //
-    // TODO: Don't think we need this. Reevaluate
-    //
-    //    if (i < 0)
-    //        definite_block_stack -> FinalThrowSet(0) += (*possibly_assigned_finals);
 
     //
     // After execution of a throw statement, it is vacuously true 

@@ -72,34 +72,35 @@ void ByteCode::CompileClass(TypeSymbol * type)
             // constant expression.
             //
             need_clinit = need_clinit || (vd -> variable_initializer_opt && !(vsym -> ACC_FINAL() && vsym -> initial_value));
-            DeclareField(vsym, 0);
+            DeclareField(vsym);
         }
     }
     
     // supply needed field declaration for this$0 (if there is one)
-    if (type -> NumConstructorParameters()) {
-        for (pi=0; pi < type -> NumConstructorParameters(); pi ++) {
-            DeclareField(type -> ConstructorParameter(pi), 1);
-        }
+    for (pi = 0; pi < type -> NumConstructorParameters(); pi++)
+    {
+        DeclareField(type -> ConstructorParameter(pi));
     }
 
+    //
     // supply needed field declaration for enclosing instances (this$n) if present
-    if (type -> NumEnclosingInstances() > 1) {
-        for (pi=1; pi < type -> NumEnclosingInstances(); pi ++) {
-            DeclareField(type-> EnclosingInstance(pi), 1);
-        }
+    //
+    for (pi = 1; pi < type -> NumEnclosingInstances(); pi++)
+    {
+        DeclareField(type -> EnclosingInstance(pi));
     }
 
     // supply needed field declarations for "class " identifiers (used for X.class literals) if present
-    for (int ri=0; ri < type -> NumClassLiterals(); ri ++) {
-        DeclareField(type -> ClassLiteral(ri), 1);
+    for (int ri = 0; ri < type -> NumClassLiterals(); ri++)
+    {
+        DeclareField(type -> ClassLiteral(ri));
     }
 
     for (i=0; i < class_body -> NumInstanceVariables(); i++) {
         field_decl  = class_body -> InstanceVariable(i);
         for (int vi=0;vi<field_decl -> NumVariableDeclarators();vi++) {
             AstVariableDeclarator * vd = field_decl -> VariableDeclarator(vi);
-            DeclareField(vd -> symbol, 0);
+            DeclareField(vd -> symbol);
             // must set Constant attribute if initial value
             if (vd -> variable_initializer_opt) { // if initialization needed
                 need_init=1;
@@ -461,7 +462,7 @@ void ByteCode::CompileInterface(TypeSymbol * type)
             // constant expression.
             //
             need_clinit = need_clinit || (vd -> variable_initializer_opt && !(vsym -> ACC_FINAL() && vsym -> initial_value));
-            DeclareField(vsym, 0);
+            DeclareField(vsym);
         }
     }
 
@@ -502,7 +503,7 @@ void ByteCode::CompileInterface(TypeSymbol * type)
 
 }
 
-void ByteCode::DeclareField(VariableSymbol * symbol, int is_synthetic)
+void ByteCode::DeclareField(VariableSymbol * symbol)
 {
     int field_index = fields.NextIndex(); // index for field
 
@@ -522,7 +523,8 @@ void ByteCode::DeclareField(VariableSymbol * symbol, int is_synthetic)
         fields[field_index].attributes.Next() = constant_value_attribute;
     }
 
-    if (is_synthetic) {
+    if (symbol -> IsSynthetic())
+    {
         fields[field_index].attributes.Next() = CreateSyntheticAttribute();
     }
 
@@ -695,18 +697,30 @@ int ByteCode::BeginMethod(int method_kind, MethodSymbol * msym)
       methods[method_index].access_flags = flags.access_flags;
      }
 #endif
-    if (msym && msym -> NumThrows()) {
-        // generate throws attribute if method throws any exceptions
-        exceptions_attribute_length = 2 * (1 + msym -> NumThrows());
-        name = RegisterUtf8(U8S_Exceptions, strlen(U8S_Exceptions));
-        Exceptions_attribute * exceptions_attribute = new Exceptions_attribute(name, exceptions_attribute_length);
-        for (i=0;i<msym -> NumThrows(); i++) {
-            throw_symbol = (TypeSymbol *) msym -> Throws(i);
-            exceptions_attribute -> exception_index_table.Next() = 
-                RegisterClass(throw_symbol -> fully_qualified_name);
+    if (msym)
+    {
+        if (msym -> IsSynthetic())
+        {
+            methods[method_index].attributes.Next() = CreateSyntheticAttribute();  
         }
-        methods[method_index].attributes.Next() = exceptions_attribute;
+
+        //
+        // Generate throws attribute if method throws any exceptions
+        //
+        if (msym -> NumThrows())
+        {
+            exceptions_attribute_length = 2 * (1 + msym -> NumThrows());
+            name = RegisterUtf8(U8S_Exceptions, strlen(U8S_Exceptions));
+            Exceptions_attribute * exceptions_attribute = new Exceptions_attribute(name, exceptions_attribute_length);
+            for (int i = 0; i < msym -> NumThrows(); i++)
+            {
+                throw_symbol = (TypeSymbol *) msym -> Throws(i);
+                exceptions_attribute -> exception_index_table.Next() = RegisterClass(throw_symbol -> fully_qualified_name);
+            }
+            methods[method_index].attributes.Next() = exceptions_attribute;
+        }
     }
+
     if (method_kind==METHOD_KIND_INTERFACE) return method_index;
     // here if need code and associated attributes.
     if (this_control.option.g) {
@@ -852,9 +866,6 @@ void ByteCode::EndMethod(int method_kind,int method_index, MethodSymbol *method_
               ;
     
         methods[method_index].attributes.Next() = code_attribute;
-        if (method_kind==METHOD_KIND_ACCESS || method_kind==METHOD_KIND_ACCESS_CLASS) {
-          methods[method_index].attributes.Next() = CreateSyntheticAttribute();  
-        }
     }
     delete [] begin_labels;
     delete [] break_labels;

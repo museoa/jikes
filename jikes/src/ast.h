@@ -246,6 +246,7 @@ public:
         ABSTRACT,
         FINAL,
         NATIVE,
+        STRICTFP,
         SYNCHRONIZED,
         TRANSIENT,
         VOLATILE,

@@ -1377,6 +1377,7 @@ TypeSymbol *Semantic::GetLocalType(AstClassDeclaration *class_declaration)
     wcscat(external_name, StringConstant::US__DS_);
     wcscat(external_name, name_symbol -> Name());
 
+    type -> SetACC_PRIVATE();
     type -> outermost_type = outermost_type;
     type -> SetExternalIdentity(control.FindOrInsertName(external_name, length));
     outermost_type -> local -> AddElement(type);

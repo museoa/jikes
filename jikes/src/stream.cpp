@@ -58,6 +58,7 @@ wchar_t *LexStream::KeywordName(int kind)
         case TK_return:       return StringConstant::US_return; break;
         case TK_short:        return StringConstant::US_short; break;
         case TK_static:       return StringConstant::US_static; break;
+        case TK_strictfp:     return StringConstant::US_strictfp; break;
         case TK_super:        return StringConstant::US_super; break;
         case TK_switch:       return StringConstant::US_switch; break;
         case TK_synchronized: return StringConstant::US_synchronized; break;

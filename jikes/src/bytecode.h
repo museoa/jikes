@@ -249,7 +249,7 @@ void    CompileConstructor(AstConstructorDeclaration *, Tuple<AstVariableDeclara
 #define METHOD_KIND_ACCESS_CLASS 5
 int     BeginMethod(int, MethodSymbol *);
 void    EndMethod(int,int, MethodSymbol *);
-void    DeclareField(VariableSymbol *, int);
+void    DeclareField(VariableSymbol *);
 void    InitializeClassVariable(AstVariableDeclarator *);
 void    InitializeInstanceVariable(AstVariableDeclarator *);
 void    InitializeArray(TypeSymbol *,AstArrayInitializer *);

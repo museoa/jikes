@@ -1754,7 +1754,7 @@ assert(this_type -> FieldMembersProcessed());
                     TypeSymbol *containing_type = method -> containing_type;
 
                     //
-                    // If the method is contained in an abstract method read from a class file,
+                    // If the method is contained in an abstract type read from a class file,
                     // then it is possible that the abstract method is just out-of-date and needs
                     // to be recompiled.
                     //
@@ -3321,7 +3321,7 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type, TypeSymbol *super_type
                 }
             }
         }
-        else if (! method -> ACC_PRIVATE()) // a method from a different package with default access? (also known as package-private!)
+        else if (! (method -> ACC_PRIVATE() || method -> IsSynthetic())) // Not amethod with default access from another package?
         {
             MethodShadowSymbol *base_method_shadow = base_expanded_table.FindMethodShadowSymbol(method -> Identity());
 

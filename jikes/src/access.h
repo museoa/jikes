@@ -29,6 +29,7 @@ public:
     bool ACC_NATIVE()       { return access_flags & 0x0100; }
     bool ACC_INTERFACE()    { return access_flags & 0x0200; }
     bool ACC_ABSTRACT()     { return access_flags & 0x0400; }
+    bool ACC_STRICTFP()     { return access_flags & 0x0800; }
 
     void SetACC_PUBLIC()       { access_flags |= 0x0001; }
     void SetACC_PRIVATE()      { access_flags |= 0x0002; }
@@ -42,6 +43,7 @@ public:
     void SetACC_NATIVE()       { access_flags |= 0x0100; }
     void SetACC_INTERFACE()    { access_flags |= 0x0200; }
     void SetACC_ABSTRACT()     { access_flags |= 0x0400; }
+    void SetACC_STRICTFP()     { access_flags |= 0x0800; }
 
     void ResetACC_PUBLIC()       { access_flags &= (~ 0x0001); }
     void ResetACC_PRIVATE()      { access_flags &= (~ 0x0002); }
@@ -55,6 +57,7 @@ public:
     void ResetACC_NATIVE()       { access_flags &= (~ 0x0100); }
     void ResetACC_INTERFACE()    { access_flags &= (~ 0x0200); }
     void ResetACC_ABSTRACT()     { access_flags &= (~ 0x0400); }
+    void ResetACC_STRICTFP()     { access_flags &= (~ 0x0800); }
 
     u2 access_flags;
 
@@ -77,6 +80,7 @@ public:
         if (ACC_NATIVE())       cout << " native";
         if (ACC_INTERFACE())    cout << " interface";
         if (ACC_ABSTRACT())     cout << " abstract";
+        if (ACC_STRICTFP())     cout << " strictfp";
         cout << "\n";
     }
 #endif

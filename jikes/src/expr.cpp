@@ -580,7 +580,18 @@ assert(enclosing_type);
                        method_set[1] -> containing_type -> ExternalName());
     }
 
-    return method_set[0];
+    MethodSymbol *method = method_set[0];
+    if (method -> IsSynthetic())
+    {
+        ReportSemError(SemanticError::SYNTHETIC_METHOD_INVOCATION,
+                       method_call -> LeftToken(),
+                       method_call -> RightToken(),
+                       method -> Header(),
+                       method -> containing_type -> ContainingPackage() -> PackageName(),
+                       method -> containing_type -> ExternalName());
+    }
+
+    return method;
 }
 
 
@@ -683,31 +694,43 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
 
         if (method_symbol -> containing_type != where_found -> Type())  // is symbol an inherited field?
         {
-            for (SemanticEnvironment *env = where_found -> previous; env; env = env -> previous)
+            if (method_symbol -> IsSynthetic())
             {
-                Tuple<MethodSymbol *> others(2);
-                SemanticEnvironment *found_other;
-                SearchForMethodInEnvironment(others, found_other, env, method_call);
-
-                int i;
-                for (i = 0; i < others.Length();  i++)
+                ReportSemError(SemanticError::SYNTHETIC_METHOD_INVOCATION,
+                               method_call -> LeftToken(),
+                               method_call -> RightToken(),
+                               method_symbol -> Header(),
+                               method_symbol -> containing_type -> ContainingPackage() -> PackageName(),
+                               method_symbol -> containing_type -> ExternalName());
+            }
+            else
+            {
+                for (SemanticEnvironment *env = where_found -> previous; env; env = env -> previous)
                 {
-                    if (others[i] != method_symbol)
-                    {
-                        ReportSemError(SemanticError::INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER,
-                                       method_call -> LeftToken(),
-                                       method_call -> RightToken(),
-                                       method_symbol -> Name(),
-                                       method_symbol -> containing_type -> ContainingPackage() -> PackageName(),
-                                       method_symbol -> containing_type -> ExternalName(),
-                                       found_other -> Type() -> ContainingPackage() -> PackageName(),
-                                       found_other -> Type() -> ExternalName());
-                        break;
-                    }
-                }
+                    Tuple<MethodSymbol *> others(2);
+                    SemanticEnvironment *found_other;
+                    SearchForMethodInEnvironment(others, found_other, env, method_call);
 
-                if (i < others.Length()) // as soon as we find an error, bail out...
-                    break;
+                    int i;
+                    for (i = 0; i < others.Length();  i++)
+                    {
+                        if (others[i] != method_symbol)
+                        {
+                            ReportSemError(SemanticError::INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER,
+                                           method_call -> LeftToken(),
+                                           method_call -> RightToken(),
+                                           method_symbol -> Name(),
+                                           method_symbol -> containing_type -> ContainingPackage() -> PackageName(),
+                                           method_symbol -> containing_type -> ExternalName(),
+                                           found_other -> Type() -> ContainingPackage() -> PackageName(),
+                                           found_other -> Type() -> ExternalName());
+                            break;
+                        }
+                    }
+
+                    if (i < others.Length()) // as soon as we find an error, bail out...
+                        break;
+                }
             }
         }
     }
@@ -912,6 +935,15 @@ inline VariableSymbol *Semantic::FindVariableInType(TypeSymbol *type, AstFieldAc
                            variable_shadow_symbol -> Conflict(i) -> owner -> TypeCast() -> ExternalName());
         }
 
+        if (variable_symbol -> IsSynthetic())
+        {
+            ReportSemError(SemanticError::SYNTHETIC_VARIABLE_ACCESS,
+                           field_access -> LeftToken(),
+                           field_access -> RightToken(),
+                           variable_symbol -> Name(),
+                           variable_symbol -> owner -> TypeCast() -> ContainingPackage() -> PackageName(),
+                           variable_symbol -> owner -> TypeCast() -> ExternalName());
+        }
         return variable_symbol;
     }
 
@@ -1067,48 +1099,60 @@ assert(variable_symbol);
         else if (variable_symbol -> owner != where_found -> Type())  // is symbol an inherited field?
         {
             TypeSymbol *type = (TypeSymbol *) variable_symbol -> owner;
-            for (SemanticEnvironment *env = where_found -> previous; env; env = env -> previous)
+
+            if (variable_symbol -> IsSynthetic())
             {
-                Tuple<VariableSymbol *> others(2);
-                SemanticEnvironment *found_other;
-                SearchForVariableInEnvironment(others, found_other, env, name_symbol, identifier_token);
-
-                int i;
-                for (i = 0; i < others.Length();  i++)
+                ReportSemError(SemanticError::SYNTHETIC_VARIABLE_ACCESS,
+                               identifier_token,
+                               identifier_token,
+                               variable_symbol -> Name(),
+                               type -> ContainingPackage() -> PackageName(),
+                               type -> ExternalName());
+            }
+            else
+            {
+                for (SemanticEnvironment *env = where_found -> previous; env; env = env -> previous)
                 {
-                    if (others[i] != variable_symbol)
-                    {
-                        MethodSymbol *method = others[i] -> owner -> MethodCast();
+                    Tuple<VariableSymbol *> others(2);
+                    SemanticEnvironment *found_other;
+                    SearchForVariableInEnvironment(others, found_other, env, name_symbol, identifier_token);
 
-                        if (method)
+                    int i;
+                    for (i = 0; i < others.Length();  i++)
+                    {
+                        if (others[i] != variable_symbol)
                         {
-                            ReportSemError(SemanticError::INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL,
-                                           identifier_token,
-                                           identifier_token,
-                                           lex_stream -> Name(identifier_token),
-                                           type -> ContainingPackage() -> PackageName(),
-                                           type -> ExternalName(),
-                                           method -> Name());
-                            break;
-                        }
-                        else
-                        {
-                            ReportSemError(SemanticError::INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER,
-                                           identifier_token,
-                                           identifier_token,
-                                           lex_stream -> Name(identifier_token),
-                                           type -> ContainingPackage() -> PackageName(),
-                                           type -> ExternalName(),
-                                           found_other -> Type() -> ContainingPackage() -> PackageName(),
-                                           found_other -> Type() -> ExternalName());
-                            break;
+                            MethodSymbol *method = others[i] -> owner -> MethodCast();
+
+                            if (method)
+                            {
+                                ReportSemError(SemanticError::INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL,
+                                               identifier_token,
+                                               identifier_token,
+                                               lex_stream -> Name(identifier_token),
+                                               type -> ContainingPackage() -> PackageName(),
+                                               type -> ExternalName(),
+                                               method -> Name());
+                                break;
+                            }
+                            else
+                            {
+                                ReportSemError(SemanticError::INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER,
+                                               identifier_token,
+                                               identifier_token,
+                                               lex_stream -> Name(identifier_token),
+                                               type -> ContainingPackage() -> PackageName(),
+                                               type -> ExternalName(),
+                                               found_other -> Type() -> ContainingPackage() -> PackageName(),
+                                               found_other -> Type() -> ExternalName());
+                                break;
+                            }
                         }
                     }
 
+                    if (i < others.Length()) // as soon as we find an error, bail out...
+                        break;
                 }
-
-                if (i < others.Length()) // as soon as we find an error, bail out...
-                    break;
             }
         }
     }
@@ -3483,6 +3527,7 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class
     if (anonymous_type -> IsInner())
     {
         this0_variable = block_symbol -> InsertVariableSymbol(control.this0_name_symbol);
+        this0_variable -> MarkSynthetic();
         this0_variable -> SetType(anonymous_type -> ContainingType());
         this0_variable -> SetOwner(constructor);
         this0_variable -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
@@ -3585,6 +3630,7 @@ assert(generated_constructor);
             // how many extra "local" variable shadows are needed. See UpdateGeneratedLocalConstructor
             //
             super_this0_variable = block_symbol -> InsertVariableSymbol(control.MakeParameter(0));
+            super_this0_variable -> MarkSynthetic();
             super_this0_variable -> SetType(super_call -> base_opt -> Type());
             super_this0_variable -> SetOwner(generated_constructor);
             super_this0_variable -> MarkComplete();
@@ -3618,6 +3664,7 @@ assert(super_constructor -> LocalConstructor() && (! super_constructor -> IsGene
     else if (super_call -> base_opt)
     {
         super_this0_variable = block_symbol -> InsertVariableSymbol(control.MakeParameter(0));
+        super_this0_variable -> MarkSynthetic();
         super_this0_variable -> SetType(super_call -> base_opt -> Type());
         super_this0_variable -> SetOwner(constructor);
         super_this0_variable -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
@@ -3704,6 +3751,7 @@ TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class
 assert((! ThisMethod()) || LocalSymbolTable().Top());
     TypeSymbol *inner_type = (ThisMethod() ? LocalSymbolTable().Top() -> InsertAnonymousTypeSymbol(name_symbol)
                                            : this_type -> InsertAnonymousTypeSymbol(name_symbol));
+    inner_type -> SetACC_PRIVATE();
     inner_type -> MarkAnonymous();
     inner_type -> outermost_type = outermost_type;
     inner_type -> supertypes_closure = new SymbolSet;
@@ -3954,7 +4002,7 @@ assert(CanMethodInvocationConvert(method -> containing_type -> ContainingType(),
                         exception_set -> AddElement(method -> Throws(i));
                 }
 
-                if (! (ThisType() -> Anonymous() && ThisMethod() -> Identity() == control.block_init_name_symbol))
+                if (! (ThisType() -> Anonymous() && ThisMethod() && ThisMethod() -> Identity() == control.block_init_name_symbol))
                 {
                     for (int k = method -> NumThrows((Semantic *) this, actual_type -> RightToken()) - 1; k >= 0; k--)
                     {
@@ -6646,6 +6694,22 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
         case AstAssignmentExpression::LEFT_SHIFT_EQUAL:
         case AstAssignmentExpression::RIGHT_SHIFT_EQUAL:
         case AstAssignmentExpression::UNSIGNED_RIGHT_SHIFT_EQUAL:
+             if (! control.IsIntegral(left_type))
+             {
+                 ReportSemError(SemanticError::TYPE_NOT_INTEGRAL,
+                                left_hand_side -> LeftToken(),
+                                left_hand_side -> RightToken(),
+                                left_type -> Name());
+             }
+
+             if (! control.IsIntegral(right_type))
+             {
+                 ReportSemError(SemanticError::TYPE_NOT_INTEGRAL,
+                                assignment_expression -> expression -> LeftToken(),
+                                assignment_expression -> expression -> RightToken(),
+                                right_type -> Name());
+             }
+
              assignment_expression -> left_hand_side = PromoteUnaryNumericExpression(left_hand_side);
              assignment_expression -> expression = PromoteUnaryNumericExpression(assignment_expression -> expression);
              if (assignment_expression -> expression -> Type() == control.long_type)
