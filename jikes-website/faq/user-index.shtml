@@ -79,7 +79,7 @@
             distributions</a> page for a list of Linux distributions known
             to include Jikes as a standard package.  For other platforms,
             go to the
-            <a href="/developerworks/project/showfiles.php?group_id=10">
+            <a href="/developerworks/downloads/?group_id=10">
             downloads</a> page and look for an official binary version of
             Jikes.  A Zip file is provided for Windows users, just unzip
             it and place the bin directory on your PATH.
@@ -91,7 +91,7 @@
             source and try compiling it yourself?  The
             <a href="dev-index.shtml">Developer FAQ</a> has a lot of
             information about compiling Jikes.  Join the the
-            <a href="http://oss.software.ibm.com/developerworks/mail/?group_id=10">
+            <a href="/developerworks/mail/?group_id=10">
             jikes-dev</a> mailing list where other developers can help you
             out.
           </p>

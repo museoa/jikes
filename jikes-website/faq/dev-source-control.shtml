@@ -56,7 +56,8 @@
             <h2>Official Releases source</h2>
             <p>
               The most recent official release of Jikes is available
-              at the <A HREF="http://oss.software.ibm.com/developerworks/project/showfiles.php?group_id=10">Jikes Download Page</A>. It's already packaged as a single
+              at the <A HREF="/developerworks/downloads/?group_id=10">Jikes Download Page</A>.
+	       It's already packaged as a single
               downloadable file, so you don't need CVS if you will
               be using a released version of Jikes.
 
@@ -106,7 +107,7 @@
                       <tr> 
                         <td class="HighlightedFrameBackground">
                           ( sh/bash syntax )
-                          <pre><code>export CVSROOT=:pserver:anoncvs@oss.software.ibm.com:/usr/cvs/jikes</code></pre></td>
+                          <pre><code>export CVSROOT=:pserver:anoncvs@www-124.ibm.com:/usr/cvs/jikes</code></pre></td>
                       </tr>
                     </table>
                   </td>
@@ -315,7 +316,7 @@
                   <td class="HighlightedFrameBorder"> 
                     <table width="100%" border="0" cellspacing="0" cellpadding="10">
                       <tr> 
-                        <td class="HighlightedFrameBackground"><a href="http://oss.software.ibm.com/developerworks/opensource/cvs/jikes/">http://oss.software.ibm.com/developerworks/opensource/cvs/jikes/</a></td>
+                        <td class="HighlightedFrameBackground"><a href="/developerworks/opensource/cvs/jikes/">http://ibm.com/developerworks/opensource/cvs/jikes/</a></td>
                       </tr>
                     </table>
                   </td>

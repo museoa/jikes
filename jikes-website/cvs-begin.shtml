@@ -21,13 +21,13 @@
 <p>First you'll need to setup the correct environment for CVS, this is platform dependent, so first in a POSIX environment try:
 <pre>
 <code>
-setenv CVSROOT :pserver:anoncvs@oss.software.ibm.com:/usr/cvs/jikes
+setenv CVSROOT :pserver:anoncvs@www-124.ibm.com:/usr/cvs/jikes
 </code>
 </pre>
 or
 <pre>
 <code>
-CVSROOT=:pserver:anoncvs@oss.software.ibm.com:/usr/cvs/jikes; export CVSROOT
+CVSROOT=:pserver:anoncvs@www-124.ibm.com:/usr/cvs/jikes; export CVSROOT
 </code>
 </pre>
 Note that the exact syntax of the setenv command is shell specific. :(<br>
@@ -35,14 +35,14 @@ Note that the exact syntax of the setenv command is shell specific. :(<br>
 If you are a Windows user, you may want to do something like:
 <pre>
 <code>
-set CVSROOT=:pserver:anoncvs@oss.software.ibm.com:/usr/cvs/jikes
+set CVSROOT=:pserver:anoncvs@www-124.ibm.com:/usr/cvs/jikes
 set homedrive=c:
 set homepath=\cvs
 </code>
 </pre>
 
 
-<p>Now that the environment is correctly configured, you'll need to log into the cvs server, both the userid and server name are stored in the CVSROOT variable, and are "anoncvs" and "oss.software.ibm.com" respectively. Most all command line cvs programs will accept the following command:
+<p>Now that the environment is correctly configured, you'll need to log into the cvs server, both the userid and server name are stored in the CVSROOT variable, and are "anoncvs" and "www-124.ibm.com" respectively. Most all command line cvs programs will accept the following command:
 
 <pre>
 <code>

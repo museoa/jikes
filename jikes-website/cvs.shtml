@@ -11,7 +11,7 @@
        sufficient to get those familiar with CVS up and running, additional information about CVS can be obtained <a href="cvs-begin.shtml">here</a>. 
 
     <dl>
-      <dt>CVSROOT</dt><dd><code>:pserver:anoncvs@oss.software.ibm.com:/usr/cvs/jikes</code></dd>
+      <dt>CVSROOT</dt><dd><code>:pserver:anoncvs@www-124.ibm.com:/usr/cvs/jikes</code></dd>
       <dt>password</dt><dd>anoncvs</dd>
       <dt>modules</dt><dd>
         <dl>
@@ -23,7 +23,7 @@
           <dt>jikes-website</dt><dd>The project webpages</dd>
         </dl>
       </dd>
-      <dt>CVSWeb</dt><dd><a href="http://oss.software.ibm.com/developerworks/opensource/cvs/jikes/">Browsable here</a></dd>
+      <dt>CVSWeb</dt><dd><a href="http://www-124.ibm.com/developerworks/opensource/cvs/jikes/">Browsable here</a></dd>
       <dt>.cvsrc</dt><dd>The following values are suggested for Jikes developers:<br>cvs -q -z3<br>diff -uN<br>update -P<br>checkout -P</dd>
     </dl>
 
