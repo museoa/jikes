@@ -5152,7 +5152,7 @@ void Semantic::ProcessCastExpression(Ast *expr)
 
 AstExpression *Semantic::ConvertToType(AstExpression *expr, TypeSymbol *type)
 {
-    if (expr -> Type() == control.null_type)
+    if (expr -> Type() == control.null_type || type -> Bad())
         return expr;
 
     LexStream::TokenIndex loc = expr -> LeftToken();

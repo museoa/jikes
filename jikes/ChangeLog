@@ -1,5 +1,10 @@
 2002-05-01  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/expr.cpp (ConvertToType): Don't cast to missing return type
+	- bug 2814.
+
+2002-05-01  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/platform.cpp (SystemFopen): Add workaround for obscure bug
 	in cygwin file inode hashing.
 
