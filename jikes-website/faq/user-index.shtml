@@ -8,28 +8,25 @@
     <link rel="stylesheet" href="../styles/jikes-faq.css">
   </head>
   <body>
-    <!-- CHANGE: <p>: align="centre" -> style="text-align: center" -->
-    <!-- CHANGE: <img>: align=centre removed -->
-    <!-- CHANGE: <img>: border=0 removed-->
     <table border="0" cellspacing="0" cellpadding="0">
       <tr>
         <td colspan="3" bgcolor="#000000">
           <img src="../images/user-faq-logo.png" width="150" height="54"
                alt="Jikes User FAQ"></td>
         <td align="right" colspan="2" bgcolor="#000000">
-          <img src="../images/jikes.png" width="600" height="54" alt=""></td></tr>
+          <img src="../images/jikes.png" width="600" height="54"
+               alt=""></td></tr>
       <tr valign="top">
         <td class="NavBar" width="6">&nbsp;</td><!-- padding -->
         <td class="NavBar"> 
         <!-- START INCLUDE NAVBAR.SHTML -->
         <!--#include file="user-navbar.html" -->
         <!-- END INCLUDE NAVBAR.SHTML -->
-	</td>
+        </td>
         <td class="NavBar" width="6">&nbsp;</td><!-- padding -->
         <td class="TopicContent" width="12">&nbsp;</td><!-- gutter -->
         <td class="TopicContent" width="588">
           <p>&nbsp;</p>
-          <!-- CHANGE: <h1>: align="centre" removed -->
           <h1>Jikes User FAQ</h1>
 
           <p>
@@ -38,16 +35,16 @@
             using binary versions of Jikes, especially where things are
             different from Sun's <code>javac</code> compiler.
           </p>
-          
-      <p> If you are looking for information about installing Jikes from source, 
-        or would like to get involved in Jikes development, please see the <!-- TODO: check the link --> 
-        <a href="dev-index.shtml"> Jikes Developer FAQ</a>. </p>
+          <p>
+            If you are looking for information about installing Jikes from
+            source, or would like to get involved in Jikes development,
+            please see the <a href="dev-index.shtml">Jikes Developer
+            FAQ</a>.
+          </p>
 
-          <!-- CHANGE: About Jikes -> Table of Contents -->
           <h2><a name="index">Table of Contents</a></h2>
 
           <p style="text-indent: 0px">
-            <!-- CHANGE: new question -->
             1. <a href="#whereget">
                Where to I get Jikes?</a><br>
             2. <a href="#usage">
@@ -86,13 +83,12 @@
             Jikes.  A Zip file is provided for Windows users, just unzip
             it and place the bin directory on your PATH.
             If there isn't an official version for your operating
-            system, join the
-            <a href="http://oss.software.ibm.com/developerworks/mail/?group_id=10">
+            system, join the <a href="/developerworks/mail/?group_id=10">
             jikes</a> mailing list and search the archives.  There might be
             an unofficial port available, or someone else might be working
             on one.  If you're still out of luck, why not download the
             source and try compiling it yourself?  The
-            <a href="dev-index.shtml"> Developer FAQ</a> has a lot of
+            <a href="dev-index.shtml">Developer FAQ</a> has a lot of
             information about compiling Jikes.  Join the the
             <a href="http://oss.software.ibm.com/developerworks/mail/?group_id=10">
             jikes-dev</a> mailing list where other developers can help you
@@ -198,11 +194,9 @@ jikes options filename...</pre>
             </dt>
             <dd>
               Do not generate bytecode.  This is used primarily for debugging
-              <!-- CHANGE: added "The ... option" -->
               the compiler.  The <code>-nowrite</code> option generates byte
               code but does not write it out.
             </dd>
-            <!-- CHANGE: updated to be correct for Jikes 1.12 -->
             <dt>
               <code>+OLDCSO</code>
             </dt>
@@ -220,7 +214,6 @@ jikes options filename...</pre>
               <code>+D</code>
             </dt>
             <dd>
-              <!-- TODO: emacs -> Emacs -->
               <!-- TODO: why the Emacs side-effect? -->
               List errors immediately in Emacs-form without buffering.  This
               is only needed if Jikes is crashing and you want to see errors
@@ -238,8 +231,7 @@ jikes options filename...</pre>
               <code>+E</code>
             </dt>
             <dd>
-              <!-- TODO: <em>emacs</em> -> Emacs -->
-              List errors in a form commonly used by <em>emacs</em> to scan
+              List errors in a form commonly used by Emacs to scan
               for errors.  By default errors are listed in a more readable
               form.
             </dd>
@@ -279,7 +271,6 @@ jikes options filename...</pre>
               <code>+Z</code>
             </dt>
             <dd>
-              <!-- CHANGE: cautons -> cautions -->
               Treat cautions as errors.
             </dd>
           </dl>
@@ -388,7 +379,6 @@ jikes -classpath .:/opt/jdk1.3/jre/lib/rt.jar ...</pre>
               Jikes incorporates compression code from the Info-ZIP group.
               There are no extra charges or costs due to the use of this code,
               and the original compression sources are freely available from
-              <!-- CHANGE: updated URLs -->
               <a href="http://www.freesoftware.com/pub/infozip/">
               Info-ZIP</a>
               or
@@ -408,7 +398,6 @@ jikes -classpath .:/opt/jdk1.3/jre/lib/rt.jar ...</pre>
             You should <em>almost always</em> include "." in the classpath;
             omit it only if you understand the implications.
           </p>
-          <!-- CHANGE: CSO -> +OLDCSO, and textual changes -->
           <p>
             The order in which the classpath is searched can also be
             selected using the <code>+OLDCSO</code> (old classpath
@@ -457,7 +446,6 @@ jikes -classpath .:/opt/jdk1.3/jre/lib/rt.jar ...</pre>
           <p>
             <!-- TODO: what is a compiler listing then?  assembler output? -->
             Jikes does not produce a compiler listing in the usual sense, but
-            <!-- CHANGE: swapped "cautions" and "warnings" -->
             only writes out warnings, cautions, and errors.
           </p>
           <p>
@@ -482,12 +470,11 @@ jikes -classpath .:/opt/jdk1.3/jre/lib/rt.jar ...</pre>
             about underlined, and with detailed explanatory text.  The
             <code>+E</code> option requests a terser form, suitable for
             automatic parsing by editors such as
-            <!-- TODO: I would prefer Emacs and Epsilon w/out <code> tags -->
             <a href="http://www.gnu.org/software/emacs/emacs.html">
-            <code>emacs</code></a>
+            Emacs</a>
             and 
             <a href="http://www.lugaru.com/">
-            <code>epsilon</code></a>.
+            Epsilon</a>.
             For example, consider the mis-typed "hello world" example:
             <!-- TODO: hello -> Hello -->
           </p>
@@ -503,15 +490,16 @@ class hello {
           <pre class="example">
 Found 1 semantic error compiling "hello.java":
 
+
      3.      system.out.println("hi there"); // should be System...
              <-------->
 *** Semantic Error: "system/out" is either a misplaced package name
                     or a non-existent entity.
-      </pre>
+          </pre>
           <p>
             With <code>+E</code> is used, the error is reported as:
           </p>
-      <pre class="example">
+          <pre class="example">
 hello.java:3:6:3:15: Semantic:"system/out" is either a misplaced
 package name or a non-existent entity.</pre>
           <p>
@@ -523,7 +511,6 @@ package name or a non-existent entity.</pre>
           <p>
             The pedantic option <code>+P</code> is used to request a complete,
             pedantic listing.  Just what is or is not pedantic depends in part
-            <!-- CHANGE: e-mail -> email -->
             on email we have received in which users have noted that Jikes
             complains about constructs that other compilers accept.  (It is an
             open question whether the other compilers choose not to report
@@ -534,40 +521,37 @@ package name or a non-existent entity.</pre>
           <ul>
             <li>
               No type declarations:
-<pre class="example">
+              <pre class="example">
 This compilation unit contains no type declaration</pre>
             </li>
             <li>
               Empty declarations, typically the result of an extraneous
               semicolon:
-<pre class="example">
+              <pre class="example">
 An EmptyDeclaration is a deprecated feature that should
 not be used</pre>
             </li>
             <li>
-              <!-- CHANGE: removed <code></code> around private -->
               Attempt to overwrite a method with private access:
-<pre class="example">
+              <pre class="example">
 Note that the method ... in class ... does not override
 the corresponding method with private access in class ...</pre>
             </li>
-            <!-- CHANGE: default method -> a method with default access -->
             <li>
               Attempt to overwrite a method with default access:
-<pre class="example">
+              <pre class="example">
 The method ... in class ... does not override the
 corresponding method with default access in class ...</pre>
             </li>
             <li>
               Access to a type defined in an unnamed package.  This message
-              <!-- CHANGE: added nbsp to "section 7.4.2" -->
               is issued in response to the comment in section&nbsp;7.4.2 of
               <!-- TODO: perhaps: specification -> JLS? -->
               the specification that "It is recommended that a Java system
               provide safeguards against unintended consequences in
               situations where compiliation units of named packages import
               types from unnamed packages."
-<pre class="example">
+              <pre class="example">
 The type associated with this construct is (or depends on)
 the type ... which is contained in an unnamed package</pre>
             </li>
@@ -611,7 +595,6 @@ the type ... which is contained in an unnamed package</pre>
           <p>
             If <code>+F</code> is specified, and <code>C</code> does not
             belong to a Zip or Jar file, the type <code>D</code> is
-            <!-- CHANGE: for now: D -> <code>D</code> -->
             incorporated.  Otherwise, <code>D</code> is incorporated only if
             it must be.
           </p>
@@ -662,7 +645,7 @@ class C {
           <p>
             If no class files exist, then
           </p>
-<pre class="example">
+          <pre class="example">
 jikes A.java</pre>
           <p>
             results in compilation of <code>A</code>, <code>B</code> and
@@ -672,7 +655,7 @@ jikes A.java</pre>
             If <code>C.java</code> (but not <code>B.java</code>) is updated,
             then
           </p>
-<pre class="example">
+          <pre class="example">
 jikes A.java</pre>
           <p>
             results in compilation only of <code>A</code>. <code>javac</code>
@@ -682,14 +665,15 @@ jikes A.java</pre>
             However, if <code>C.java</code> (but not <code>B.java</code>) is
             updated, then
           </p>
-<pre class="example">
+          <pre class="example">
 jikes +F A.java</pre>
           <p>
             results in compilation of <code>A</code> and <code>C</code>.
           </p>
           <p> 
             It is always the case, independent of time-stamps of files, that
-<pre class="example">
+          </p>
+          <pre class="example">
 jikes -depend A.java</pre>
           <p>
             results in compilation of <code>A</code>, <code>B</code> and
@@ -698,12 +682,12 @@ jikes -depend A.java</pre>
           <p>
             Note that
           </p>
-<pre class="example">
+          <pre class="example">
 jikes -depend +F ...</pre>
           <p>
             has the same effect as
           </p>
-<pre class="example">
+          <pre class="example">
 jikes -depend ...</pre>
           <p>
             i.e., <code>+F</code> will cause no more files to be compiled than
@@ -768,12 +752,12 @@ jikes -depend ...</pre>
             <ul>
               <li>
                 Open a window and compile your program using
-<pre class="example">
+                <pre class="example">
 jikes ++ Main.java</pre>
                 where <code>Main.java</code> denotes your root source file.
                 Jikes will then compile <code>Main.java</code> and all the
                 files it references, building a complete set of dependencies,
-                and will then wait for input. (Note that <code>++</code>
+                and will then wait for input.  (Note that <code>++</code>
                 implies <code>+F</code> also.)
               </li>
               <li>
@@ -782,14 +766,14 @@ jikes ++ Main.java</pre>
                 in the window in which Jikes is waiting. Jikes will then
                 determine which source files have been changed, and will then
                 perform the minimum number of compilations needed to bring to
-                class files into a complete and consistent state. You can
+                class files into a complete and consistent state.  You can
                 repeat this cycle as you wish, until you
               </li>
               <li>
                 Terminate the compilation by typing a single line 
-<pre class="example">
+                <pre class="example">
 q</pre>
-                in the window in which Jikes is waiting. Jikes will then
+                in the window in which Jikes is waiting.  Jikes will then
                 terminate.
               </li>
             </ul>
@@ -817,7 +801,7 @@ q</pre>
 
           <p>
             <!-- TODO: warn people about cyclic dependencies in Java -->
-            <!-- CHANGE: removed <code></code> from C and C++ -->
+            <!-- TODO: mention Ant as an alternative -->
             Most C and C++ compilers support the option <code>-M</code> to
             generate dependency information for use with make.  Jikes provides
             the same function for Java using the option <code>+M</code>, which
@@ -836,7 +820,7 @@ q</pre>
           <p>
             You can also use the option <code>+DR=filename</code> to request
             that a dependence report be written to the file
-            <code>filename</code>. The format is designed to allow the use of
+            <code>filename</code>.  The format is designed to allow the use of
             the information as input to a tool; for example, it could be used
             for a tool that determines the minimum set of class files that
             must be included in a <code>jar</code> file.
@@ -895,8 +879,8 @@ public class Test {
 *** Warning: An EmptyDeclaration is a deprecated feature that
              should not be used - ";" ignored</pre>
           <p>
+            <!-- TODO: update JLS references -->
             The first extra semicolon is erroneous, the second is allowed by
-            <!-- CHANGE: nbsp -->
             section&nbsp;7.6.  Jikes treats each as cause to issue a warning.
             You can use the <code>-nowarn</code> option to suppress this (and
             other) warnings, or, even better, you can use your editor to
@@ -907,7 +891,6 @@ public class Test {
 
           <p>
             It is a compile-time error if a statement cannot be executed
-            <!-- CHANGE: nbsp -->
             because it is <em>unreachable</em> (section&nbsp;14.19).  When
             Jikes first appeared, some other compilers didn't properly detect
             unreachable statements, and accepted programs such as the
@@ -960,7 +943,7 @@ class Test {
           <p>
             This was the most frequently reported problem when Jikes first
             appeared.  It took several months to confirm that Jikes was right
-            all along. See 
+            all along.  See 
             <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery2">
             Query #2 to Sun</a>
             for the full story.
@@ -969,12 +952,13 @@ class Test {
           <h4>Cyclic Scoping</h4>
 
           <p>
+            <!-- TODO: does this qualify as a program?  source file? -->
             Jikes rejects the program:
           </p>
-          <!-- TODO: make this example more complete, it is confusing -->
           <pre class="example">
 class X extends Y.Z {}
 class Y extends X.Z {}</pre>
+</pre>
           <p>
             because Jikes checks for cycles by grouping types as follows:
           </p>
@@ -1044,7 +1028,7 @@ class W extends Z
             </li> 
           </ul>
           <p>
-            This graph has a cycle: <code>W.A->W.B->W.A</code>. So Jikes
+            This graph has a cycle: <code>W.A->W.B->W.A</code>.  So Jikes
             rejects this program:
           </p>
           <pre class="example">
@@ -1159,10 +1143,7 @@ class C implements C.I {
 
           <h4>The Unofficial Java Spec Report</h4>
 
-          <!-- CHANGE: removed junk: </b></a></h3> -->
-
           <p>
-            <!-- CHANGE: fix for bug #140 in new bug db -->
             <a href="http://www.ergnosis.com/java-spec-report/">
             The Unofficial Java Spec Report</a>
             is an unofficial site that covers problems with the Java Language
@@ -1175,12 +1156,10 @@ class C implements C.I {
             <!-- TODO: needs an update! -->
             Starting with Jikes v0.28, we will attempt to track the
             recommendations of the unofficial report, and implement them where
-            <!-- CHANGE: nbsp -->
             feasible.  The current status for the 1.1 portion in Issue&nbsp;9
             (22&nbsp;May 1998) is as follows:
           </p>
           <ul>
-            <!-- CHANGE: removed - - in favour of separate sentences -->
             <li>
               No definition of cyclic scoping.  Jikes has its definition, as
               described earlier.
@@ -1204,7 +1183,7 @@ class C implements C.I {
             </li>
             <li>
               Reachability of instance initializers and constructors
-              undefined. Implemented.
+              undefined.  Implemented.
             </li>
             <li>
               Initialization requirements for blank final fields incorrect.
@@ -1266,7 +1245,7 @@ class C implements C.I {
           </p>
           <p>
             You should also to see if the Java virtual machine is using a JIT,
-            in which case you should try with the JIT disabled. We have seen
+            in which case you should try with the JIT disabled.  We have seen
             cases when JIT's fail with class files produced by Jikes, even
             though these class files pass verification.
           </p>

@@ -1,3 +1,15 @@
+2001-11-03  Andrew M. Inggs  <aminggs@yahoo.co.uk>
+
+	* faq/user-index.html:  Removed changed comments like
+	<!-- CHANGE: updated to be correct for Jikes 1.12 -->
+	these are better represented by ChangeLog entries.
+	Converted tabs to spaces and made other minor
+	formatting changes.  Standardized the way Emacs and
+	Epsilon are written (initial capital and no font
+	change).  Indented <pre class="example"> start tags
+	consistently.  Standardized on two spaces after a full
+	stop.
+
 2001-11-26  Mo DeJong  <supermo@bayarea.net>
 
 	* cvs.shtml: Add jcl module to modules list.
