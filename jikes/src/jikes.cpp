@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 
         return_code = 0;
     }
-    else if (files)
+    else if (files && files[0])
     {
         return_code = compiler -> compile(files);
     }
