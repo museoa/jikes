@@ -256,7 +256,8 @@ void Semantic::ProcessSynchronizedStatement(Ast *stmt)
 
     synchronized_statement -> block -> is_reachable = synchronized_statement -> is_reachable;
 
-    if (synchronized_statement -> expression -> Type() -> Primitive())
+    if (synchronized_statement -> expression -> Type() -> Primitive() ||
+        synchronized_statement -> expression -> symbol == control.null_type)
     {
         ReportSemError(SemanticError::TYPE_NOT_REFERENCE,
                        synchronized_statement -> expression -> LeftToken(),
@@ -308,12 +309,7 @@ void Semantic::ProcessSynchronizedStatement(Ast *stmt)
     if (LocalBlockStack().TopMaxEnclosedVariableIndex() < block -> max_variable_index)
         LocalBlockStack().TopMaxEnclosedVariableIndex() = block -> max_variable_index;
 
-    //
-    // If the synchronized_statement is enclosed in a loop and it contains a reachable continue statement
-    // then it may have already been marked as "can complete normally";
-    //
-    synchronized_statement -> can_complete_normally = synchronized_statement -> can_complete_normally ||
-                                                      synchronized_statement -> block -> can_complete_normally;
+    synchronized_statement -> can_complete_normally = synchronized_statement -> block -> can_complete_normally;
 
     block -> CompressSpace(); // space optimization
 
@@ -348,12 +344,7 @@ void Semantic::ProcessIfStatement(Ast *stmt)
         if_statement -> false_statement_opt -> is_reachable = if_statement -> is_reachable;
         ProcessBlock(if_statement -> false_statement_opt);
 
-        //
-        // If the if_statement is enclosed in a loop and it contains a reachable continue statement
-        // then it may have already been marked as "can complete normally";
-        //
-        if_statement -> can_complete_normally = if_statement -> can_complete_normally ||
-                                                if_statement -> true_statement -> can_complete_normally ||
+        if_statement -> can_complete_normally = if_statement -> true_statement -> can_complete_normally ||
                                                 if_statement -> false_statement_opt -> can_complete_normally;
     }
     else if_statement -> can_complete_normally = if_statement -> is_reachable;
