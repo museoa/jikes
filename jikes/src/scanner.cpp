@@ -44,6 +44,11 @@ Scanner::Scanner(Control &control_) : control(control_)
     assert(NUM_TERMINALS < 128);
 
     //
+    // If this assertion fails, then gencode.java is at fault.
+    //
+    assert(Code::CodeCheck());
+
+    //
     // -------------------------------------------------------------------------------
     // We are pulling this code out because we are tired of defending it. We
     // tought it was obvious that either $ should not have been used for compiler

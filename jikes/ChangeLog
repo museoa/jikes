@@ -1,5 +1,22 @@
 2001-09-06  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/Makefile.am: Added src/gencode.java to the .tar
+	ball, along with hardcoded maintainer target gencode.
+	Also, install jikesapi.h in the include directory.
+	* src/.cvsignore:
+	* Makefile.in:
+	* doc/Makefile.in:
+	* src/Makefile.in: Regenerate with automake dependency tracking.
+	* src/gencode.java: Improved the code with more comments,
+	notification in the generated files, and a 4x reduction
+	to the size of src/code.cpp with no runtime cost (by
+	sharing more common array entries) - patch 140, from bug 640.
+	* src/code.h:
+	* src/code.cpp: Regenerate from new gencode.java.
+	* src/scanner.cpp (Scanner): Add a sanity check.
+
+2001-09-06  Eric Blake  <ebb9@email.byu.edu>
+
 	Patch 85:
 	* src/java.g: Fixed some copyright and namespace
 	code transferred to generated files.
