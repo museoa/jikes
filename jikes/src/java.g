@@ -141,10 +141,17 @@ $MakeMethodDeclarator
 #endif
 ./
 
-$MakeFormalParameter
+$MakeFormalParameterA
 /.
 #ifndef HEADERS
-    rule_action[$rule_number] = &Parser::MakeFormalParameter;
+    rule_action[$rule_number] = &Parser::MakeFormalParameterA;
+#endif
+./
+
+$MakeFormalParameterB
+/.
+#ifndef HEADERS
+    rule_action[$rule_number] = &Parser::MakeFormalParameterB;
 #endif
 ./
 
@@ -607,6 +614,7 @@ void Parser::InitRuleAction()
     AstType* MakeArrayType(int tokennum);
     AstName* MakeSimpleName(int tokennum);
     void MakeFormalParameter(AstModifiers* modifiers, AstType* type,
+                             int ellipsis_token,
                              AstVariableDeclaratorId* variable);
     AstArguments* MakeArguments(int tokennum);
     void MakeLocalVariable(AstModifiers* modifiers, AstType* type,
@@ -634,7 +642,8 @@ void Parser::InitRuleAction()
     void MakeMethodDeclaration();
     void MakeMethodHeader();
     void MakeMethodDeclarator();
-    void MakeFormalParameter();
+    void MakeFormalParameterA();
+    void MakeFormalParameterB();
     void MakeConstructorDeclaration();
     void MakeLabeledStatement();
     void MakeExpressionStatement();
@@ -1696,37 +1705,63 @@ void Parser::MakeMethodDeclarator()
 }
 ./
 
-FormalParameterList ::= FormalParameter
+--
+-- Varargs were added in JSR 201.
+--
+--FormalParameterList ::= FormalParameter
+FormalParameterList ::= LastFormalParameter
 \:$StartList:\
 /.$shared_StartList./
 
-FormalParameterList ::= FormalParameterList ',' FormalParameter
+--
+-- Varargs were added in JSR 201.
+--
+--FormalParameterList ::= FormalParameterList ',' FormalParameter
+FormalParameterList ::= FormalParameters ',' LastFormalParameter
+\:$AddList3:\
+/.$shared_AddList3./
+
+--
+-- Varargs were added in JSR 201.
+--
+FormalParameters ::= FormalParameter
+\:$StartList:\
+/.$shared_StartList./
+
+--
+-- Varargs were added in JSR 201.
+--
+FormalParameters ::= FormalParameters ',' FormalParameter
 \:$AddList3:\
 /.$shared_AddList3./
 
 --
 -- We must match the inline expansion of LocalVariableDeclaration, so there
 -- is no ambiguity in 'for(a' starting 'for(a b:c)' vs. 'for(a b;;)'.
+-- The use of Marker allows us to share code.
 --
 --FormalParameter ::= finalopt Type VariableDeclaratorId
-FormalParameter ::= PrimitiveType Dimsopt VariableDeclaratorId
-\:$MakeFormalParameter:\
+FormalParameter ::= PrimitiveType Dimsopt Marker VariableDeclaratorId
+\:$MakeFormalParameterA:\
 /.$location
-void Parser::MakeFormalParameter()
+void Parser::MakeFormalParameterA()
 {
     MakeFormalParameter(NULL, MakeArrayType(1),
-                        DYNAMIC_CAST<AstVariableDeclaratorId*> (Sym(3)));
+                        Token(3) == Token(4) ? 0 : Token(3),
+                        DYNAMIC_CAST<AstVariableDeclaratorId*> (Sym(4)));
 }
 
 //
 // Creates a formal parameter declaration and places it in Sym(1).
 //
 void Parser::MakeFormalParameter(AstModifiers* modifiers, AstType* type,
+                                 int ellipsis_token,
                                  AstVariableDeclaratorId* variable)
 {
     AstFormalParameter* p = ast_pool -> NewFormalParameter();
     p -> modifiers_opt = modifiers;
     p -> type = type;
+    p -> ellipsis_token_opt = ellipsis_token;
     AstVariableDeclarator* formal_declarator =
         ast_pool -> NewVariableDeclarator();
     formal_declarator -> variable_declarator_name = variable;
@@ -1739,35 +1774,95 @@ void Parser::MakeFormalParameter(AstModifiers* modifiers, AstType* type,
 -- The use of Marker allows us to share code.
 --
 --FormalParameter ::= Name VariableDeclaratorId
-FormalParameter ::= Name Marker VariableDeclaratorId
-\:$MakeFormalParameter:\
+FormalParameter ::= Name Marker Marker VariableDeclaratorId
+\:$MakeFormalParameterA:\
 /.$shared_function
 //
-// void MakeFormalParameter();
+// void MakeFormalParameterA();
 //./
 
-FormalParameter ::= Name Dims VariableDeclaratorId
-\:$MakeFormalParameter:\
+--
+-- The use of Marker allows us to share code.
+--
+--FormalParameter ::= Name Dims VariableDeclaratorId
+FormalParameter ::= Name Dims Marker VariableDeclaratorId
+\:$MakeFormalParameterA:\
 /.$shared_function
 //
-// void MakeFormalParameter();
+// void MakeFormalParameterA();
 //./
 
 --1.1 feature
 --
 -- For nicer error messages, we accept all modifiers, even though only
 -- 'final' and annotations are valid.
+-- The use of Marker allows us to share code.
 --
-FormalParameter ::= Modifiers Type VariableDeclaratorId
-\:$action:\
+--FormalParameter ::= Modifiers Type VariableDeclaratorId
+FormalParameter ::= Modifiers Type Marker VariableDeclaratorId
+\:$MakeFormalParameterB:\
 /.$location
-void Parser::Act$rule_number()
+void Parser::MakeFormalParameterB()
 {
     MakeFormalParameter(DYNAMIC_CAST<AstModifiers*> (Sym(1)),
                         DYNAMIC_CAST<AstType*> (Sym(2)),
-                        DYNAMIC_CAST<AstVariableDeclaratorId*> (Sym(3)));
+                        Token(3) == Token(4) ? 0 : Token(3),
+                        DYNAMIC_CAST<AstVariableDeclaratorId*> (Sym(4)));
 }
 ./
+
+--
+-- Varargs were added in JSR 201. We must match the inline expansion of
+-- FormalParameter, so there is no ambiguity in 'void m(a' starting
+-- 'void m(a b)' vs. 'void m(a b,c d)'. We also expand ...opt, by reusing
+-- FormalParameter. 
+--
+--LastFormalParameter ::= Modifiersopt Type ...opt VariableDeclaratorId
+LastFormalParameter ::= FormalParameter
+\:$NoAction:\
+/.$shared_NoAction./
+
+--
+-- Varargs were added in JSR 201.
+--
+LastFormalParameter ::= PrimitiveType Dimsopt '...' VariableDeclaratorId
+\:$MakeFormalParameterA:\
+/.$shared_function
+//
+// void MakeFormalParameterA();
+//./
+
+--
+-- Varargs were added in JSR 201.
+--
+LastFormalParameter ::= Name Marker '...' VariableDeclaratorId
+\:$MakeFormalParameterA:\
+/.$shared_function
+//
+// void MakeFormalParameterA();
+//./
+
+--
+-- Varargs were added in JSR 201.
+--
+LastFormalParameter ::= Name Dims '...' VariableDeclaratorId
+\:$MakeFormalParameterA:\
+/.$shared_function
+//
+// void MakeFormalParameterA();
+//./
+
+--
+-- Varargs were added in JSR 201.
+-- For nicer error messages, we accept all modifiers, even though only
+-- 'final' and annotations are valid.
+--
+LastFormalParameter ::= Modifiers Type '...' VariableDeclaratorId
+\:$MakeFormalParameterB:\
+/.$shared_function
+//
+// void MakeFormalParameterB();
+//./
 
 --
 -- Simplify.
@@ -2187,15 +2282,16 @@ void Parser::Act$rule_number()
 --
 -- To separate Type vs. Name ambiguities, we have to expand this inline.
 -- Otherwise, we cannot tell whether 'a[' starts 'a[]b;' or 'a[1]++;'.
+-- The use of Marker allows us to share code.
 --
 --LocalVariableDeclaration ::= Type VariableDeclarators
-LocalVariableDeclaration ::= PrimitiveType Dimsopt VariableDeclarators
+LocalVariableDeclaration ::= PrimitiveType Dimsopt Marker VariableDeclarators
 \:$MakeLocalVariable:\
 /.$location
 void Parser::MakeLocalVariable()
 {
     MakeLocalVariable(NULL, MakeArrayType(1),
-                      DYNAMIC_CAST<AstListNode*> (Sym(3)));
+                      DYNAMIC_CAST<AstListNode*> (Sym(4)));
 }
 
 //
@@ -2226,14 +2322,18 @@ void Parser::MakeLocalVariable(AstModifiers* modifiers, AstType* type,
 -- The use of Marker allows us to share code.
 --
 --LocalVariableDeclaration ::= Name VariableDeclarators
-LocalVariableDeclaration ::= Name Marker VariableDeclarators
+LocalVariableDeclaration ::= Name Marker Marker VariableDeclarators
 \:$MakeLocalVariable:\
 /.$shared_function
 //
 // void MakeLocalVariable();
 //./
 
-LocalVariableDeclaration ::= Name Dims VariableDeclarators
+--
+-- The use of Marker allows us to share code.
+--
+--LocalVariableDeclaration ::= Name Dims VariableDeclarators
+LocalVariableDeclaration ::= Name Dims Marker VariableDeclarators
 \:$MakeLocalVariable:\
 /.$shared_function
 //
@@ -2244,16 +2344,17 @@ LocalVariableDeclaration ::= Name Dims VariableDeclarators
 --
 -- For nicer error messages, we accept all modifiers, even though only
 -- 'final' and annotations are valid.
+-- The use of Marker allows us to share code.
 --
 --LocalVariableDeclaration ::= finalopt Type VariableDeclarators
-LocalVariableDeclaration ::= Modifiers Type VariableDeclarators
+LocalVariableDeclaration ::= Modifiers Type Marker VariableDeclarators
 \:$action:\
 /.$location
 void Parser::Act$rule_number()
 {
     MakeLocalVariable(DYNAMIC_CAST<AstModifiers*> (Sym(1)),
                       DYNAMIC_CAST<AstType*> (Sym(2)),
-                      DYNAMIC_CAST<AstListNode*> (Sym(3)));
+                      DYNAMIC_CAST<AstListNode*> (Sym(4)));
 }
 ./
 

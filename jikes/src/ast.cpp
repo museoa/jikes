@@ -471,6 +471,7 @@ Ast* AstFormalParameter::Clone(StoragePool* ast_pool)
         clone -> modifiers_opt =
             (AstModifiers*) modifiers_opt -> Clone(ast_pool);
     clone -> type = (AstType*) type -> Clone(ast_pool);
+    clone -> ellipsis_token_opt = ellipsis_token_opt;
     clone -> formal_declarator =
         (AstVariableDeclarator*) formal_declarator -> Clone(ast_pool);
     return clone;
@@ -1307,6 +1308,8 @@ void AstFormalParameter::Print(LexStream& lex_stream)
     if (modifiers_opt)
         modifiers_opt -> Print(lex_stream);
     type -> Print(lex_stream);
+    if (ellipsis_token_opt)
+        Coutput << lex_stream.NameString(ellipsis_token_opt);
     formal_declarator -> Print(lex_stream);
 }
 

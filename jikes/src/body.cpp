@@ -589,6 +589,7 @@ void Semantic::ProcessForeachStatement(Ast* stmt)
     enclosed_statement -> is_reachable = foreach -> is_reachable;
 
     ProcessType(foreach -> formal_parameter -> type);
+    assert(! foreach -> formal_parameter -> ellipsis_token_opt);
     TypeSymbol* index_type = foreach -> formal_parameter -> type -> symbol;
     AccessFlags access_flags =
         ProcessFormalModifiers(foreach -> formal_parameter);
@@ -1523,6 +1524,7 @@ void Semantic::ProcessTryStatement(Ast* stmt)
     {
         AstCatchClause* clause = try_statement -> CatchClause(i);
         AstFormalParameter* parameter = clause -> formal_parameter;
+        assert(! parameter -> ellipsis_token_opt);
         AstVariableDeclaratorId* name =
             parameter -> formal_declarator -> variable_declarator_name;
 

@@ -1,5 +1,25 @@
 2004-02-26  Eric Blake  <ebb9@byu.net>
 
+	* src/ast.h (AstFormalParameter::ellipsis_token_opt): New field.
+	* src/ast.cpp (AstFormalParameter::Clone, Print): Support it.
+	* src/unparse.cpp (AstFormalParameter::Unparse): Ditto.
+	* src/body.cpp (ProcessForeachStatement, ProcessTryStatement):
+	Ditto.
+	* src/decl.cpp (ProcessFormalParameters): Note that varargs are
+	not supported yet.
+	* src/error.h (VARARGS_UNSUPPORTED): New error.
+	* src/error.cpp: Ditto.
+	* src/parser.h: Forward declare AstFormalParameter.
+	* src/java.g (FormalParameter, FormalParameterList),
+	(LocalVariableDeclaration): Parse varargs, from JSR 201.
+	* src/javaact.cpp: Regenerate.
+	* src/javaact.h: Ditto.
+	* src/javadcl.h: Ditto.
+	* src/javadef.h: Ditto.
+	* src/javasym.h: Ditto.
+
+2004-02-26  Eric Blake  <ebb9@byu.net>
+
 	* src/expr.cpp (ProcessPLUS): Remove bad assertion ('true +
 	false', while illegal, can reach this point).
 

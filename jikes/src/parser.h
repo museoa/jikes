@@ -31,6 +31,7 @@ class AstCompilationUnit;
 class AstModifiers;
 class AstClassBody;
 class AstVariableDeclaratorId;
+class AstFormalParameter;
 class AstMethodBody;
 class AstArguments;
 

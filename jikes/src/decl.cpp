@@ -3192,6 +3192,13 @@ void Semantic::ProcessFormalParameters(BlockSymbol* block,
         }
         else symbol = block -> InsertVariableSymbol(name_symbol);
 
+        if (parameter -> ellipsis_token_opt)
+        {
+            assert(i == method_declarator -> NumFormalParameters() - 1);
+            // TODO: Add Varargs support for 1.5.
+            ReportSemError(SemanticError::VARARGS_UNSUPPORTED,
+                           parameter -> ellipsis_token_opt);
+        }
         unsigned dims = parm_type -> num_dimensions + name -> NumBrackets();
         symbol -> SetType(parm_type -> GetArrayType(this, dims));
         symbol -> SetFlags(access_flags);

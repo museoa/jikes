@@ -1702,6 +1702,9 @@ void SemanticError::InitializeMessages()
     messages[FOREACH_UNSUPPORTED] =
         "Enhanced for loops (also known as foreach loops) are only supported "
         "for `-source 1.5' or greater.";
+    messages[VARARGS_UNSUPPORTED] =
+        "Variable-arity methods (also known as varargs) are only supported "
+        "for `-source 1.5' or greater.";
     messages[RETURN_STATEMENT_IN_INITIALIZER] =
         "A return statement may not appear in an initializer block.";
     messages[ABRUPT_INITIALIZER] =

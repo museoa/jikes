@@ -285,7 +285,7 @@ void AstFormalParameter::Unparse(Ostream& os, LexStream* lex_stream)
     if (modifiers_opt)
         modifiers_opt -> Unparse(os, lex_stream);
     type -> Unparse(os, lex_stream);
-    os << ' ';
+    os << (ellipsis_token_opt ? "... " : " ");
     formal_declarator -> Unparse(os, lex_stream);
     if (debug_unparse)
         os << "/*:AstFormalParameter#" << id << "*/";

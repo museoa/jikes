@@ -1778,10 +1778,12 @@ class AstFormalParameter : public Ast
 public:
     AstModifiers* modifiers_opt;
     AstType* type;
+    LexStream::TokenIndex ellipsis_token_opt;
     AstVariableDeclarator* formal_declarator;
 
     AstFormalParameter()
         : modifiers_opt(NULL)
+        , ellipsis_token_opt(LexStream::BadToken())
     {
         kind = PARAMETER;
         class_tag = NO_TAG;
