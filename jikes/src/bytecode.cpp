@@ -141,35 +141,6 @@ void ByteCode::CompileClass()
     }
 
     //
-    // TODO: FIXME: Miranda methods should not be necessary with modern VMs.
-    //
-    // NOTE that an abstract class that requires this patch may become
-    // out-of-date and cause spurious messages to be emitted if any abstract
-    // method inherited from an interface is later removed from that interface.
-    //
-    if (unit_type -> ACC_ABSTRACT())
-    {
-        for (int i = 0; i < unit_type -> expanded_method_table -> symbol_pool.Length(); i++)
-        {
-            MethodShadowSymbol *method_shadow_symbol = unit_type -> expanded_method_table -> symbol_pool[i];
-            MethodSymbol *method_symbol = method_shadow_symbol -> method_symbol;
-            if (method_symbol -> ACC_ABSTRACT() &&
-                method_symbol -> containing_type != unit_type &&
-                method_symbol -> containing_type -> ACC_INTERFACE())
-            {
-                if (! method_symbol -> IsTyped())
-                    method_symbol -> ProcessMethodSignature(&semantic, class_decl -> identifier_token);
-                method_symbol -> ProcessMethodThrows(&semantic, class_decl -> identifier_token);
-
-                int method_index = methods.NextIndex();
-
-                BeginMethod(method_index, method_symbol);
-                EndMethod(method_index, method_symbol);
-            }
-        }
-    }
-
-    //
     // compile any private access methods
     //
     {

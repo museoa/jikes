@@ -1,3 +1,10 @@
+2001-12-07  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.cpp (CompileClass): Remove the emission of Miranda
+	methods (generated place-holder abstract methods in abstract
+	classes which inherit but don't declare the method) - bug 2356,
+	patch 236.
+
 2001-12-06  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/expr.cpp (ProcessAmbiguousName): Update name resolution to
