@@ -52,7 +52,7 @@ public:
     static const unsigned short scope_suffix[];
     static const unsigned short scope_lhs[];
     static const unsigned char  scope_la[];
-    static const unsigned char  scope_state_set[];
+    static const unsigned short scope_state_set[];
     static const unsigned short scope_rhs[];
     static const unsigned short scope_state[];
     static const unsigned short in_symb[];

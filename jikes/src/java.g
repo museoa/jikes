@@ -78,10 +78,38 @@ $MakeArrayType
 #endif
 ./
 
+$MakeCompilationUnit
+/.
+#ifndef HEADERS
+    rule_action[$rule_number] = &Parser::MakeCompilationUnit;
+#endif
+./
+
 $MakeImportDeclaration
 /.
 #ifndef HEADERS
     rule_action[$rule_number] = &Parser::MakeImportDeclaration;
+#endif
+./
+
+$MakeModifier
+/.
+#ifndef HEADERS
+    rule_action[$rule_number] = &Parser::MakeModifier;
+#endif
+./
+
+$MakeAnnotation
+/.
+#ifndef HEADERS
+    rule_action[$rule_number] = &Parser::MakeAnnotation;
+#endif
+./
+
+$MakeArrayInitializer
+/.
+#ifndef HEADERS
+    rule_action[$rule_number] = &Parser::MakeArrayInitializer;
 #endif
 ./
 
@@ -96,13 +124,6 @@ $MakeQualifiedSuper
 /.
 #ifndef HEADERS
     rule_action[$rule_number] = &Parser::MakeQualifiedSuper;
-#endif
-./
-
-$MakeArrayInitializer
-/.
-#ifndef HEADERS
-    rule_action[$rule_number] = &Parser::MakeArrayInitializer;
 #endif
 ./
 
@@ -613,6 +634,7 @@ void Parser::InitRuleAction()
 #else // HEADERS
     AstType* MakeArrayType(int tokennum);
     AstName* MakeSimpleName(int tokennum);
+    AstModifiers* MakeModifiers();
     void MakeFormalParameter(AstModifiers* modifiers, AstType* type,
                              int ellipsis_token,
                              AstVariableDeclaratorId* variable);
@@ -633,10 +655,13 @@ void Parser::InitRuleAction()
     void AddList2();
     void AddList3();
     void MakeArrayType();
+    void MakeCompilationUnit();
     void MakeImportDeclaration();
+    void MakeModifier();
+    void MakeAnnotation();
+    void MakeArrayInitializer();
     void MakeClassBody();
     void MakeQualifiedSuper();
-    void MakeArrayInitializer();
     void MakeLocalVariable();
     void MakeQualifiedNew();
     void MakeMethodDeclaration();
@@ -1019,11 +1044,18 @@ void Parser::Act$rule_number()
 
 --18.6 Productions from 7: Packages
 
-CompilationUnit ::= PackageDeclarationopt ImportDeclarationsopt
+--
+-- Annotations were added in JSR 175. As a result, we must inline expand
+-- PackageDeclaration vs. TypeDeclaration in order to resolve the ambiguity
+-- between '@A' starting '@A package B;' vs. '@A B{}'.
+--
+--CompilationUnit ::= PackageDeclarationopt ImportDeclarationsopt
+--                    TypeDeclarationsopt
+CompilationUnit ::= PackageDeclaration ImportDeclarationsopt
                     TypeDeclarationsopt
-\:$action:\
+\:$MakeCompilationUnit:\
 /.$location
-void Parser::Act$rule_number()
+void Parser::MakeCompilationUnit()
 {
     AstCompilationUnit* p = ast_pool -> NewCompilationUnit();
     p -> package_declaration_opt =
@@ -1055,6 +1087,31 @@ void Parser::Act$rule_number()
         FreeCircularList(tail);
     }
     Sym(1) = p;
+}
+./
+
+--
+-- The use of Marker allows us to share code.
+--
+CompilationUnit ::= Marker ImportDeclarations TypeDeclarationsopt
+\:$MakeCompilationUnit:\
+/.$shared_function
+//
+// void MakeCompilationUnit();
+//./
+
+--
+-- See comments above why this is inline expanded.
+--
+CompilationUnit ::= TypeDeclarationsopt
+\:$action:\
+/.$location
+void Parser::Act$rule_number()
+{
+    Sym(3) = Sym(1);
+    Sym(1) = NULL;
+    Sym(2) = NULL;
+    MakeCompilationUnit();
 }
 ./
 
@@ -1117,16 +1174,51 @@ TypeDeclarations ::= TypeDeclarations TypeDeclaration
 \:$AddList2:\
 /.$shared_AddList2./
 
-PackageDeclaration ::= 'package' Name PackageHeaderMarker ';'
+--
+-- Annotations were added in JSR 175. We must use Modifiers with a semantic
+-- check that no modifier keywords appeared, because of the ambiguity between
+-- '@A @B' starting '@A @B package C;' or '@A @B class C{}'.
+--
+--PackageDeclaration ::= 'package' Name PackageHeaderMarker ';'
+PackageDeclaration ::= Modifiersopt 'package' Name PackageHeaderMarker ';'
 \:$action:\
 /.$location
 void Parser::Act$rule_number()
 {
     AstPackageDeclaration* p = ast_pool -> NewPackageDeclaration();
-    p -> package_token = Token(1);
-    p -> name = DYNAMIC_CAST<AstName*> (Sym(2));
-    p -> semicolon_token = Token(3);
+    p -> modifiers_opt = MakeModifiers();
+    p -> package_token = Token(2);
+    p -> name = DYNAMIC_CAST<AstName*> (Sym(3));
+    p -> semicolon_token = Token(5);
     Sym(1) = p;
+}
+
+AstModifiers* Parser::MakeModifiers()
+{
+    AstModifiers* p = NULL;
+    if (Sym(1))
+    {
+        p = ast_pool -> NewModifiers();
+        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
+        p -> AllocateModifiers(tail -> index + 1);
+        AstListNode* root = tail;
+        do
+        {
+            root = root -> next;
+            if (root -> element -> ModifierKeywordCast())
+            {
+                AstModifierKeyword* mod =
+                    (AstModifierKeyword*) root -> element;
+                p -> AddModifier(mod);
+                if (lex_stream -> Kind(mod -> modifier_token) == TK_static)
+                    p -> static_token_opt = mod -> modifier_token;
+            }
+            else p -> AddModifier(DYNAMIC_CAST<AstAnnotation*>
+                                  (root -> element));
+        } while (root != tail);
+        FreeCircularList(tail);
+    }
+    return p;
 }
 ./
 
@@ -1241,72 +1333,289 @@ void Parser::Act$rule_number()
 --ConstantModifiers ::= Modifiers
 --AbstractMethodModifiers ::= Modifiers
 Modifiers ::= Modifier
-\:$action:\
+\:$StartList:\
+/.$shared_StartList./
+
+Modifiers ::= Modifiers Modifier
+\:$AddList2:\
+/.$shared_AddList2./
+
+Modifier ::= 'public'
+\:$MakeModifier:\
 /.$location
-void Parser::Act$rule_number()
+void Parser::MakeModifier()
 {
-    AstModifiers* p = ast_pool -> NewModifier(Token(1));
-    if (lex_stream -> Kind(Token(1)) == TK_static)
-        p -> static_token_opt = Token(1);
+    Sym(1) = ast_pool -> NewModifierKeyword(Token(1));
+}
+./
+
+Modifier ::= 'protected'
+\:$MakeModifier:\
+/.$shared_function
+//
+// void MakeModifier();
+//./
+
+Modifier ::= 'private'
+\:$MakeModifier:\
+/.$shared_function
+//
+// void MakeModifier();
+//./
+
+Modifier ::= 'static'
+\:$MakeModifier:\
+/.$shared_function
+//
+// void MakeModifier();
+//./
+
+Modifier ::= 'abstract'
+\:$MakeModifier:\
+/.$shared_function
+//
+// void MakeModifier();
+//./
+
+Modifier ::= 'final'
+\:$MakeModifier:\
+/.$shared_function
+//
+// void MakeModifier();
+//./
+
+Modifier ::= 'native'
+\:$MakeModifier:\
+/.$shared_function
+//
+// void MakeModifier();
+//./
+
+Modifier ::= 'strictfp'
+\:$MakeModifier:\
+/.$shared_function
+//
+// void MakeModifier();
+//./
+
+Modifier ::= 'synchronized'
+\:$MakeModifier:\
+/.$shared_function
+//
+// void MakeModifier();
+//./
+
+Modifier ::= 'transient'
+\:$MakeModifier:\
+/.$shared_function
+//
+// void MakeModifier();
+//./
+
+Modifier ::= 'volatile'
+\:$MakeModifier:\
+/.$shared_function
+//
+// void MakeModifier();
+//./
+
+--
+-- Annotations were added in JSR 175. They are valid anywhere a modifier is,
+-- additionally they are valid on package declarations.
+--
+Modifier ::= Annotation
+\:$NoAction:\
+/.$shared_NoAction./
+
+--
+-- Annotations were added in JSR 175.
+--
+Annotation ::= NormalAnnotation
+\:$NoAction:\
+/.$shared_NoAction./
+
+--
+-- Annotations were added in JSR 175.
+--
+Annotation ::= MarkerAnnotation
+\:$NoAction:\
+/.$shared_NoAction./
+
+--
+-- Annotations were added in JSR 175.
+--
+Annotation ::= SingleMemberAnnotation
+\:$NoAction:\
+/.$shared_NoAction./
+
+--
+-- Annotations were added in JSR 175.
+--
+--NormalAnnotation ::= '@' TypeName '(' MemberValuePairsopt ')'
+NormalAnnotation ::= '@' Name '(' MemberValuePairsopt ')'
+\:$MakeAnnotation:\
+/.$location
+void Parser::MakeAnnotation()
+{
+    AstAnnotation* p = ast_pool -> NewAnnotation();
+    p -> at_token = Token(1);
+    p -> name = DYNAMIC_CAST<AstName*> (Sym(2));
+    if (Sym(4))
+    {
+        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(4));
+        p -> AllocateMemberValuePairs(tail -> index + 1);
+        AstListNode* root = tail;
+        do
+        {
+            root = root -> next;
+            p -> AddMemberValuePair(DYNAMIC_CAST<AstMemberValuePair*>
+                                    (root -> element));
+        } while (root != tail);
+        FreeCircularList(tail);
+    }
+    if (Token(5) > Token(3))
+        p -> right_paren_token_opt = Token(5);
     Sym(1) = p;
 }
 ./
 
-Modifiers ::= Modifiers Modifier
+--
+-- Annotations were added in JSR 175.
+--
+MemberValuePairs ::= MemberValuePair
+\:$StartList:\
+/.$shared_StartList./
+
+--
+-- Annotations were added in JSR 175.
+--
+MemberValuePairs ::= MemberValuePairs ',' MemberValuePair
+\:$AddList3:\
+/.$shared_AddList3./
+
+--
+-- Annotations were added in JSR 175. We got rid of SimpleName.
+--
+--MemberValuePair ::= SimpleName '=' MemberValue
+MemberValuePair ::= 'Identifier' '=' MemberValue
 \:$action:\
 /.$location
 void Parser::Act$rule_number()
 {
-    AstModifiers* p = DYNAMIC_CAST<AstModifiers*> (Sym(1));
-    p -> right_modifier_token = Token(2);
-    if (! p -> static_token_opt && lex_stream -> Kind(Token(2)) == TK_static)
-        p -> static_token_opt = Token(1);
+    AstMemberValuePair* p = ast_pool -> NewMemberValuePair();
+    p -> identifier_token_opt = Token(1);
+    p -> member_value = DYNAMIC_CAST<AstMemberValue*> (Sym(3));
+    Sym(1) = p;
 }
 ./
 
-Modifier ::= 'public'
+--
+-- Annotations were added in JSR 175.
+--
+MemberValue ::= ConditionalExpression
 \:$NoAction:\
 /.$shared_NoAction./
 
-Modifier ::= 'protected'
+--
+-- Annotations were added in JSR 175.
+--
+MemberValue ::= Annotation
 \:$NoAction:\
 /.$shared_NoAction./
 
-Modifier ::= 'private'
+--
+-- Annotations were added in JSR 175.
+--
+MemberValue ::= MemberValueArrayInitializer
 \:$NoAction:\
 /.$shared_NoAction./
 
-Modifier ::= 'static'
-\:$NoAction:\
-/.$shared_NoAction./
+--
+-- Annotations were added in JSR 175.
+-- The rule was expanded inline below to make the grammar lalr(1). The use of
+-- Marker allows us to share code.
+--
+--MemberValueArrayInitializer ::= '{' MemberValuesopt ,opt '}'
+MemberValueArrayInitializer ::= '{' Marker ,opt '}'
+\:$MakeArrayInitializer:\
+/.$location
+void Parser::MakeArrayInitializer()
+{
+    AstArrayInitializer* p = ast_pool -> NewArrayInitializer();
+    p -> left_brace_token = Token(1);
+    if (Sym(2))
+    {
+        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(2));
+        p -> AllocateVariableInitializers(tail -> index + 1);
+        AstListNode* root = tail;
+        do
+        {
+            root = root -> next;
+            p -> AddVariableInitializer(DYNAMIC_CAST<AstMemberValue*>
+                                        (root -> element));
+        } while (root != tail);
+        FreeCircularList(tail);
+    }
+    p -> right_brace_token = Token(4);
+    Sym(1) = p;
+}
+./
 
-Modifier ::= 'abstract'
-\:$NoAction:\
-/.$shared_NoAction./
+--
+-- Annotations were added in JSR 175.
+--
+MemberValueArrayInitializer ::= '{' MemberValues ,opt '}'
+\:$MakeArrayInitializer:\
+/.$shared_function
+//
+// void MakeArrayInitializer();
+//./
 
-Modifier ::= 'final'
-\:$NoAction:\
-/.$shared_NoAction./
+--
+-- Annotations were added in JSR 175.
+--
+MemberValues ::= MemberValue
+\:$StartList:\
+/.$shared_StartList./
 
-Modifier ::= 'native'
-\:$NoAction:\
-/.$shared_NoAction./
+--
+-- Annotations were added in JSR 175.
+--
+MemberValues ::= MemberValues ',' MemberValue
+\:$AddList3:\
+/.$shared_AddList3./
 
-Modifier ::= 'strictfp'
-\:$NoAction:\
-/.$shared_NoAction./
+--
+-- Annotations were added in JSR 175.
+-- The use of Marker allows us to share code.
+--
+--MarkerAnnotation ::= '@' TypeName
+MarkerAnnotation ::= '@' Name Marker Marker Marker
+\:$MakeAnnotation:\
+/.$shared_function
+//
+// void MakeAnnotation();
+//./
 
-Modifier ::= 'synchronized'
-\:$NoAction:\
-/.$shared_NoAction./
-
-Modifier ::= 'transient'
-\:$NoAction:\
-/.$shared_NoAction./
-
-Modifier ::= 'volatile'
-\:$NoAction:\
-/.$shared_NoAction./
+--
+-- Annotations were added in JSR 175.
+--
+--SingleMemberAnnotation ::= '@' TypeName '(' MemberValue ')'
+SingleMemberAnnotation ::= '@' Name '(' MemberValue ')'
+\:$action:\
+/.$location
+void Parser::Act$rule_number()
+{
+    AstMemberValuePair* mvp = ast_pool -> NewMemberValuePair();
+    mvp -> member_value = DYNAMIC_CAST<AstMemberValue*> (Sym(4));
+    AstListNode* p = AllocateListNode();
+    p -> next = p;
+    p -> element = mvp;
+    p -> index = 0;
+    Sym(4) = p;
+    MakeAnnotation();
+}
+./
 
 --18.8 Productions from 8: Class Declarations
 --18.8.1 Productions from 8.1: Class Declarations
@@ -1323,7 +1632,7 @@ ClassDeclaration ::= Modifiersopt 'class' 'Identifier' Marker Superopt
 void Parser::Act$rule_number()
 {
     AstClassDeclaration* p = ast_pool -> NewClassDeclaration();
-    p -> modifiers_opt = DYNAMIC_CAST<AstModifiers*> (Sym(1));
+    p -> modifiers_opt = MakeModifiers();
     p -> class_token = Token(2);
     p -> super_opt = DYNAMIC_CAST<AstTypeName*> (Sym(5));
     if (Sym(6))
@@ -1579,7 +1888,7 @@ FieldDeclaration ::= Modifiersopt Marker Type VariableDeclarators ';'
 void Parser::Act$rule_number()
 {
     AstFieldDeclaration* p = ast_pool -> NewFieldDeclaration();
-    p -> modifiers_opt = DYNAMIC_CAST<AstModifiers*> (Sym(1));
+    p -> modifiers_opt = MakeModifiers();
     p -> type = DYNAMIC_CAST<AstType*> (Sym(3));
     AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(4));
     p -> AllocateVariableDeclarators(tail -> index + 1);
@@ -1691,7 +2000,7 @@ MethodHeader ::= Modifiersopt Marker Type MethodDeclarator Throwsopt
 void Parser::MakeMethodHeader()
 {
     AstMethodDeclaration* p = ast_pool -> NewMethodDeclaration();
-    p -> modifiers_opt = DYNAMIC_CAST<AstModifiers*> (Sym(1));
+    p -> modifiers_opt = MakeModifiers();
     p -> type = DYNAMIC_CAST<AstType*> (Sym(3));
     p -> method_declarator = DYNAMIC_CAST<AstMethodDeclarator*> (Sym(4));
     if (Sym(5))
@@ -1850,8 +2159,7 @@ FormalParameter ::= Modifiers Type Marker VariableDeclaratorId
 /.$location
 void Parser::MakeFormalParameterB()
 {
-    MakeFormalParameter(DYNAMIC_CAST<AstModifiers*> (Sym(1)),
-                        DYNAMIC_CAST<AstType*> (Sym(2)),
+    MakeFormalParameter(MakeModifiers(), DYNAMIC_CAST<AstType*> (Sym(2)),
                         Token(3) == Token(4) ? 0 : Token(3),
                         DYNAMIC_CAST<AstVariableDeclaratorId*> (Sym(4)));
 }
@@ -1979,7 +2287,7 @@ InitializerDeclaration ::= Modifiersopt Marker MethodHeaderMarker MethodBody
 void Parser::Act$rule_number()
 {
     AstInitializerDeclaration* p = ast_pool -> NewInitializerDeclaration();
-    p -> modifiers_opt = DYNAMIC_CAST<AstModifiers*> (Sym(1));
+    p -> modifiers_opt = MakeModifiers();
     p -> block = DYNAMIC_CAST<AstMethodBody*> (Sym(4));
     Sym(1) = p;
 }
@@ -2000,7 +2308,7 @@ ConstructorDeclaration ::= Modifiersopt Marker ConstructorDeclarator
 void Parser::MakeConstructorDeclaration()
 {
     AstConstructorDeclaration* p = ast_pool -> NewConstructorDeclaration();
-    p -> modifiers_opt = DYNAMIC_CAST<AstModifiers*> (Sym(1));
+    p -> modifiers_opt = MakeModifiers();
     p -> constructor_declarator = DYNAMIC_CAST<AstMethodDeclarator*> (Sym(3));
     if (Sym(4))
     {
@@ -2124,7 +2432,7 @@ InterfaceDeclaration ::= Modifiersopt 'interface' 'Identifier' Marker
 void Parser::Act$rule_number()
 {
     AstInterfaceDeclaration* p = ast_pool -> NewInterfaceDeclaration();
-    p -> modifiers_opt = DYNAMIC_CAST<AstModifiers*> (Sym(1));
+    p -> modifiers_opt = MakeModifiers();
     p -> interface_token = Token(2);
     if (Sym(5))
     {
@@ -2215,27 +2523,10 @@ void Parser::Act$rule_number()
 -- ArrayInitializer ::= '{' VariableInitializersopt ,opt '}'
 ArrayInitializer ::= '{' Marker ,opt '}'
 \:$MakeArrayInitializer:\
-/.$location
-void Parser::MakeArrayInitializer()
-{
-    AstArrayInitializer* p = ast_pool -> NewArrayInitializer();
-    p -> left_brace_token = Token(1);
-    if (Sym(2))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(2));
-        p -> AllocateVariableInitializers(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddVariableInitializer(root -> element);
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
-    p -> right_brace_token = Token(4);
-    Sym(1) = p;
-}
-./
+/.$shared_function
+//
+// void MakeArrayInitializer();
+//./
 
 ArrayInitializer ::= '{' VariableInitializers ,opt '}'
 \:$MakeArrayInitializer:\
@@ -2301,8 +2592,7 @@ BlockStatement ::= ClassDeclaration
 void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool ->
-        NewLocalClassDeclarationStatement(DYNAMIC_CAST<AstClassDeclaration*>
-                                          (Sym(1)));
+        NewLocalClassStatement(DYNAMIC_CAST<AstClassDeclaration*> (Sym(1)));
 }
 ./
 
@@ -2320,7 +2610,7 @@ LocalVariableDeclarationStatement ::= LocalVariableDeclaration ';'
 /.$location
 void Parser::Act$rule_number()
 {
-    DYNAMIC_CAST<AstLocalVariableDeclarationStatement*> (Sym(1)) ->
+    DYNAMIC_CAST<AstLocalVariableStatement*> (Sym(1)) ->
         semicolon_token_opt = Token(2);
 }
 ./
@@ -2346,8 +2636,7 @@ void Parser::MakeLocalVariable()
 void Parser::MakeLocalVariable(AstModifiers* modifiers, AstType* type,
                                AstListNode* variables)
 {
-    AstLocalVariableDeclarationStatement* p =
-        ast_pool -> NewLocalVariableDeclarationStatement();
+    AstLocalVariableStatement* p = ast_pool -> NewLocalVariableStatement();
     p -> modifiers_opt = modifiers;
     p -> type = type;
     AstListNode* tail = variables;
@@ -2398,8 +2687,7 @@ LocalVariableDeclaration ::= Modifiers Type Marker VariableDeclarators
 /.$location
 void Parser::Act$rule_number()
 {
-    MakeLocalVariable(DYNAMIC_CAST<AstModifiers*> (Sym(1)),
-                      DYNAMIC_CAST<AstType*> (Sym(2)),
+    MakeLocalVariable(MakeModifiers(), DYNAMIC_CAST<AstType*> (Sym(2)),
                       DYNAMIC_CAST<AstListNode*> (Sym(4)));
 }
 ./
@@ -3339,8 +3627,7 @@ ClassInstanceCreationExpression ::= 'new' ClassOrInterfaceType '('
 /.$location
 void Parser::Act$rule_number()
 {
-    AstClassInstanceCreationExpression* p =
-        ast_pool -> NewClassInstanceCreationExpression();
+    AstClassCreationExpression* p = ast_pool -> NewClassCreationExpression();
     p -> new_token = Token(1);
     p -> class_type = DYNAMIC_CAST<AstTypeName*> (Sym(2));
     p -> arguments = MakeArguments(3);
@@ -3365,8 +3652,7 @@ ClassInstanceCreationExpression ::= Primary '.' 'new' 'Identifier'
 /.$location
 void Parser::MakeQualifiedNew()
 {
-    AstClassInstanceCreationExpression* p =
-        ast_pool -> NewClassInstanceCreationExpression();
+    AstClassCreationExpression* p = ast_pool -> NewClassCreationExpression();
     p -> base_opt = DYNAMIC_CAST<AstExpression*> (Sym(1));
     p -> new_token = Token(3);
     p -> class_type = ast_pool -> NewTypeName(MakeSimpleName(4));
@@ -4402,7 +4688,7 @@ Identifieropt ::= 'Identifier'
 \:$NoAction:\
 /.$shared_NoAction./
 
-PackageDeclarationopt ::= $empty
+Superopt ::= $empty
 \:$NullAction:\
 /.$location
 //
@@ -4412,14 +4698,6 @@ PackageDeclarationopt ::= $empty
 //
 void Parser::NullAction() { Sym(1) = NULL; }
 ./
-
-PackageDeclarationopt ::= PackageDeclaration
-\:$NoAction:\
-/.$shared_NoAction./
-
-Superopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
 
 Superopt ::= Super
 \:$NoAction:\
@@ -4566,6 +4844,20 @@ Catchesopt ::= $empty
 /.$shared_NullAction./
 
 Catchesopt ::= Catches
+\:$NoAction:\
+/.$shared_NoAction./
+
+--
+-- Annotations were added in JSR 175.
+--
+MemberValuePairsopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+--
+-- Annotations were added in JSR 175.
+--
+MemberValuePairsopt ::= MemberValuePairs
 \:$NoAction:\
 /.$shared_NoAction./
 

@@ -1004,6 +1004,8 @@ void Scanner::ClassifyIdOrKeyword()
         if (brace_stack.Size() == 0)
             lex -> type_index.Next() = current_token_index;
     }
+    else if (current_token -> Kind() == TK_package && ! lex -> package)
+        lex -> package = current_token_index;
 
     cursor = ptr;
 }

@@ -863,8 +863,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     int EmitInstanceofExpression(AstInstanceofExpression*, bool);
     int EmitCastExpression(AstCastExpression*, bool);
     void EmitCast(TypeSymbol*, TypeSymbol*);
-    int EmitInstanceCreationExpression(AstClassInstanceCreationExpression*,
-                                        bool);
+    int EmitClassCreationExpression(AstClassCreationExpression*, bool);
     int EmitConditionalExpression(AstConditionalExpression*, bool);
     int EmitFieldAccess(AstFieldAccess*, bool = true);
     AstExpression* VariableExpressionResolution(AstExpression*);

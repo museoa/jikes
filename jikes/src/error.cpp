@@ -599,6 +599,7 @@ void SemanticError::InitializeMessageGroups()
                              "modifiers appearing out of order",
                              NAMED_WEAK_OFF);
     group -> AddMessage(RECOMMENDED_MODIFIER_ORDER);
+    group -> AddMessage(RECOMMENDED_ANNOTATION_ORDER);
     message_groups.Push(group);
 
     group = new MessageGroup("redundant-modifiers",
@@ -1721,17 +1722,6 @@ void SemanticError::InitializeMessages()
         "The value of a float literal must not round to infinity or zero.";
     messages[INVALID_DOUBLE_VALUE] =
         "The value of a double literal must not round to infinity or zero.";
-    messages[HEX_FLOATING_POINT_UNSUPPORTED] =
-        "Hexadecimal floating point values are only supported for `-source "
-        "1.5' or greater.";
-    messages[FOREACH_UNSUPPORTED] =
-        "Enhanced for loops (also known as foreach loops) are only supported "
-        "for `-source 1.5' or greater.";
-    messages[VARARGS_UNSUPPORTED] =
-        "Variable-arity methods (also known as varargs) are only supported "
-        "for `-source 1.5' or greater.";
-    messages[STATIC_IMPORT_UNSUPPORTED] =
-        "Static imports are only supported for `-source 1.5' or greater.";
     messages[RETURN_STATEMENT_IN_INITIALIZER] =
         "A return statement may not appear in an initializer block.";
     messages[ABRUPT_INITIALIZER] =
@@ -1760,6 +1750,30 @@ void SemanticError::InitializeMessages()
     messages[INVALID_CONTINUE_TARGET] =
         "The statement labeled \"%1\" cannot be continued since it is "
         "not a \"while\", \"do\" or \"for\" statement.";
+
+    // JDK 1.5 (JLS3) feature-related errors.
+    messages[HEX_FLOATING_POINT_UNSUPPORTED] =
+        "Hexadecimal floating point values are only supported for `-source "
+        "1.5' or greater.";
+    messages[FOREACH_UNSUPPORTED] =
+        "Enhanced for loops (also known as foreach loops) are only supported "
+        "for `-source 1.5' or greater.";
+    messages[VARARGS_UNSUPPORTED] =
+        "Variable-arity methods (also known as varargs) are only supported "
+        "for `-source 1.5' or greater."
+        "(not yet implemented)";
+    messages[STATIC_IMPORT_UNSUPPORTED] =
+        "Static imports are only supported for `-source 1.5' or greater."
+        "(not yet implemented)";
+    messages[ANNOTATION_MODIFIER_UNSUPPORTED] =
+        "Annotation modifiers are only supported for `-source 1.5' or "
+        "greater."
+        "(not yet implemented)";
+    messages[RECOMMENDED_ANNOTATION_ORDER] =
+        "It is recommended that the annotation modifier \"%1\" appear before "
+        "all modifier keywords.";
+    messages[DUPLICATE_ANNOTATION] =
+        "Duplicate specification of the annotation modifier \"%1\".";
 
     // More type-related errors.
     messages[NON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD] =

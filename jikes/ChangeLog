@@ -1,3 +1,44 @@
+2004-03-05  Eric Blake  <ebb9@byu.net>
+
+	* src/ast.h (AstMemberValue, AstMemberValuePair, AstAnnotation),
+	(AstModifierKeyword): New classes.
+	(AstModifiers): Redo, to annotations in addition to keywords, per
+	JSR 175.
+	(AstPackageDeclaration): Add modifiers_opt.
+	(AstLocalVariableStatement, AstLocalClassStatement),
+	(AstClassCreationExpression): Rename to be shorter names.
+	* src/decl.cpp (CheckPackage): Check for package annotations,
+	although this needs more work.
+	* src/error.h (ANNOTATION_MODIFIER_UNSUPPORTED),
+	(RECOMMENDED_ANNOTATION_ORDER, DUPLICATE_ANNOTATION): New errors.
+	* src/error.cpp: Ditto.
+	* src/stream.h (PackageToken): New method, to allow for package
+	modifiers.
+	* src/stream.cpp: Reflect changes to stream.
+	* src/parser.cpp (PackageHeaderParse): Ditto.
+	* src/parser.h: Ditto.
+	* src/scanner.cpp (ClassifyIdOrKeyword): Ditto.
+	* src/semantic.h (ProcessPackageModifiers): New method.
+	* src/ast.cpp: Reflect changes to AST.
+	* src/body.cpp: Ditto.
+	* src/bytecode.cpp: Ditto.
+	* src/bytecode.h: Ditto.
+	* src/definite.cpp: Ditto.
+	* src/expr.cpp: Ditto.
+	* src/modifier.cpp: Ditto.
+	* src/symbol.cpp: Ditto.
+	* src/symbol.h: Ditto.
+	* src/unparse.cpp: Ditto.
+	* src/java.g: Ditto.
+	(CompilationUnit, PackageDeclaration, Modifier): Parse annotation
+	modifiers (but not yet for annotation types).
+	* src/javaact.cpp: Regenerate.
+	* src/javaact.h: Ditto.
+	* src/javadcl.h: Ditto.
+	* src/javadef.h: Ditto.
+	* src/javaprs.h: Ditto.
+	* src/javasym.h: Ditto.
+
 2004-03-02  Elliott Hughes  <enh@acm.org>
 
 	* src/control.cpp, src/decl.cpp: remove checks for +P from referenced

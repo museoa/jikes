@@ -345,6 +345,7 @@ LexStream::LexStream(Control& control_, FileSymbol* file_symbol_)
       comment_stream(10, 8),
       locations(NULL),
       line_location(12, 8),
+      package(0),
       initial_reading_of_input(true),
       comment_buffer(NULL),
       control(control_)

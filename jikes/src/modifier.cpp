@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -37,11 +36,30 @@ AccessFlags Semantic::ProcessModifiers(AstModifiers* modifiers,
     if (! modifiers)
         return AccessFlags(implicit_flags);
     AccessFlags access_flags;
-    for (LexStream::TokenIndex index = modifiers -> left_modifier_token;
-         index <= modifiers -> right_modifier_token; index++)
+    bool seen_keyword = false;
+    for (unsigned i = 0; i < modifiers -> NumModifiers(); i++)
     {
+        Ast* mod = modifiers -> Modifier(i);
+        AstAnnotation* annotation = mod -> AnnotationCast();
+        AstModifierKeyword* keyword = mod -> ModifierKeywordCast();
+        if (annotation)
+        {
+            if (seen_keyword)
+            {
+                ReportSemError(SemanticError::RECOMMENDED_ANNOTATION_ORDER,
+                               mod,
+                               lex_stream -> NameString(annotation -> name ->
+                                                        identifier_token));
+            }
+            // TODO: Add annotation support for 1.5.
+            ReportSemError(SemanticError::ANNOTATION_MODIFIER_UNSUPPORTED,
+                           mod);
+            continue;
+        }
+        assert(keyword);
+        seen_keyword = true;
         u2 flag;
-        switch (lex_stream -> Kind(index))
+        switch (lex_stream -> Kind(keyword -> modifier_token))
         {
         case TK_abstract: flag = AccessFlags::ACCESS_ABSTRACT; break;
         case TK_final: flag = AccessFlags::ACCESS_FINAL; break;
@@ -59,33 +77,36 @@ AccessFlags Semantic::ProcessModifiers(AstModifiers* modifiers,
         }
         if ((flag & valid_flags) == 0)
         {
-            ReportSemError(SemanticError::INVALID_MODIFIER, index,
-                           lex_stream -> NameString(index),
+            ReportSemError(SemanticError::INVALID_MODIFIER, mod,
+                           lex_stream -> NameString(keyword -> modifier_token),
                            declaration_kind_name);
         }
         else if ((flag & AccessFlags::ACCESS_ACCESS) &&
                  (access_flags.Flags() & AccessFlags::ACCESS_ACCESS))
         {
-            ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER, index);
+            ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER, mod);
         }
         else if (access_flags.IsSet(flag))
         {
-            ReportSemError(SemanticError::DUPLICATE_MODIFIER, index,
-                       lex_stream -> NameString(index));
+            ReportSemError(SemanticError::DUPLICATE_MODIFIER, mod,
+                           lex_stream -> NameString(keyword ->
+                                                    modifier_token));
         }
         else
         {
             // We have a valid flag if it is alone.
             if ((flag & implicit_flags) != 0)
             {
-                ReportSemError(SemanticError::REDUNDANT_MODIFIER, index,
-                               lex_stream -> NameString(index),
+                ReportSemError(SemanticError::REDUNDANT_MODIFIER, mod,
+                               lex_stream -> NameString(keyword ->
+                                                        modifier_token),
                                declaration_kind_name);
             }
             if (! access_flags.RecommendedOrder(flag))
             {
-                ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
-                               index, lex_stream -> NameString(index));
+                ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER, mod,
+                               lex_stream -> NameString(keyword ->
+                                                        modifier_token));
             }
             access_flags.SetFlags(flag);
             if (access_flags.ACC_FINAL())
@@ -93,14 +114,15 @@ AccessFlags Semantic::ProcessModifiers(AstModifiers* modifiers,
                 if (access_flags.ACC_VOLATILE())
                 {
                     // We know it's a field because of volatile.
-                    ReportSemError(SemanticError::VOLATILE_FINAL_FIELD,
-                                   index, lex_stream -> NameString(index));
+                    ReportSemError(SemanticError::VOLATILE_FINAL_FIELD, mod,
+                                   lex_stream -> NameString(keyword ->
+                                                            modifier_token));
                     access_flags.ResetFlags(flag);
                 }
                 else if (access_flags.ACC_ABSTRACT())
                 {
-                    ReportSemError(SemanticError::FINAL_ABSTRACT_ENTITY,
-                                   index, declaration_kind_name);
+                    ReportSemError(SemanticError::FINAL_ABSTRACT_ENTITY, mod,
+                                   declaration_kind_name);
                     access_flags.ResetFlags(flag);
                 }
             }
@@ -117,13 +139,13 @@ AccessFlags Semantic::ProcessModifiers(AstModifiers* modifiers,
                     access_flags.ACC_STATIC() || access_flags.ACC_STRICTFP())
                 {
                     ReportSemError(SemanticError::BAD_ABSTRACT_METHOD_MODIFIER,
-                                   index);
+                                   mod);
                     access_flags.ResetFlags(flag);
                 }
             }
             else if (access_flags.ACC_STRICTFP() && access_flags.ACC_NATIVE())
             {
-                ReportSemError(SemanticError::STRICTFP_NATIVE_METHOD, index);
+                ReportSemError(SemanticError::STRICTFP_NATIVE_METHOD, mod);
                 access_flags.ResetFlags(flag);
             }
         }
@@ -131,6 +153,15 @@ AccessFlags Semantic::ProcessModifiers(AstModifiers* modifiers,
     access_flags.SetFlags(implicit_flags);
     return access_flags;
 }
+
+//
+// Process modifiers of packages (annotations only, added in 1.5).
+//
+AccessFlags Semantic::ProcessPackageModifiers(AstPackageDeclaration* package)
+{
+    return ProcessModifiers(package -> modifiers_opt, L"a package", 0);
+}
+
 
 //
 // Process modifiers of top-level types.
@@ -250,7 +281,7 @@ AccessFlags Semantic::ProcessFieldModifiers(AstFieldDeclaration* field_declarati
 // Note: Technically, this could be factored out from the grammar, since
 // only final is valid.
 //
-AccessFlags Semantic::ProcessLocalModifiers(AstLocalVariableDeclarationStatement* local_declaration)
+AccessFlags Semantic::ProcessLocalModifiers(AstLocalVariableStatement* local_declaration)
 {
     return ProcessModifiers(local_declaration -> modifiers_opt,
                             L"a local variable", AccessFlags::ACCESS_FINAL);

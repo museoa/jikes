@@ -341,6 +341,11 @@ public:
         return comments[i].length;
     }
 
+    inline TokenIndex PackageToken()
+    {
+        return package;
+    }
+
     inline unsigned NumBadTokens()
     {
         unsigned count = 0;
@@ -531,6 +536,7 @@ private:
     ConvertibleArray<unsigned> line_location;
     TokenIndex* types;
     ConvertibleArray<TokenIndex> type_index;
+    TokenIndex package;
 
     void CompressSpace();
 

@@ -79,7 +79,7 @@ AstPackageDeclaration* Parser::PackageHeaderParse(LexStream* lex_stream_,
     AstPackageDeclaration* package_declaration = NULL;
     lex_stream_ -> Reset();
 
-    if (lex_stream_ -> Kind(lex_stream_ -> Peek()) == TK_package)
+    if (lex_stream_ -> PackageToken())
     {
         ast_pool = ast_pool_;
         list_node_pool = new StoragePool(lex_stream_ -> NumTokens());

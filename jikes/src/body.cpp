@@ -206,10 +206,9 @@ void Semantic::WarnOfAccessibleFieldWithName(SemanticError::SemanticErrorKind pr
 }
 
 
-void Semantic::ProcessLocalVariableDeclarationStatement(Ast* stmt)
+void Semantic::ProcessLocalVariableStatement(Ast* stmt)
 {
-    AstLocalVariableDeclarationStatement* local_decl =
-        (AstLocalVariableDeclarationStatement*) stmt;
+    AstLocalVariableStatement* local_decl = (AstLocalVariableStatement*) stmt;
     ProcessType(local_decl -> type);
     TypeSymbol* field_type = local_decl -> type -> symbol;
     AccessFlags access_flags = ProcessLocalModifiers(local_decl);
@@ -1936,8 +1935,7 @@ TypeSymbol* Semantic::GetLocalType(AstClassDeclaration* class_declaration)
 
 void Semantic::ProcessClassDeclaration(Ast* stmt)
 {
-    AstLocalClassDeclarationStatement* class_statement =
-        (AstLocalClassDeclarationStatement*) stmt;
+    AstLocalClassStatement* class_statement = (AstLocalClassStatement*) stmt;
     AstClassDeclaration* class_declaration = class_statement -> declaration;
     AstClassBody* class_body = class_declaration -> class_body;
 

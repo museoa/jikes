@@ -157,12 +157,12 @@ DefiniteAssignmentSet* Semantic::DefiniteMethodInvocation(AstExpression* express
 }
 
 
-DefiniteAssignmentSet* Semantic::DefiniteClassInstanceCreationExpression(AstExpression* expression,
-                                                                         DefinitePair& def_pair)
+DefiniteAssignmentSet* Semantic::DefiniteClassCreationExpression(AstExpression* expression,
+                                                                 DefinitePair& def_pair)
 {
     unsigned i;
-    AstClassInstanceCreationExpression* class_creation =
-        (AstClassInstanceCreationExpression*) expression;
+    AstClassCreationExpression* class_creation =
+        (AstClassCreationExpression*) expression;
     if (class_creation -> resolution_opt)
         class_creation = class_creation -> resolution_opt;
     if (class_creation -> base_opt)
@@ -837,10 +837,9 @@ void Semantic::DefiniteBlock(Ast* stmt)
 }
 
 
-void Semantic::DefiniteLocalClassDeclarationStatement(Ast* stmt)
+void Semantic::DefiniteLocalClassStatement(Ast* stmt)
 {
-    AstLocalClassDeclarationStatement* local_decl =
-        (AstLocalClassDeclarationStatement*) stmt;
+    AstLocalClassStatement* local_decl = (AstLocalClassStatement*) stmt;
     TypeSymbol* local_type = local_decl -> declaration -> class_body ->
         semantic_environment -> Type();
     assert(local_type -> LocalClassProcessingCompleted());
@@ -859,11 +858,9 @@ void Semantic::DefiniteLocalClassDeclarationStatement(Ast* stmt)
 }
 
 
-void Semantic::DefiniteLocalVariableDeclarationStatement(Ast* stmt)
+void Semantic::DefiniteLocalVariableStatement(Ast* stmt)
 {
-    AstLocalVariableDeclarationStatement* local_decl =
-        (AstLocalVariableDeclarationStatement*) stmt;
-
+    AstLocalVariableStatement* local_decl = (AstLocalVariableStatement*) stmt;
     for (unsigned i = 0; i < local_decl -> NumVariableDeclarators(); i++)
     {
         AstVariableDeclarator* variable_declarator =

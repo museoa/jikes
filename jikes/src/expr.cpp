@@ -551,8 +551,8 @@ void Semantic::ReportMethodNotFound(AstMethodInvocation* method_call,
 //
 void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
 {
-    AstClassInstanceCreationExpression* class_creation =
-        ast -> ClassInstanceCreationExpressionCast();
+    AstClassCreationExpression* class_creation =
+        ast -> ClassCreationExpressionCast();
     AstSuperCall* super_call = ast -> SuperCallCast();
     AstArguments* args;
     LexStream::TokenIndex left_tok;
@@ -720,8 +720,8 @@ MethodSymbol* Semantic::FindConstructor(TypeSymbol* containing_type, Ast* ast,
     AstArguments* args;
     Tuple<MethodSymbol*> constructor_set(2); // Stores constructor overloads.
 
-    AstClassInstanceCreationExpression* class_creation =
-        ast -> ClassInstanceCreationExpressionCast();
+    AstClassCreationExpression* class_creation =
+        ast -> ClassCreationExpressionCast();
     AstSuperCall* super_call = ast -> SuperCallCast();
 
     if (class_creation)
@@ -1699,8 +1699,8 @@ AstExpression* Semantic::CreateAccessToType(Ast* source,
     AstSuperCall* super_call = source -> SuperCallCast();
     AstThisExpression* this_expr = source -> ThisExpressionCast();
     AstSuperExpression* super_expr = source -> SuperExpressionCast();
-    AstClassInstanceCreationExpression* class_creation =
-        source -> ClassInstanceCreationExpressionCast();
+    AstClassCreationExpression* class_creation =
+        source -> ClassCreationExpressionCast();
     bool exact = false;
 
     if (name)
@@ -3608,7 +3608,7 @@ void Semantic::UpdateLocalConstructors(TypeSymbol* inner_type)
 // the resolution_opt field of the original to a generated instance creation
 // expression that has been adjusted for compilation purposes.
 //
-void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class_creation,
+void Semantic::GetAnonymousConstructor(AstClassCreationExpression* class_creation,
                                        TypeSymbol* anonymous_type)
 {
     LexStream::TokenIndex left_loc =
@@ -3636,8 +3636,8 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class
         GenArguments(class_creation -> arguments -> left_parenthesis_token,
                      right_loc);
 
-    AstClassInstanceCreationExpression* resolution =
-        compilation_unit -> ast_pool -> GenClassInstanceCreationExpression();
+    AstClassCreationExpression* resolution =
+        compilation_unit -> ast_pool -> GenClassCreationExpression();
     resolution -> new_token = class_creation -> new_token;
     // TODO: WARNING: sharing of subtrees...
     resolution -> class_type = class_creation -> class_type;
@@ -3845,7 +3845,7 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class
 // super_type is the type specified in the anonymous constructor,
 // which is the supertype of the created anonymous type.
 //
-TypeSymbol* Semantic::GetAnonymousType(AstClassInstanceCreationExpression* class_creation,
+TypeSymbol* Semantic::GetAnonymousType(AstClassCreationExpression* class_creation,
                                        TypeSymbol* super_type)
 {
     //
@@ -4015,10 +4015,10 @@ TypeSymbol* Semantic::GetAnonymousType(AstClassInstanceCreationExpression* class
 }
 
 
-void Semantic::ProcessClassInstanceCreationExpression(Ast* expr)
+void Semantic::ProcessClassCreationExpression(Ast* expr)
 {
-    AstClassInstanceCreationExpression* class_creation =
-        (AstClassInstanceCreationExpression*) expr;
+    AstClassCreationExpression* class_creation =
+        (AstClassCreationExpression*) expr;
     unsigned i;
 
     //

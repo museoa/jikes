@@ -512,7 +512,7 @@ public:
         ProcessExprOrStmt[Ast::PARENTHESIZED_EXPRESSION] =
             &Semantic::ProcessParenthesizedExpression;
         ProcessExprOrStmt[Ast::CLASS_CREATION] =
-            &Semantic::ProcessClassInstanceCreationExpression;
+            &Semantic::ProcessClassCreationExpression;
         ProcessExprOrStmt[Ast::ARRAY_CREATION] =
             &Semantic::ProcessArrayCreationExpression;
         ProcessExprOrStmt[Ast::POST_UNARY] =
@@ -534,7 +534,7 @@ public:
         ProcessExprOrStmt[Ast::SUPER_CALL] = &Semantic::ProcessInvalidKind;
         ProcessExprOrStmt[Ast::BLOCK] = &Semantic::ProcessBlock;
         ProcessExprOrStmt[Ast::LOCAL_VARIABLE_DECLARATION] =
-            &Semantic::ProcessLocalVariableDeclarationStatement;
+            &Semantic::ProcessLocalVariableStatement;
         ProcessExprOrStmt[Ast::IF] = &Semantic::ProcessIfStatement;
         ProcessExprOrStmt[Ast::EMPTY_STATEMENT] =
             &Semantic::ProcessEmptyStatement;
@@ -567,9 +567,9 @@ public:
         DefiniteStmt[Ast::SUPER_CALL] = &Semantic::DefiniteDefaultStatement;
         DefiniteStmt[Ast::BLOCK] = &Semantic::DefiniteBlock;
         DefiniteStmt[Ast::LOCAL_CLASS] =
-            &Semantic::DefiniteLocalClassDeclarationStatement;
+            &Semantic::DefiniteLocalClassStatement;
         DefiniteStmt[Ast::LOCAL_VARIABLE_DECLARATION] =
-            &Semantic::DefiniteLocalVariableDeclarationStatement;
+            &Semantic::DefiniteLocalVariableStatement;
         DefiniteStmt[Ast::IF] = &Semantic::DefiniteIfStatement;
         DefiniteStmt[Ast::EMPTY_STATEMENT] =
             &Semantic::DefiniteDefaultStatement;
@@ -596,7 +596,7 @@ public:
         DefiniteExpr[Ast::PARENTHESIZED_EXPRESSION] =
             &Semantic::DefiniteParenthesizedExpression;
         DefiniteExpr[Ast::CLASS_CREATION] =
-            &Semantic::DefiniteClassInstanceCreationExpression;
+            &Semantic::DefiniteClassCreationExpression;
         DefiniteExpr[Ast::ARRAY_CREATION] =
             &Semantic::DefiniteArrayCreationExpression;
         DefiniteExpr[Ast::POST_UNARY] = &Semantic::DefinitePostUnaryExpression;
@@ -971,11 +971,12 @@ private:
 
     // Implemented in modifier.cpp - process declaration modifiers
     AccessFlags ProcessModifiers(AstModifiers*, const wchar_t*, u2, u2 = 0);
+    AccessFlags ProcessPackageModifiers(AstPackageDeclaration*);
     AccessFlags ProcessTopLevelTypeModifiers(AstDeclaredType*);
     AccessFlags ProcessNestedTypeModifiers(TypeSymbol*, AstDeclaredType*);
     AccessFlags ProcessLocalClassModifiers(AstClassDeclaration*);
     AccessFlags ProcessFieldModifiers(AstFieldDeclaration*);
-    AccessFlags ProcessLocalModifiers(AstLocalVariableDeclarationStatement*);
+    AccessFlags ProcessLocalModifiers(AstLocalVariableStatement*);
     AccessFlags ProcessFormalModifiers(AstFormalParameter*);
     AccessFlags ProcessMethodModifiers(AstMethodDeclaration*);
     AccessFlags ProcessConstructorModifiers(AstConstructorDeclaration*);
@@ -1032,8 +1033,8 @@ private:
     void DefiniteLoopBody(BitSet&);
 
     void DefiniteBlock(Ast*);
-    void DefiniteLocalClassDeclarationStatement(Ast*);
-    void DefiniteLocalVariableDeclarationStatement(Ast*);
+    void DefiniteLocalClassStatement(Ast*);
+    void DefiniteLocalVariableStatement(Ast*);
     void DefiniteExpressionStatement(Ast*);
     void DefiniteSynchronizedStatement(Ast*);
     void DefiniteIfStatement(Ast*);
@@ -1068,8 +1069,8 @@ private:
                                                DefinitePair&);
     DefiniteAssignmentSet* DefiniteMethodInvocation(AstExpression*,
                                                     DefinitePair&);
-    DefiniteAssignmentSet* DefiniteClassInstanceCreationExpression(AstExpression*,
-                                                                   DefinitePair&);
+    DefiniteAssignmentSet* DefiniteClassCreationExpression(AstExpression*,
+                                                           DefinitePair&);
     DefiniteAssignmentSet* DefiniteArrayCreationExpression(AstExpression*,
                                                            DefinitePair&);
     DefiniteAssignmentSet* DefinitePreUnaryExpression(AstExpression*,
@@ -1238,7 +1239,7 @@ private:
     void ProcessExpressionOrStringConstant(AstExpression* expr);
 
     // Implemented in body.cpp - statement processing
-    void ProcessLocalVariableDeclarationStatement(Ast*);
+    void ProcessLocalVariableStatement(Ast*);
     void ProcessBlock(Ast*);
     void ProcessForStatement(Ast*);
     void ProcessForeachStatement(Ast*);
@@ -1291,11 +1292,11 @@ private:
     void ProcessSuperExpression(Ast*);
     void ProcessParenthesizedExpression(Ast*);
     void UpdateLocalConstructors(TypeSymbol*);
-    void GetAnonymousConstructor(AstClassInstanceCreationExpression*,
+    void GetAnonymousConstructor(AstClassCreationExpression*,
                                  TypeSymbol*);
-    TypeSymbol* GetAnonymousType(AstClassInstanceCreationExpression*,
+    TypeSymbol* GetAnonymousType(AstClassCreationExpression*,
                                  TypeSymbol*);
-    void ProcessClassInstanceCreationExpression(Ast*);
+    void ProcessClassCreationExpression(Ast*);
     void ProcessArrayCreationExpression(Ast*);
     void ProcessPostUnaryExpression(Ast*);
     void ProcessPreUnaryExpression(Ast*);

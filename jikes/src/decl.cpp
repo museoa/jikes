@@ -27,36 +27,38 @@ namespace Jikes { // Open namespace Jikes block
 //
 inline void Semantic::CheckPackage()
 {
-    if (compilation_unit -> package_declaration_opt)
+    if (! compilation_unit -> package_declaration_opt)
+        return;
+    AstPackageDeclaration* package_decl =
+        compilation_unit -> package_declaration_opt;
+    //
+    // Make sure that the package or any of its parents does not match the
+    // name of a type.
+    //
+    for (PackageSymbol* subpackage = this_package,
+             *package = subpackage -> owner;
+         package; subpackage = package, package = package -> owner)
     {
-        //
-        // Make sure that the package or any of its parents does not match the
-        // name of a type.
-        //
-        for (PackageSymbol* subpackage = this_package,
-                 *package = subpackage -> owner;
-             package;
-             subpackage = package, package = package -> owner)
+        FileSymbol* file_symbol =
+            Control::GetFile(control, package, subpackage -> Identity());
+        if (file_symbol)
         {
-            FileSymbol* file_symbol =
-                Control::GetFile(control, package, subpackage -> Identity());
-            if (file_symbol)
-            {
-                char* file_name = file_symbol -> FileName();
-                int length = file_symbol -> FileNameLength();
-                wchar_t* error_name = new wchar_t[length + 1];
-                for (int i = 0; i < length; i++)
-                    error_name[i] = file_name[i];
-                error_name[length] = U_NULL;
+            char* file_name = file_symbol -> FileName();
+            int length = file_symbol -> FileNameLength();
+            wchar_t* error_name = new wchar_t[length + 1];
+            for (int i = 0; i < length; i++)
+                error_name[i] = file_name[i];
+            error_name[length] = U_NULL;
 
-                ReportSemError(SemanticError::PACKAGE_TYPE_CONFLICT,
-                               compilation_unit -> package_declaration_opt -> name,
-                               package -> PackageName(), subpackage -> Name(),
-                               error_name);
-                delete [] error_name;
-            }
+            ReportSemError(SemanticError::PACKAGE_TYPE_CONFLICT,
+                           compilation_unit -> package_declaration_opt -> name,
+                           package -> PackageName(), subpackage -> Name(),
+                           error_name);
+            delete [] error_name;
         }
     }
+    // TODO: Warn about package annotations outside of package-info.java.
+    ProcessPackageModifiers(package_decl);
 }
 
 

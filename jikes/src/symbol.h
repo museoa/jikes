@@ -1291,7 +1291,7 @@ private:
     //
     // For a local type, when we first encounter an embedded call to one of
     // its constructors or a constructor of one of its inner types, either via
-    // a ClassInstanceCreation or an ExplicitConstructorInvocation, we record
+    // a ClassCreationExpression or an ExplicitConstructorInvocation, we record
     // it and resolve it after we have computed all necessary information
     // about the type and its inner types.
     //

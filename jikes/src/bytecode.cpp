@@ -848,10 +848,10 @@ bool ByteCode::EmitStatement(AstStatement* statement)
         return EmitBlockStatement((AstBlock*) statement);
     case Ast::LOCAL_VARIABLE_DECLARATION: // JLS 14.3
         {
-            AstLocalVariableDeclarationStatement* lvds =
-                statement -> LocalVariableDeclarationStatementCast();
-            for (unsigned i = 0; i < lvds -> NumVariableDeclarators(); i++)
-                DeclareLocalVariable(lvds -> VariableDeclarator(i));
+            AstLocalVariableStatement* lvs =
+                statement -> LocalVariableStatementCast();
+            for (unsigned i = 0; i < lvs -> NumVariableDeclarators(); i++)
+                DeclareLocalVariable(lvs -> VariableDeclarator(i));
         }
         return false;
     case Ast::EMPTY_STATEMENT: // JLS 14.5
@@ -1282,8 +1282,8 @@ void ByteCode::EmitStatementExpression(AstExpression* expression)
         EmitAssignmentExpression((AstAssignmentExpression*) expression, false);
         break;
     case Ast::CLASS_CREATION:
-        EmitInstanceCreationExpression(((AstClassInstanceCreationExpression*)
-                                        expression), false);
+        EmitClassCreationExpression((AstClassCreationExpression*) expression,
+                                    false);
         break;
     default:
         assert(false && "invalid statement expression kind");
@@ -1600,20 +1600,19 @@ bool ByteCode::EmitSwitchBlockStatement(AstSwitchBlockStatement* block,
     {
         if (! abrupt)
             abrupt = EmitStatement(block -> Statement(i));
-        else if (block -> Statement(i) ->
-                 LocalVariableDeclarationStatementCast())
+        else if (block -> Statement(i) -> LocalVariableStatementCast())
         {
             //
             // In a switch statement, local variable declarations are
             // accessible in other case labels even if the declaration
             // itself is unreachable.
             //
-            AstLocalVariableDeclarationStatement* lvds =
-                (AstLocalVariableDeclarationStatement*) block -> Statement(i);
-            for (unsigned j = 0; j < lvds -> NumVariableDeclarators(); j++)
+            AstLocalVariableStatement* lvs =
+                (AstLocalVariableStatement*) block -> Statement(i);
+            for (unsigned j = 0; j < lvs -> NumVariableDeclarators(); j++)
             {
                 AstVariableDeclarator* declarator =
-                    lvds -> VariableDeclarator(j);
+                    lvs -> VariableDeclarator(j);
                 if (control.option.g & JikesOption::VARS)
                 {
                     method_stack -> StartPc(declarator -> symbol) =
@@ -2311,7 +2310,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression* p, bool cond, Label& lab,
         else if ((expr -> ThisExpressionCast() ||
                   expr -> SuperExpressionCast() ||
                   expr -> ClassLiteralCast() ||
-                  expr -> ClassInstanceCreationExpressionCast() ||
+                  expr -> ClassCreationExpressionCast() ||
                   expr -> ArrayCreationExpressionCast()) &&
                  left_type -> IsSubtype(right_type))
         {
@@ -3249,7 +3248,8 @@ int ByteCode::EmitExpression(AstExpression* expression, bool need_value)
         }
         return 0;
     case Ast::CLASS_CREATION:
-        return EmitInstanceCreationExpression((AstClassInstanceCreationExpression*) expression, need_value);
+        return EmitClassCreationExpression
+            ((AstClassCreationExpression*) expression, need_value);
     case Ast::ARRAY_CREATION:
         return EmitArrayCreationExpression((AstArrayCreationExpression*) expression, need_value);
     case Ast::CLASS_LITERAL:
@@ -4668,7 +4668,7 @@ int ByteCode::EmitInstanceofExpression(AstInstanceofExpression* expr,
     else if ((expr -> expression -> ThisExpressionCast() ||
               expr -> expression -> SuperExpressionCast() ||
               expr -> expression -> ClassLiteralCast() ||
-              expr -> expression -> ClassInstanceCreationExpressionCast() ||
+              expr -> expression -> ClassCreationExpressionCast() ||
               expr -> expression -> ArrayCreationExpressionCast()) &&
              left_type -> IsSubtype(right_type))
     {
@@ -4839,7 +4839,7 @@ void ByteCode::EmitCheckForNull(AstExpression* expression, bool need_value)
         return;
     }
     VariableSymbol* variable = expression -> symbol -> VariableCast();
-    if (expression -> ClassInstanceCreationExpressionCast() ||
+    if (expression -> ClassCreationExpressionCast() ||
         expression -> ThisExpressionCast() ||
         expression -> SuperExpressionCast() ||
         expression -> ClassLiteralCast() ||
@@ -4871,12 +4871,12 @@ void ByteCode::EmitCheckForNull(AstExpression* expression, bool need_value)
     PutOp(OP_POP);
 }
 
-int ByteCode::EmitInstanceCreationExpression(AstClassInstanceCreationExpression* expression,
-                                             bool need_value)
+int ByteCode::EmitClassCreationExpression(AstClassCreationExpression* expr,
+                                          bool need_value)
 {
-    if (expression -> resolution_opt)
-        expression = expression -> resolution_opt;
-    MethodSymbol* constructor = (MethodSymbol*) expression -> symbol;
+    if (expr -> resolution_opt)
+        expr = expr -> resolution_opt;
+    MethodSymbol* constructor = (MethodSymbol*) expr -> symbol;
     TypeSymbol* type = constructor -> containing_type;
 
     PutOp(OP_NEW);
@@ -4890,22 +4890,22 @@ int ByteCode::EmitInstanceCreationExpression(AstClassInstanceCreationExpression*
     //
     int stack_words = 0;
     unsigned i = 0;
-    if (expression -> base_opt)
+    if (expr -> base_opt)
     {
         stack_words++;
-        EmitCheckForNull(expression -> base_opt);
+        EmitCheckForNull(expr -> base_opt);
     }
     if (type -> Anonymous() && type -> super -> EnclosingInstance())
     {
         stack_words++;
-        EmitCheckForNull(expression -> arguments -> Argument(i++));
+        EmitCheckForNull(expr -> arguments -> Argument(i++));
     }
-    for ( ; i < expression -> arguments -> NumArguments(); i++)
-        stack_words += EmitExpression(expression -> arguments -> Argument(i));
-    for (i = 0; i < expression -> arguments -> NumLocalArguments(); i++)
+    for ( ; i < expr -> arguments -> NumArguments(); i++)
+        stack_words += EmitExpression(expr -> arguments -> Argument(i));
+    for (i = 0; i < expr -> arguments -> NumLocalArguments(); i++)
         stack_words +=
-            EmitExpression(expression -> arguments -> LocalArgument(i));
-    if (expression -> arguments -> NeedsExtraNullArgument())
+            EmitExpression(expr -> arguments -> LocalArgument(i));
+    if (expr -> arguments -> NeedsExtraNullArgument())
     {
         PutOp(OP_ACONST_NULL);
         stack_words++;
@@ -5226,7 +5226,7 @@ bool ByteCode::IsNop(AstBlock* block)
     {
         Ast* statement = block -> Statement(i);
         if (statement -> EmptyStatementCast() ||
-            statement -> LocalClassDeclarationStatementCast() ||
+            statement -> LocalClassStatementCast() ||
             (statement -> BlockCast() && IsNop((AstBlock*) statement)))
             continue;
         if (statement -> kind == Ast::IF)

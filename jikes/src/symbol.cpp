@@ -2674,8 +2674,8 @@ TypeSymbol* TypeSymbol::GetPlaceholderType()
         class_body -> right_brace_token = loc;
         AstName* ast_type = ast_pool -> GenName(loc);
 
-        AstClassInstanceCreationExpression* class_creation =
-            ast_pool -> GenClassInstanceCreationExpression();
+        AstClassCreationExpression* class_creation =
+            ast_pool -> GenClassCreationExpression();
         class_creation -> new_token = loc;
         class_creation -> class_type = ast_pool -> GenTypeName(ast_type);
         class_creation -> arguments = ast_pool -> GenArguments(loc, loc);
