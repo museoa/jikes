@@ -480,7 +480,6 @@ void SemanticError::StaticInitializer()
     print_message[TYPED_METHOD_WITH_NO_RETURN] = PrintTYPED_METHOD_WITH_NO_RETURN;
 
     print_message[DEFAULT_METHOD_NOT_OVERRIDDEN] = PrintDEFAULT_METHOD_NOT_OVERRIDDEN;
-    print_message[PRIVATE_METHOD_NOT_OVERRIDDEN] = PrintPRIVATE_METHOD_NOT_OVERRIDDEN;
 
     print_message[ONE_UNNAMED_PACKAGE] = PrintONE_UNNAMED_PACKAGE;
     print_message[TYPE_NOT_IN_UNNAMED_PACKAGE] = PrintTYPE_NOT_IN_UNNAMED_PACKAGE;
@@ -3501,30 +3500,6 @@ void SemanticError::PrintDEFAULT_METHOD_NOT_OVERRIDDEN(ErrorInfo &err, LexStream
     }
     Unicode::Cout(err.insert3);
     cout << "\" does not override the corresponding method with default access in class \"";
-    if (wcslen(err.insert4) > 0 && wcscmp(err.insert4, StringConstant::US__DO_) != 0)
-    {
-        Unicode::Cout(err.insert4);
-        cout << "/";
-    }
-    Unicode::Cout(err.insert5);
-    cout << "\"";
-
-    return;
-}
-
-
-void SemanticError::PrintPRIVATE_METHOD_NOT_OVERRIDDEN(ErrorInfo &err, LexStream *lex_stream, Control &control)
-{
-    cout << "The method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" in class \"";
-    if (wcslen(err.insert2) > 0 && wcscmp(err.insert2, StringConstant::US__DO_) != 0)
-    {
-        Unicode::Cout(err.insert2);
-        cout << "/";
-    }
-    Unicode::Cout(err.insert3);
-    cout << "\" does not override the corresponding method with private access in class \"";
     if (wcslen(err.insert4) > 0 && wcscmp(err.insert4, StringConstant::US__DO_) != 0)
     {
         Unicode::Cout(err.insert4);

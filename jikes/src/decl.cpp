@@ -3279,7 +3279,7 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type, TypeSymbol *super_type
                 }
             }
         }
-        else
+        else if (! method -> ACC_PRIVATE()) // a method from a different package with default access? (also known as package-private!)
         {
             MethodShadowSymbol *base_method_shadow = base_expanded_table.FindMethodShadowSymbol(method -> Identity());
 
@@ -3323,8 +3323,7 @@ assert(class_creation);
                         }
                     }
 
-                    ReportSemError((method -> ACC_PRIVATE() ? SemanticError::PRIVATE_METHOD_NOT_OVERRIDDEN
-                                                            : SemanticError::DEFAULT_METHOD_NOT_OVERRIDDEN),
+                    ReportSemError(SemanticError::DEFAULT_METHOD_NOT_OVERRIDDEN,
                                    left_tok,
                                    right_tok,
                                    method -> Header((Semantic *) this, tok),

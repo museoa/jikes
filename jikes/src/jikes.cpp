@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
              << "+U                 do full dependence check including Zip and Jar files\n"
              << "+V                 generate veracious listing\n"
              << "+Z                 treat cautions as errors\n"
-             << "\nVersion 0.43 (09 Feb 98)"
+             << "\nVersion 0.43 (10 Feb 98)"
              << " by Philippe Charles and David Shields, IBM Research.\n";
         cerr << "Please report problems to shields@watson.ibm.com.\n" ;
     cerr << "or via browser at http://www.ibm.com/research/jikes\n";

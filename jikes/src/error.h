@@ -223,7 +223,6 @@ public:
         TYPED_METHOD_WITH_NO_RETURN,
 
         DEFAULT_METHOD_NOT_OVERRIDDEN,
-        PRIVATE_METHOD_NOT_OVERRIDDEN,
 
         ONE_UNNAMED_PACKAGE,
         TYPE_NOT_IN_UNNAMED_PACKAGE,
@@ -521,7 +520,6 @@ private:
     static void PrintTYPED_METHOD_WITH_NO_RETURN(ErrorInfo &, LexStream *, Control &);
 
     static void PrintDEFAULT_METHOD_NOT_OVERRIDDEN(ErrorInfo &, LexStream *, Control &);
-    static void PrintPRIVATE_METHOD_NOT_OVERRIDDEN(ErrorInfo &, LexStream *, Control &);
 
     static void PrintONE_UNNAMED_PACKAGE(ErrorInfo &, LexStream *, Control &);
     static void PrintTYPE_NOT_IN_UNNAMED_PACKAGE(ErrorInfo &, LexStream *, Control &);
