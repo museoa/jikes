@@ -3352,7 +3352,8 @@ wchar_t *SemanticError::PrintCIRCULAR_CLASS(ErrorInfo &err,
     s << "The class \"";
     if (NotDot(err.insert1))
         s << err.insert1 << "/";
-    s << err.insert2 << "\" is circularly defined with its super type(s).";
+    s << err.insert2 << "\" may not have a superclass or superinterface "
+      << "which extends itself, or which is enclosed by itself or a subclass.";
 
     return s.Array();
 }
@@ -3367,7 +3368,8 @@ wchar_t *SemanticError::PrintCIRCULAR_INTERFACE(ErrorInfo &err,
     s << "The interface \"";
     if (NotDot(err.insert1))
         s << err.insert1 << "/";
-    s << err.insert2 << "\" is circularly defined with its super type(s).";
+    s << err.insert2 << "\" may not have a superinterface which extends "
+      << "itself, or which is enclosed by itself or any subtype.";
 
     return s.Array();
 }
@@ -3577,7 +3579,7 @@ wchar_t *SemanticError::PrintFINAL_METHOD_OVERRIDE(ErrorInfo &err,
     ErrorString s;
 
     s << "The method \"" << err.insert1
-      << "\" cannot override the final (or private) method \""
+      << "\" cannot override the final method \""
       << err.insert2 << "\" declared in type \"";
     if (NotDot(err.insert3))
         s << err.insert3 << "/";

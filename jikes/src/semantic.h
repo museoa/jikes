@@ -640,32 +640,25 @@ private:
 };
 
 
+//
+// A semantic object is associated with each compilation unit (ie. each .java
+// file). It is subdivided into SemanticEnvironments, which detail the
+// compilation state of the current class or interface.
+//
 class Semantic
 {
 public:
-    //
-    //
-    //
-    Control &control;
-    FileSymbol *source_file_symbol;
-    LexStream *lex_stream;
-    AstCompilationUnit *compilation_unit;
-    DirectorySymbol *directory_symbol;
+    Control &control; // The control object performing the compilation
+    FileSymbol *source_file_symbol; // The source file name
+    LexStream *lex_stream; // The source file contents
+    AstCompilationUnit *compilation_unit; // The syntax tree
+    DirectorySymbol *directory_symbol; // The source file location
 
     SymbolSet types_to_be_processed;
 
     int return_code;
 
-    PackageSymbol *Package() { return this_package; }
-
-    void CheckPackage();
-    void ProcessTypeNames();
-    void ProcessImports();
-    void ProcessSuperTypeDependences(AstClassDeclaration *);
-    void ProcessSuperTypeDependences(AstInterfaceDeclaration *);
-
-    void ComputeFinalValue(VariableSymbol *);
-
+    // The constructor
     Semantic(Control &control_, FileSymbol *file_symbol_)
         : control(control_),
           source_file_symbol(file_symbol_),
@@ -923,6 +916,7 @@ public:
 
     ~Semantic() { delete error; }
 
+    // Report a semantic warning or error
     void ReportSemError(SemanticError::SemanticErrorKind kind,
                         LexStream::TokenIndex ltok,
                         LexStream::TokenIndex rtok,
@@ -986,15 +980,27 @@ public:
         error = NULL;
     }
 
-    TypeSymbol *ProcessSignature(TypeSymbol *, const char *,
-                                 LexStream::TokenIndex);
+    PackageSymbol *Package() { return this_package; }
+
+    // Implemented in decl.cpp - performs first pass over .java file.
+    void CheckPackage();
+    void ProcessTypeNames();
+    void ProcessImports();
     TypeSymbol *ReadType(FileSymbol *, PackageSymbol *, NameSymbol *,
                          LexStream::TokenIndex);
+
+    // Implemented in init.cpp - determines values of final fields.
+    void ComputeFinalValue(VariableSymbol *);
+
+    // Implemented in getclass.cpp - reads in a .class file.
+    TypeSymbol *ProcessSignature(TypeSymbol *, const char *,
+                                 LexStream::TokenIndex);
     TypeSymbol *ReadTypeFromSignature(TypeSymbol *, const char *, int,
                                       LexStream::TokenIndex);
     TypeSymbol *ProcessNestedType(TypeSymbol *, NameSymbol *,
                                   LexStream::TokenIndex);
 
+    // Evaluate constant expressions
     inline bool IsConstantTrue(AstExpression *expr)
     {
         return expr -> IsConstant() &&
@@ -1017,39 +1023,35 @@ private:
 
     SemanticError *error;
 
+    // Implemented in decl.cpp - clean up after parsing
     void CleanUp();
     void CleanUpType(TypeSymbol *);
 
-    void SetDefaultSuperType(AstClassDeclaration *);
-    void SetDefaultSuperType(AstInterfaceDeclaration *);
+    // Implemented in decl.cpp - process a .java file for declarations
     void ProcessTypeHeader(AstClassDeclaration *);
-    void MarkCircularNest(TypeSymbol *);
-    void ProcessSuperTypesOfOuterType(TypeSymbol *);
-    void ProcessSuperTypesOfInnerType(TypeSymbol *, Tuple<TypeSymbol *> &);
-    void ProcessTypeHeaders(AstClassDeclaration *);
-    TypeSymbol *FindTypeInLayer(Ast *, SymbolSet &);
-    void ProcessNestedSuperTypes(TypeSymbol *);
-    void ProcessNestedTypeHeaders(TypeSymbol *, AstClassBody *);
     void ProcessTypeHeader(AstInterfaceDeclaration *);
+    void ProcessTypeHeaders(AstClassDeclaration *);
     void ProcessTypeHeaders(AstInterfaceDeclaration *);
-    void ProcessNestedTypeHeaders(AstInterfaceDeclaration *);
+    void ProcessTypeHeaders(TypeSymbol *, AstClassBody *);
     void ProcessConstructorMembers(AstClassBody *);
     void ProcessMethodMembers(AstClassBody *);
     void ProcessFieldMembers(AstClassBody *);
     void ProcessMembers(SemanticEnvironment *, AstClassBody *);
     void CompleteSymbolTable(SemanticEnvironment *, LexStream::TokenIndex,
                              AstClassBody *);
-    void ProcessExecutableBodies(SemanticEnvironment *, AstClassBody *);
-    void ProcessExecutableBodies(AstInterfaceDeclaration *);
-
     void ProcessMethodMembers(AstInterfaceDeclaration *);
     void ProcessFieldMembers(AstInterfaceDeclaration *);
     void ProcessMembers(AstInterfaceDeclaration *);
     void CompleteSymbolTable(AstInterfaceDeclaration *);
 
+    // Implemented in body.cpp - process method bodies and field initializers
+    void ProcessExecutableBodies(SemanticEnvironment *, AstClassBody *);
+    void ProcessExecutableBodies(AstInterfaceDeclaration *);
+
     friend class TypeSymbol;
     friend class VariableSymbol;
 
+    // Used in the handling of imports - see decl.cpp
     Tuple<Symbol *> import_on_demand_packages;
     Tuple<TypeSymbol *> single_type_imports;
 
@@ -1058,6 +1060,7 @@ private:
     //
     PackageSymbol *this_package;
 
+    // Look at state associated with the current type
     TypeSymbol *ThisType() { return state_stack.Top() -> Type(); }
     MethodSymbol *&ThisMethod() { return state_stack.Top() -> this_method; }
     VariableSymbol *&ThisVariable()
@@ -1136,10 +1139,13 @@ private:
         return state_stack.Top() -> processing_simple_assignment;
     }
 
+    // A stack to allow nested type processing
     SemanticEnvironmentStack state_stack;
 
+    // Implemented in expr.cpp - semantic checks of expressions
     bool IsIntValueRepresentableInType(AstExpression *, TypeSymbol *);
 
+    // Implemented in decl.cpp - nested class processing
     void CheckClassMembers(TypeSymbol *, AstClassBody *);
     void CheckNestedTypeDuplication(SemanticEnvironment *,
                                     LexStream::TokenIndex);
@@ -1160,9 +1166,10 @@ private:
     void ProcessImportQualifiedName(AstExpression *);
     void ProcessPackageOrType(AstExpression *);
     void ProcessTypeImportOnDemandDeclaration(AstImportDeclaration *);
-    AstExpression *FindFirstType(Ast *);
     TypeSymbol *FindSimpleNameType(PackageSymbol *, LexStream::TokenIndex);
     void ProcessSingleTypeImportDeclaration(AstImportDeclaration *);
+
+    // Implemented in modifier.cpp - process declaration modifiers
     AccessFlags ProcessClassModifiers(AstClassDeclaration *);
     AccessFlags ProcessLocalClassModifiers(AstClassDeclaration *);
     AccessFlags ProcessNestedClassModifiers(AstClassDeclaration *);
@@ -1177,6 +1184,8 @@ private:
     AccessFlags ProcessConstructorModifiers(AstConstructorDeclaration *);
     AccessFlags ProcessInterfaceFieldModifiers(AstFieldDeclaration *);
     AccessFlags ProcessInterfaceMethodModifiers(AstMethodDeclaration *);
+
+    // Implemented in body.cpp - process method bodies
     void AddDefaultConstructor(TypeSymbol *);
     void ProcessConstructorDeclaration(AstConstructorDeclaration *);
     void ProcessMethodDeclaration(AstMethodDeclaration *);
@@ -1187,14 +1196,17 @@ private:
     TypeSymbol *FindTypeInEnvironment(SemanticEnvironment *, NameSymbol *);
     TypeSymbol *FindType(LexStream::TokenIndex);
     TypeSymbol *MustFindType(Ast *);
+    TypeSymbol *FindTypeInLayer(Ast *, SymbolSet &);
     void ProcessInterface(TypeSymbol *, AstExpression *);
 
+    // Implemented in decl.cpp - process initializers
     void InitializeVariable(AstFieldDeclaration *, MethodSymbol *);
     void ProcessInitializer(AstMethodBody *, MethodSymbol *);
     void ProcessStaticInitializers(AstClassBody *);
     void ProcessInstanceInitializers(AstClassBody *);
     MethodSymbol *GetStaticInitializerMethod(int estimate = 0);
 
+    // Implemented in expr.cpp - expression processing
     bool CanWideningPrimitiveConvert(TypeSymbol *, TypeSymbol *);
     bool CanNarrowingPrimitiveConvert(TypeSymbol *, TypeSymbol *);
     bool CanCastConvert(TypeSymbol *, TypeSymbol *,
@@ -1209,6 +1221,7 @@ private:
     void BinaryNumericPromotion(AstBinaryExpression *);
     void BinaryNumericPromotion(AstConditionalExpression *);
 
+    // Implemented in definite.cpp - definite (un)assignment analysis
     void (Semantic::*DefiniteStmt[Ast::_num_kinds])(Ast *);
     inline void DefiniteStatement(Ast *);
 
@@ -1294,6 +1307,7 @@ private:
     void DefiniteSetup();
     void DefiniteCleanUp();
 
+    // Implemented in body.cpp - method bodies and statements
     void ProcessBlockStatements(AstBlock *);
     void ProcessThisCall(AstThisCall *);
     void ProcessSuperCall(AstSuperCall *);
@@ -1302,6 +1316,8 @@ private:
     void ProcessConstructorBody(AstConstructorDeclaration *);
     bool UncaughtException(TypeSymbol *);
     wchar_t *UncaughtExceptionContext();
+
+    // Implemented in expr.cpp - expression processing
     void ReportConstructorNotFound(Ast *, TypeSymbol *);
     void ReportMethodNotFound(AstMethodInvocation *, TypeSymbol *);
     MethodSymbol *FindConstructor(TypeSymbol *, Ast *,
@@ -1409,6 +1425,7 @@ private:
             control.Utf8_pool.CheckStringConstant(expr);
     }
 
+    // Implemented in body.cpp - statement processing
     void ProcessLocalVariableDeclarationStatement(Ast *);
     void ProcessBlock(Ast *);
     void ProcessForStatement(Ast *);
@@ -1438,6 +1455,7 @@ private:
     TypeSymbol *GetLocalType(AstClassDeclaration *);
     void ProcessClassDeclaration(Ast *);
 
+    // Implemented in expr.cpp - expression processing
     void CheckSimpleName(AstSimpleName *, SemanticEnvironment *where_found);
     void ProcessSimpleName(Ast *);
     void FindVariableMember(TypeSymbol *, AstFieldAccess *);
@@ -1475,6 +1493,7 @@ private:
     void ProcessVariableInitializer(AstVariableDeclarator *);
     void ProcessArrayInitializer(AstArrayInitializer *, TypeSymbol *);
 
+    // Implemented in decl.cpp - inheritance of declared members
     void CheckMethodOverride(MethodSymbol *, MethodSymbol *, TypeSymbol *);
     void AddInheritedTypes(TypeSymbol *, TypeSymbol *);
     void AddInheritedFields(TypeSymbol *, TypeSymbol *);
@@ -1512,6 +1531,7 @@ private:
 
 public:
 
+    // Implemented in getclass.cpp - class processing from .class files
     static inline u1 GetU1(const char *);
     static inline u2 GetU2(const char *);
     static inline u4 GetU4(const char *);
@@ -1521,17 +1541,13 @@ public:
     static inline u4 GetAndSkipU4(const char *&);
     static inline void Skip(const char *&, int);
 
-    inline void AddDependence(TypeSymbol *, TypeSymbol *,
-                              LexStream::TokenIndex, bool = false);
-    inline void SetObjectSuperType(TypeSymbol *, LexStream::TokenIndex);
-    inline void AddStringConversionDependence(TypeSymbol *,
-                                              LexStream::TokenIndex);
+    inline void AddDependence(TypeSymbol *, TypeSymbol *, bool = false);
+    inline void AddStringConversionDependence(TypeSymbol *);
 };
 
 
 inline void Semantic::AddDependence(TypeSymbol *base_type,
                                     TypeSymbol *parent_type,
-                                    LexStream::TokenIndex tok,
                                     bool static_access)
 {
     if (base_type != control.no_type)
@@ -1554,30 +1570,22 @@ inline void Semantic::AddDependence(TypeSymbol *base_type,
     }
 }
 
-inline void Semantic::SetObjectSuperType(TypeSymbol *type,
-                                         LexStream::TokenIndex tok)
-{
-    type -> super = control.Object();
-    AddDependence(type, type -> super, tok);
-}
-
-inline void Semantic::AddStringConversionDependence(TypeSymbol *type,
-                                                    LexStream::TokenIndex tok)
+inline void Semantic::AddStringConversionDependence(TypeSymbol *type)
 {
     if (type == control.null_type)
          ;
     else if (type == control.boolean_type)
-         AddDependence(ThisType(), control.Boolean(), tok);
+         AddDependence(ThisType(), control.Boolean());
     else if (type == control.char_type)
-         AddDependence(ThisType(), control.Character(), tok);
+         AddDependence(ThisType(), control.Character());
     else if (type == control.int_type)
-         AddDependence(ThisType(), control.Integer(), tok);
+         AddDependence(ThisType(), control.Integer());
     else if (type == control.long_type)
-         AddDependence(ThisType(), control.Long(), tok);
+         AddDependence(ThisType(), control.Long());
     else if (type == control.float_type)
-         AddDependence(ThisType(), control.Float(), tok);
+         AddDependence(ThisType(), control.Float());
     else // (type == control.double_type)
-         AddDependence(ThisType(), control.Double(), tok);
+         AddDependence(ThisType(), control.Double());
 }
 
 #ifdef HAVE_JIKES_NAMESPACE

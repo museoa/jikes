@@ -337,8 +337,8 @@ void Semantic::ProcessTypeNames()
     ProcessImports();
 
     //
-    // Process outer type of superclasses and interfaces and make sure that
-    // compilation unit contains exactly one public type.
+    // Make sure that compilation unit contains exactly one public type, and
+    // that it matches the file name.
     //
     TypeSymbol *public_type = NULL;
     for (int i = 0; i < type_list.Length(); i++)
@@ -349,9 +349,6 @@ void Semantic::ProcessTypeNames()
             type -> declaration -> ClassDeclarationCast();
         AstInterfaceDeclaration *interface_declaration =
             type -> declaration -> InterfaceDeclarationCast();
-        if (class_declaration)
-             ProcessSuperTypeDependences(class_declaration);
-        else ProcessSuperTypeDependences(interface_declaration);
 
         if (type && type -> ACC_PUBLIC())
         {
@@ -408,7 +405,6 @@ void Semantic::CheckClassMembers(TypeSymbol *containing_type,
     for (int i = 0; i < class_body -> NumNestedClasses(); i++)
     {
         AstClassDeclaration *class_declaration = class_body -> NestedClass(i);
-
         ProcessNestedClassName(containing_type, class_declaration);
     }
 
@@ -416,7 +412,6 @@ void Semantic::CheckClassMembers(TypeSymbol *containing_type,
     {
         AstInterfaceDeclaration *interface_declaration =
             class_body -> NestedInterface(j);
-
         ProcessNestedInterfaceName(containing_type, interface_declaration);
     }
 
@@ -622,7 +617,6 @@ void Semantic::CheckInterfaceMembers(TypeSymbol *containing_type,
     {
         AstClassDeclaration *class_declaration =
             interface_declaration -> NestedClass(i);
-
         ProcessNestedClassName(containing_type, class_declaration);
     }
 
@@ -630,7 +624,6 @@ void Semantic::CheckInterfaceMembers(TypeSymbol *containing_type,
     {
         AstInterfaceDeclaration *inner_interface_declaration =
             interface_declaration -> NestedInterface(j);
-
         ProcessNestedInterfaceName(containing_type,
                                    inner_interface_declaration);
     }
@@ -731,165 +724,47 @@ void Semantic::ProcessImports()
 
 
 //
-// Pass 1.3: Process outer types in "extends" and "implements" clauses
-// associated with the types.
-//
-void Semantic::ProcessSuperTypeDependences(AstClassDeclaration *class_declaration)
-{
-    TypeSymbol *type = class_declaration -> semantic_environment -> Type();
-
-    //
-    // Special case java.lang.Object, the only type without a supertype.
-    //
-    if (type -> Identity() == control.object_name_symbol &&
-	type -> ContainingPackage() == control.system_package &&
-	! type -> IsNested())
-    {
-	if (class_declaration -> super_opt ||
-	    class_declaration -> NumInterfaces() > 0)
-	{
-	    ReportSemError(SemanticError::OBJECT_WITH_SUPER_TYPE,
-			   class_declaration -> LeftToken(),
-			   class_declaration -> class_body -> left_brace_token - 1);
-	    type -> MarkBad();
-	}
-	return;
-    }
-
-    if (class_declaration -> super_opt)
-    {
-        TypeSymbol *super_type =
-            FindFirstType(class_declaration -> super_opt) -> symbol ->
-            TypeCast();
-        if (super_type)
-            super_type -> subtypes -> AddElement(type -> outermost_type);
-    }
-
-    for (int k = 0; k < class_declaration -> NumInterfaces(); k++)
-    {
-         TypeSymbol *super_type =
-             FindFirstType(class_declaration -> Interface(k)) -> symbol ->
-             TypeCast();
-         if (super_type)
-         {
-             assert(super_type -> subtypes);
-
-             super_type -> subtypes -> AddElement(type -> outermost_type);
-         }
-    }
-
-    SetDefaultSuperType(class_declaration);
-
-    AstClassBody *class_body = class_declaration -> class_body;
-    for (int i = 0; i < class_body -> NumNestedClasses(); i++)
-        ProcessSuperTypeDependences(class_body -> NestedClass(i));
-
-    for (int j = 0; j < class_body -> NumNestedInterfaces(); j++)
-        ProcessSuperTypeDependences(class_body -> NestedInterface(j));
-}
-
-
-void Semantic::ProcessSuperTypeDependences(AstInterfaceDeclaration *interface_declaration)
-{
-    TypeSymbol *type = interface_declaration -> semantic_environment -> Type();
-    for (int k = 0; k < interface_declaration -> NumExtendsInterfaces(); k++)
-    {
-        TypeSymbol *super_type =
-            FindFirstType(interface_declaration -> ExtendsInterface(k)) ->
-            symbol -> TypeCast();
-        if (super_type)
-            super_type -> subtypes -> AddElement(type -> outermost_type);
-    }
-
-    SetDefaultSuperType(interface_declaration);
-
-    for (int i = 0; i < interface_declaration -> NumNestedClasses(); i++)
-        ProcessSuperTypeDependences(interface_declaration -> NestedClass(i));
-
-    for (int j = 0; j < interface_declaration -> NumNestedInterfaces(); j++)
-        ProcessSuperTypeDependences(interface_declaration ->
-                                    NestedInterface(j));
-}
-
-
-void Semantic::SetDefaultSuperType(AstClassDeclaration *class_declaration)
-{
-    TypeSymbol *type = class_declaration -> semantic_environment -> Type();
-
-    //
-    // If a type has no super type, set it up properly in case
-    // it is expanded prematurely by one of its dependents.
-    //
-    if (! class_declaration -> super_opt)
-        type -> super = control.Object();
-}
-
-
-void Semantic::SetDefaultSuperType(AstInterfaceDeclaration *interface_declaration)
-{
-    TypeSymbol *type = interface_declaration -> semantic_environment -> Type();
-
-    //
-    // Set it up an interface properly in case it is
-    // expanded prematurely by one of its dependents.
-    //
-    type -> super = control.Object();
-}
-
-
-//
 // Pass 2: Process "extends" and "implements" clauses associated with the
 // types.
 //
 void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
 {
-    TypeSymbol *this_type = class_declaration -> semantic_environment -> Type();
+    TypeSymbol *type = class_declaration -> semantic_environment -> Type();
 
-    assert(! this_type -> HeaderProcessed() || this_type -> Bad());
-    if (this_type -> Bad())
+    assert(! type -> HeaderProcessed() || type -> Bad());
+    if (type -> Bad())
         return;
 
     //
-    // If the class does not have a super type then ...
+    // Special case java.lang.Object, the only class with no supertype.
     //
-    if (! class_declaration -> super_opt)
+    if (type -> Identity() == control.object_name_symbol &&
+        this_package == control.system_package && ! type -> IsNested())
     {
-        if (this_type -> Identity() != control.object_name_symbol ||
-            this_package != control.system_package || this_type -> IsNested())
-            SetObjectSuperType(this_type,
-                               class_declaration -> identifier_token);
+        if (class_declaration -> super_opt ||
+            class_declaration -> NumInterfaces() > 0)
+        {
+            ReportSemError(SemanticError::OBJECT_WITH_SUPER_TYPE,
+                           class_declaration -> LeftToken(),
+                           (class_declaration -> class_body ->
+                            left_brace_token - 1));
+            type -> MarkBad();
+        }
+        type -> MarkHeaderProcessed();
+        return;
     }
-    else
+
+    if (class_declaration -> super_opt)
     {
         TypeSymbol *super_type = MustFindType(class_declaration -> super_opt);
-
-        assert(this_type -> subtypes_closure);
         assert(! super_type -> SourcePending());
-
-        this_type -> super = super_type;
-
-        // if there is a cycle, break it and issue an error message
-        if (this_type -> subtypes_closure -> IsElement(super_type) ||
-            this_type == super_type)
-        {
-            this_type -> super = control.Object();
-            this_type -> MarkCircular();
-            ReportSemError(SemanticError::CIRCULAR_CLASS,
-                           class_declaration -> identifier_token,
-                           class_declaration -> super_opt -> RightToken(),
-                           this_type -> ContainingPackage() -> PackageName(),
-                           this_type -> ExternalName());
-        }
-        else if (super_type -> ACC_INTERFACE())
+        if (super_type -> ACC_INTERFACE())
         {
             ReportSemError(SemanticError::NOT_A_CLASS,
                            class_declaration -> super_opt -> LeftToken(),
                            class_declaration -> super_opt -> RightToken(),
                            super_type -> ContainingPackage() -> PackageName(),
                            super_type -> ExternalName());
-
-            SetObjectSuperType(this_type,
-                               class_declaration -> identifier_token);
         }
         else if (super_type -> ACC_FINAL())
         {
@@ -899,369 +774,202 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
                             super_type -> ContainingPackage() -> PackageName(),
                             super_type -> ExternalName());
         }
+        else
+        {
+            super_type -> subtypes -> AddElement(type);
+            type -> super = super_type;
+            while (super_type)
+            {
+                type -> supertypes_closure -> AddElement(super_type);
+                type -> supertypes_closure -> Union(*super_type ->
+                                                    supertypes_closure);
+                if (super_type -> owner -> TypeCast())
+                    super_type = super_type -> ContainingType();
+                else super_type = NULL;
+            }
+        }
     }
+    if (! type -> super)
+    {
+        type -> super = control.Object();
+        type -> supertypes_closure -> AddElement(control.Object());
+        control.Object() -> subtypes -> AddElement(type);
+    }
+    AddDependence(type, type -> super);
 
     for (int i = 0; i < class_declaration -> NumInterfaces(); i++)
-        ProcessInterface(this_type, class_declaration -> Interface(i));
+        ProcessInterface(type, class_declaration -> Interface(i));
 
-    this_type -> MarkHeaderProcessed();
+    // if there is a cycle, break it and issue an error message
+    if (type -> supertypes_closure -> IsElement(type))
+    {
+        type -> super = control.Object();
+        type -> ResetInterfaces();
+        type -> MarkCircular();
+        ReportSemError(SemanticError::CIRCULAR_CLASS,
+                       class_declaration -> identifier_token,
+                       class_declaration -> class_body -> LeftToken() - 1,
+                       type -> ContainingPackage() -> PackageName(),
+                       type -> ExternalName());
+    }
+    type -> MarkHeaderProcessed();
 }
 
 
 void Semantic::ProcessTypeHeader(AstInterfaceDeclaration *interface_declaration)
 {
-    TypeSymbol *this_type =
-        interface_declaration -> semantic_environment -> Type();
+    TypeSymbol *type = interface_declaration -> semantic_environment -> Type();
 
-    assert(! this_type -> HeaderProcessed() || this_type -> Bad());
+    assert(! type -> HeaderProcessed() || type -> Bad());
 
-    SetObjectSuperType(this_type, interface_declaration -> identifier_token);
+    //
+    // Although interfaces do not have a superclass in source code, in
+    // bytecode they are treated as subclasses of Object.
+    //
+    type -> super = control.Object();
+    AddDependence(type, control.Object());
     for (int k = 0; k < interface_declaration -> NumExtendsInterfaces(); k++)
-        ProcessInterface(this_type,
-                         interface_declaration -> ExtendsInterface(k));
+        ProcessInterface(type, interface_declaration -> ExtendsInterface(k));
 
-    assert(this_type -> subtypes_closure);
-
-    for (int i = 0; i < this_type -> NumInterfaces(); i++)
+    if (type -> supertypes_closure -> IsElement(type))
     {
-        if (this_type -> subtypes_closure ->
-            IsElement(this_type -> Interface(i)))
-        {
-            //
-            // Remove all the interfaces if a loop is detected. The error will
-            // be reported later.
-            //
-            this_type -> ResetInterfaces();
-            this_type -> MarkCircular();
-            ReportSemError(SemanticError::CIRCULAR_INTERFACE,
-                           interface_declaration -> identifier_token,
-                           interface_declaration -> ExtendsInterface(interface_declaration -> NumExtendsInterfaces() - 1) -> RightToken(),
-                           this_type -> ContainingPackage() -> PackageName(),
-                           this_type -> ExternalName());
-            break;
-        }
+        //
+        // Remove all the interfaces if a loop is detected.
+        //
+        type -> ResetInterfaces();
+        type -> MarkCircular();
+        ReportSemError(SemanticError::CIRCULAR_INTERFACE,
+                       interface_declaration -> identifier_token,
+                       interface_declaration -> left_brace_token - 1,
+                       type -> ContainingPackage() -> PackageName(),
+                       type -> ExternalName());
     }
-
-    this_type -> MarkHeaderProcessed();
+    type -> MarkHeaderProcessed();
 }
 
 
-//
-// Marked type and all other types that are nested inside it "circular"
-//
-void Semantic::MarkCircularNest(TypeSymbol *type)
+void Semantic::ProcessInterface(TypeSymbol *base_type, AstExpression *name)
 {
-    if (type -> Circular())
-        return;
+    TypeSymbol *interf = MustFindType(name);
 
-    //
-    // Mark the type as circular
-    //
-    type -> MarkCircular();
-    type -> super = control.Object();
-    type -> ResetInterfaces();
+    assert(! interf -> SourcePending());
 
-    //
-    // Recursively, process any nested type...
-    //
-    AstClassDeclaration *class_declaration =
-        type -> declaration -> ClassDeclarationCast();
-    if (class_declaration)
+    if (! interf -> ACC_INTERFACE())
     {
-        AstClassBody *class_body = class_declaration -> class_body;
-        for (int i = 0; i < class_body -> NumNestedClasses(); i++)
-            MarkCircularNest(class_body -> NestedClass(i) ->
-                             semantic_environment -> Type());
-        for (int k = 0; k < class_body -> NumNestedInterfaces(); k++)
-            MarkCircularNest(class_body -> NestedInterface(k) ->
-                             semantic_environment -> Type());
+        if (! interf -> Bad())
+        {
+            ReportSemError(SemanticError::NOT_AN_INTERFACE,
+                           name -> LeftToken(),
+                           name -> RightToken(),
+                           interf -> ContainingPackage() -> PackageName(),
+                           interf -> ExternalName());
+        }
+
+        name -> symbol = NULL;
     }
     else
     {
-        AstInterfaceDeclaration *interface_declaration =
-            (AstInterfaceDeclaration *) type -> declaration;
-        for (int i = 0; i < interface_declaration -> NumNestedClasses(); i++)
-            MarkCircularNest(interface_declaration -> NestedClass(i) ->
-                             semantic_environment -> Type());
-        for (int k = 0; k < interface_declaration -> NumNestedInterfaces(); k++)
-            MarkCircularNest(interface_declaration -> NestedInterface(k) ->
-                             semantic_environment -> Type());
-    }
-}
-
-
-//
-// Compute the set of super types associated with this outer-level type
-// and check for circularity.
-//
-void Semantic::ProcessSuperTypesOfOuterType(TypeSymbol *type)
-{
-    assert((! type -> IsNested()) || type -> owner -> MethodCast());
-
-    if (type -> super)
-    {
-        type -> supertypes_closure -> AddElement(type -> super ->
-                                                 outermost_type);
-        type -> supertypes_closure -> Union(*type -> super -> outermost_type ->
-                                            supertypes_closure);
-    }
-
-    for (int k = 0; k < type -> NumInterfaces(); k++)
-    {
-        type -> supertypes_closure -> AddElement(type -> Interface(k) ->
-                                                 outermost_type);
-        type -> supertypes_closure -> Union(*type -> Interface(k) ->
-                                            outermost_type -> supertypes_closure);
-    }
-
-    SymbolSet &inner_types = *(type -> innertypes_closure);
-    for (TypeSymbol *inner_type = (TypeSymbol *) inner_types.FirstElement();
-                     inner_type;
-                     inner_type = (TypeSymbol *) inner_types.NextElement())
-    {
-        TypeSymbol *super_type = inner_type -> super;
-        for (int k = 0; super_type;
-             super_type = (TypeSymbol *) (k < inner_type -> NumInterfaces()
-                                          ? inner_type -> Interface(k++)
-                                          : NULL))
+        for (int k = 0; k < base_type -> NumInterfaces(); k++)
         {
-            if (super_type -> outermost_type != type)
+            if (base_type -> Interface(k) == interf)
             {
-                type -> supertypes_closure -> AddElement(super_type ->
-                                                         outermost_type);
-                type -> supertypes_closure -> Union(*super_type ->
-                                                    outermost_type -> supertypes_closure);
+                ReportSemError(SemanticError::DUPLICATE_INTERFACE,
+                               name -> LeftToken(),
+                               name -> RightToken(),
+                               interf -> ContainingPackage() -> PackageName(),
+                               interf -> ExternalName(),
+                               base_type -> ExternalName());
+
+                name -> symbol = NULL;
+
+                return;
             }
         }
-    }
-
-    bool circular = type -> supertypes_closure -> IsElement(type) ||
-                    type -> subtypes_closure -> Intersects(*type ->
-                                                           supertypes_closure);
-    if (circular)
-    {
-        //
-        // If the type is already marked circular, an error message has
-        // already been issued. Remove the circular mark, so that we can
-        // remark the whole "nest".
-        if (type -> Circular())
-            type -> MarkNonCircular();
-        else
+        name -> symbol = interf; // save type name in ast.
+        base_type -> AddInterface(interf);
+        interf -> subtypes -> AddElement(base_type);
+        AddDependence(base_type, interf);
+        while (interf)
         {
-            if (type -> ACC_INTERFACE())
-            {
-                AstInterfaceDeclaration *interface_declaration =
-                    (AstInterfaceDeclaration *) type -> declaration;
-                int right_token_index =
-                    interface_declaration -> NumExtendsInterfaces() - 1;
-
-                ReportSemError(SemanticError::CIRCULAR_INTERFACE,
-                               interface_declaration -> identifier_token,
-                               (interface_declaration -> NumExtendsInterfaces() > 0
-                                ? interface_declaration -> ExtendsInterface(right_token_index) -> RightToken()
-                                : interface_declaration -> identifier_token),
-                               type -> ContainingPackage() -> PackageName(),
-                               type -> ExternalName());
-            }
-            else
-            {
-                AstClassDeclaration *class_declaration =
-                    (AstClassDeclaration *) type -> declaration;
-                int right_token_index =
-                    class_declaration -> NumInterfaces() - 1;
-
-                ReportSemError(SemanticError::CIRCULAR_CLASS,
-                               class_declaration -> identifier_token,
-                               (class_declaration -> NumInterfaces() > 0
-                                ? class_declaration -> Interface(right_token_index) -> RightToken()
-                                : (class_declaration -> super_opt
-                                   ? class_declaration -> super_opt -> RightToken()
-                                   : class_declaration -> identifier_token)),
-                               type -> ContainingPackage() -> PackageName(),
-                               type -> ExternalName());
-
-                SetObjectSuperType(type, class_declaration -> identifier_token);
-
-                assert(type -> Identity() != control.object_name_symbol ||
-                       type -> ContainingPackage() != control.system_package);
-            }
+            base_type -> supertypes_closure -> AddElement(interf);
+            base_type -> supertypes_closure -> Union(*interf ->
+                                                     supertypes_closure);
+            if (interf -> owner -> TypeCast())
+                interf = interf -> ContainingType();
+            else interf = NULL;
         }
-
-        MarkCircularNest(type);
-    }
-}
-
-
-//
-// The array partially_ordered_types contains a list of inner types. For
-// each of these types, compute the set of super types associated with it
-// and check for circularity.
-//
-void Semantic::ProcessSuperTypesOfInnerType(TypeSymbol *type,
-                                            Tuple<TypeSymbol *> &partially_ordered_types)
-{
-    for (int l = 0; l < partially_ordered_types.Length(); l++)
-    {
-        TypeSymbol *inner_type = partially_ordered_types[l];
-
-        SymbolSet &nested_types = *(inner_type -> innertypes_closure);
-        nested_types.AddElement(inner_type); // Compute reflexive transitive closure
-        for (TypeSymbol *nested_type = (TypeSymbol *) nested_types.FirstElement();
-             nested_type;
-             nested_type = (TypeSymbol *) nested_types.NextElement())
-        {
-            TypeSymbol *super_type = nested_type -> super;
-            for (int k = 0; super_type;
-                 super_type = (TypeSymbol *) (k < nested_type -> NumInterfaces()
-                                              ? nested_type -> Interface(k++)
-                                              : NULL))
-            {
-                for ( ; super_type;
-                      super_type = super_type -> owner -> TypeCast())
-                {
-                    if (type -> innertypes_closure -> IsElement(super_type))
-                        break;
-                }
-
-                if (super_type && super_type != inner_type)
-                {
-                    inner_type -> supertypes_closure -> AddElement(super_type);
-                    inner_type -> supertypes_closure -> Union(*super_type ->
-                                                              supertypes_closure);
-                }
-            }
-        }
-
-        bool circular =
-            inner_type -> supertypes_closure -> IsElement(inner_type) ||
-            inner_type -> subtypes_closure -> Intersects(*inner_type ->
-                                                         supertypes_closure);
-
-        if (circular)
-        {
-            MarkCircularNest(inner_type);
-
-            if (inner_type -> ACC_INTERFACE())
-            {
-                AstInterfaceDeclaration *interface_declaration =
-                    (AstInterfaceDeclaration *) inner_type -> declaration;
-                ReportSemError(SemanticError::CIRCULAR_INTERFACE,
-                               interface_declaration -> identifier_token,
-                               (interface_declaration -> NumExtendsInterfaces() > 0
-                                ? interface_declaration -> ExtendsInterface(interface_declaration -> NumExtendsInterfaces() - 1) -> RightToken()
-                                : interface_declaration -> identifier_token),
-                               inner_type -> ContainingPackage() -> PackageName(),
-                               inner_type -> ExternalName());
-            }
-            else
-            {
-                AstClassDeclaration *class_declaration =
-                    (AstClassDeclaration *) inner_type -> declaration;
-                ReportSemError(SemanticError::CIRCULAR_CLASS,
-                               class_declaration -> identifier_token,
-                               (class_declaration -> NumInterfaces() > 0
-                                ? class_declaration -> Interface(class_declaration -> NumInterfaces() - 1) -> RightToken()
-                                : (class_declaration -> super_opt
-                                   ? class_declaration -> super_opt -> RightToken()
-                                   : class_declaration -> identifier_token)),
-                               inner_type -> ContainingPackage() -> PackageName(),
-                               inner_type -> ExternalName());
-            }
-        }
-    }
-
-    //
-    // At this point the innertypes_closure set contains only the
-    // immediate inner types.
-    //
-    if (partially_ordered_types.Length() > 1) // inner_types set has more than one element?
-    {
-        SymbolSet &inner_types = *(type -> innertypes_closure);
-
-        assert(partially_ordered_types.Length() == inner_types.Size());
-
-        TopologicalSort *topological_sorter =
-            new TopologicalSort(inner_types, partially_ordered_types);
-        topological_sorter -> Sort();
-        delete topological_sorter;
-    }
-
-    //
-    // Now, complete the closure set of inner types.
-    //
-    for (int i = 0; i < partially_ordered_types.Length(); i++)
-    {
-        TypeSymbol *inner_type = partially_ordered_types[i];
-        type -> AddNestedType(inner_type);
-        type -> innertypes_closure -> Union(*(inner_type ->
-                                              innertypes_closure));
     }
 }
 
 
 void Semantic::ProcessTypeHeaders(AstClassDeclaration *class_declaration)
 {
-    TypeSymbol *this_type = class_declaration -> semantic_environment -> Type();
-
-    // Not a nested type or a immediately local type.
-    assert(state_stack.Size() == 0 || this_type -> owner -> MethodCast());
+    TypeSymbol *type = class_declaration -> semantic_environment -> Type();
 
     ProcessTypeHeader(class_declaration);
-    ProcessNestedTypeHeaders(this_type, class_declaration -> class_body);
-    ProcessSuperTypesOfOuterType(this_type);
-
-    //
-    // Note that if we are processing an outermost type, no environment is set
-    // before we invoke ProcessTypeHeader to process its super types.
-    // Therefore, the dependence map is not updated with the super type
-    // information. In that case, we do so here.
-    //
-    if (state_stack.Size() == 0)
+    state_stack.Push(class_declaration -> semantic_environment);
+    AstClassBody *class_body = class_declaration -> class_body;
+    for (int i = 0; i < class_body -> NumNestedClasses(); i++)
     {
-        if (this_type -> super)
-        {
-            AddDependence(this_type,
-                          this_type -> super,
-                          (class_declaration -> super_opt
-                           ? class_declaration -> super_opt -> LeftToken()
-                           : class_declaration -> identifier_token));
-       }
-
-        for (int i = 0; i < class_declaration -> NumInterfaces(); i++)
-        {
-            if (class_declaration -> Interface(i) -> Type())
-                AddDependence(this_type,
-                              class_declaration -> Interface(i) -> Type(),
-                              class_declaration -> Interface(i) -> LeftToken());
-        }
+        AstClassDeclaration *nested_class = class_body -> NestedClass(i);
+        ProcessTypeHeaders(nested_class);
+        type -> AddNestedType(nested_class -> semantic_environment -> Type());
     }
+    for (int j = 0; j < class_body -> NumNestedInterfaces(); j++)
+    {
+        AstInterfaceDeclaration *nested_interface =
+            class_body -> NestedInterface(j);
+        ProcessTypeHeaders(nested_interface);
+        type -> AddNestedType(nested_interface -> semantic_environment ->
+                              Type());
+    }
+    state_stack.Pop();
 }
 
 
 void Semantic::ProcessTypeHeaders(AstInterfaceDeclaration *interface_declaration)
 {
-    TypeSymbol *this_type =
-        interface_declaration -> semantic_environment -> Type();
-
-    assert(state_stack.Size() == 0); // Not a nested type
+    TypeSymbol *type = interface_declaration -> semantic_environment -> Type();
 
     ProcessTypeHeader(interface_declaration);
-    ProcessNestedTypeHeaders(interface_declaration);
-    ProcessSuperTypesOfOuterType(interface_declaration ->
-                                 semantic_environment -> Type());
-
-    //
-    // Note that no environment is set before we invoke ProcessTypeHeader to
-    // process the super types of this_type. As a result, the dependence map
-    // is not updated with that information. We do so here.
-    //
-    for (int i = 0; i < interface_declaration -> NumExtendsInterfaces(); i++)
+    state_stack.Push(interface_declaration -> semantic_environment);
+    for (int i = 0; i < interface_declaration -> NumNestedClasses(); i++)
     {
-        if (interface_declaration -> ExtendsInterface(i) -> Type())
-            AddDependence(this_type,
-                          interface_declaration -> ExtendsInterface(i) -> Type(),
-                          interface_declaration -> ExtendsInterface(i) -> LeftToken());
+        AstClassDeclaration *nested_class =
+            interface_declaration -> NestedClass(i);
+        ProcessTypeHeaders(nested_class);
+        type -> AddNestedType(nested_class -> semantic_environment -> Type());
     }
+    for (int j = 0; j < interface_declaration -> NumNestedInterfaces(); j++)
+    {
+        AstInterfaceDeclaration *nested_interface =
+            interface_declaration -> NestedInterface(j);
+        ProcessTypeHeaders(nested_interface);
+        type -> AddNestedType(nested_interface -> semantic_environment ->
+                              Type());
+    }
+    state_stack.Pop();
+}
+
+
+void Semantic::ProcessTypeHeaders(TypeSymbol *anon_type, AstClassBody *body)
+{
+    state_stack.Push(anon_type -> semantic_environment);
+    for (int i = 0; i < body -> NumNestedClasses(); i++)
+    {
+        AstClassDeclaration *nested_class = body -> NestedClass(i);
+        ProcessTypeHeaders(nested_class);
+        anon_type -> AddNestedType(nested_class -> semantic_environment ->
+                                   Type());
+    }
+    for (int j = 0; j < body -> NumNestedInterfaces(); j++)
+    {
+        AstInterfaceDeclaration *nested_interface = body -> NestedInterface(j);
+        ProcessTypeHeaders(nested_interface);
+        anon_type -> AddNestedType(nested_interface -> semantic_environment ->
+                              Type());
+    }
+    state_stack.Pop();
 }
 
 
@@ -1425,169 +1133,6 @@ TypeSymbol *Semantic::FindTypeInLayer(Ast *name, SymbolSet &inner_types)
 }
 
 
-void Semantic::ProcessNestedSuperTypes(TypeSymbol *type)
-{
-    int num_inner_types = type -> innertypes_closure -> Size();
-
-    if (num_inner_types > 0)
-    {
-        SymbolSet &inner_types = *(type -> innertypes_closure);
-
-        for (TypeSymbol *inner_type = (TypeSymbol *) inner_types.FirstElement();
-             inner_type;
-             inner_type = (TypeSymbol *) inner_types.NextElement())
-        {
-            if (inner_type -> ACC_INTERFACE())
-            {
-                AstInterfaceDeclaration *inner_interface_declaration =
-                    (AstInterfaceDeclaration *) inner_type -> declaration;
-
-                for (int l = 0;
-                     l < inner_interface_declaration -> NumExtendsInterfaces();
-                     l++)
-                {
-                    AstExpression *interface_name =
-                        inner_interface_declaration -> ExtendsInterface(l);
-                    TypeSymbol *super_type = FindTypeInLayer(interface_name,
-                                                             inner_types);
-                    if (super_type)
-                        super_type -> subtypes -> AddElement(inner_type);
-                }
-            }
-            else
-            {
-                AstClassDeclaration *inner_class_declaration =
-                    (AstClassDeclaration *) inner_type -> declaration;
-
-                if (inner_class_declaration -> super_opt)
-                {
-                    TypeSymbol *super_type =
-                        FindTypeInLayer(inner_class_declaration -> super_opt,
-                                        inner_types);
-                    if (super_type)
-                        super_type -> subtypes -> AddElement(inner_type);
-                }
-
-                for (int l = 0;
-                     l < inner_class_declaration -> NumInterfaces(); l++)
-                {
-                    TypeSymbol *super_type =
-                        FindTypeInLayer(inner_class_declaration -> Interface(l),
-                                        inner_types);
-                    if (super_type)
-                        super_type -> subtypes -> AddElement(inner_type);
-                }
-            }
-        }
-
-        //
-        // Create a partial order or the inner types. If there are cycles,
-        // then the order is arbitrary.
-        //
-        Tuple<TypeSymbol *> partially_ordered_types;
-
-        if (num_inner_types > 0) // inner_types set is not empty?
-        {
-            TypeCycleChecker *cycle_checker =
-                new TypeCycleChecker(partially_ordered_types);
-            cycle_checker -> PartialOrder(inner_types);
-            delete cycle_checker;
-        }
-
-        for (int k = 0; k < partially_ordered_types.Length(); k++)
-        {
-            TypeSymbol *inner_type = partially_ordered_types[k];
-            if (inner_type -> ACC_INTERFACE())
-            {
-                AstInterfaceDeclaration *inner_interface_declaration =
-                    (AstInterfaceDeclaration *) inner_type -> declaration;
-                ProcessTypeHeader(inner_interface_declaration);
-                ProcessNestedTypeHeaders(inner_interface_declaration);
-            }
-            else
-            {
-                AstClassDeclaration *inner_class_declaration =
-                    (AstClassDeclaration *) inner_type -> declaration;
-                ProcessTypeHeader(inner_class_declaration);
-                ProcessNestedTypeHeaders(inner_class_declaration -> semantic_environment -> Type(),
-                                        inner_class_declaration -> class_body);
-            }
-        }
-
-        ProcessSuperTypesOfInnerType(type, partially_ordered_types);
-    }
-}
-
-
-void Semantic::ProcessNestedTypeHeaders(TypeSymbol *type,
-                                        AstClassBody *class_body)
-{
-    if (type -> expanded_type_table &&
-        (type -> super != control.Object() || type -> NumInterfaces() > 0))
-    {
-        delete type -> expanded_type_table;
-        type -> expanded_type_table = NULL;
-    }
-
-    if (! type -> expanded_type_table)
-        ComputeTypesClosure(type, class_body -> left_brace_token);
-
-    state_stack.Push(type -> semantic_environment);
-
-    type -> innertypes_closure = new SymbolSet;
-
-    for (int i = 0; i < class_body -> NumNestedClasses(); i++)
-    {
-        if (class_body -> NestedClass(i) -> semantic_environment)
-            type -> innertypes_closure -> AddElement(class_body -> NestedClass(i) -> semantic_environment -> Type());
-    }
-
-    for (int j = 0; j < class_body -> NumNestedInterfaces(); j++)
-    {
-        if (class_body -> NestedInterface(j) -> semantic_environment)
-            type -> innertypes_closure -> AddElement(class_body -> NestedInterface(j) -> semantic_environment -> Type());
-    }
-
-    ProcessNestedSuperTypes(type);
-
-    state_stack.Pop();
-}
-
-
-void Semantic::ProcessNestedTypeHeaders(AstInterfaceDeclaration *interface_declaration)
-{
-    TypeSymbol *type = interface_declaration -> semantic_environment -> Type();
-    if (type -> expanded_type_table && type -> NumInterfaces() > 0)
-    {
-        delete type -> expanded_type_table;
-        type  -> expanded_type_table = NULL;
-    }
-
-    if (! type -> expanded_type_table)
-        ComputeTypesClosure(type, interface_declaration -> identifier_token);
-
-    state_stack.Push(interface_declaration -> semantic_environment);
-
-    type -> innertypes_closure = new SymbolSet;
-
-    for (int i = 0; i < interface_declaration -> NumNestedClasses(); i++)
-    {
-        if (interface_declaration -> NestedClass(i) -> semantic_environment)
-            type -> innertypes_closure -> AddElement(interface_declaration -> NestedClass(i) -> semantic_environment -> Type());
-    }
-
-    for (int j = 0; j < interface_declaration -> NumNestedInterfaces(); j++)
-    {
-        if (interface_declaration -> NestedInterface(j) -> semantic_environment)
-            type -> innertypes_closure -> AddElement(interface_declaration -> NestedInterface(j) -> semantic_environment -> Type());
-    }
-
-    ProcessNestedSuperTypes(type);
-
-    state_stack.Pop();
-}
-
-
 //
 // Pass 3: Process all method and constructor declarations within the
 // compilation unit so that any field initialization enclosed in the
@@ -1608,7 +1153,7 @@ inline void Semantic::ProcessConstructorMembers(AstClassBody *class_body)
             ProcessConstructorDeclaration(class_body -> Constructor(k));
     }
     else if (! this_type -> Anonymous())
-         AddDefaultConstructor(this_type);
+        AddDefaultConstructor(this_type);
 
     this_type -> MarkConstructorMembersProcessed();
 }
@@ -2448,75 +1993,6 @@ void Semantic::ProcessTypeImportOnDemandDeclaration(AstImportDeclaration *import
                        type -> ContainingPackage() -> PackageName(),
                        type -> ExternalName());
     }
-}
-
-
-//
-// The Ast name is a name expression (either a qualified or simple name).
-// FindFirstType traverses the name tree and returns the first subtree that it
-// finds that matches a type. As a side-effect, each subtree that matches a
-// package or a type has that package or type recorded in its "symbol" field.
-//
-AstExpression *Semantic::FindFirstType(Ast *name)
-{
-    AstExpression *name_expression = NULL;
-
-    AstFieldAccess *field_access = name -> FieldAccessCast();
-    if (field_access)
-    {
-        AstExpression *expr = FindFirstType(field_access -> base);
-
-        if (expr -> symbol -> TypeCast()) // A subexpression has been found, pass it up
-            name_expression = expr;
-        else
-        {
-            PackageSymbol *package = expr -> symbol -> PackageCast();
-
-            assert(package);
-
-            name_expression = field_access; // The relevant subexpression might be this field access...
-
-            NameSymbol *name_symbol =
-                lex_stream -> NameSymbol(field_access -> identifier_token);
-            TypeSymbol *type = package -> FindTypeSymbol(name_symbol);
-            if (type)
-            {
-                if (type -> SourcePending())
-                    control.ProcessHeaders(type -> file_symbol);
-                field_access -> symbol = type;
-            }
-            else
-            {
-                FileSymbol *file_symbol =
-                    Control::GetFile(control, package, name_symbol);
-                if (file_symbol)
-                    field_access -> symbol = ReadType(file_symbol, package,
-                                                      name_symbol,
-                                                      field_access -> identifier_token);
-                else
-                {
-                    PackageSymbol *subpackage =
-                        package -> FindPackageSymbol(name_symbol);
-                    if (! subpackage)
-                        subpackage =
-                            package -> InsertPackageSymbol(name_symbol);
-                    control.FindPathsToDirectory(subpackage);
-                    field_access -> symbol = subpackage;
-                }
-            }
-        }
-    }
-    else
-    {
-        AstSimpleName *simple_name = name -> SimpleNameCast();
-
-        assert(simple_name);
-
-        ProcessPackageOrType(simple_name);
-        name_expression = simple_name;
-    }
-
-    return name_expression;
 }
 
 
@@ -3637,7 +3113,8 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
                     }
                 }
             }
-            else if (shadow && ! method -> ACC_STATIC())
+            else if (shadow && ! method -> ACC_STATIC() &&
+                     control.option.pedantic)
             {
                 //
                 // The base_type declares a method by the same name as an
@@ -4448,49 +3925,6 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
     }
 
     return type;
-}
-
-
-void Semantic::ProcessInterface(TypeSymbol *base_type, AstExpression *name)
-{
-    TypeSymbol *interf = MustFindType(name);
-
-    assert(! interf -> SourcePending());
-
-    if (! interf -> ACC_INTERFACE())
-    {
-        if (! interf -> Bad())
-        {
-            ReportSemError(SemanticError::NOT_AN_INTERFACE,
-                           name -> LeftToken(),
-                           name -> RightToken(),
-                           interf -> ContainingPackage() -> PackageName(),
-                           interf -> ExternalName());
-        }
-
-        name -> symbol = NULL;
-    }
-    else
-    {
-        for (int k = 0; k < base_type -> NumInterfaces(); k++)
-        {
-            if (base_type -> Interface(k) == interf)
-            {
-                ReportSemError(SemanticError::DUPLICATE_INTERFACE,
-                               name -> LeftToken(),
-                               name -> RightToken(),
-                               interf -> ContainingPackage() -> PackageName(),
-                               interf -> ExternalName(),
-                               base_type -> ExternalName());
-
-                name -> symbol = NULL;
-
-                return;
-            }
-        }
-        name -> symbol = interf; // save type name in ast.
-        base_type -> AddInterface(interf);
-    }
 }
 
 

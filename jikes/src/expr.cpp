@@ -1598,9 +1598,20 @@ AstExpression *Semantic::CreateAccessToType(Ast *source,
     AstSuperCall *super_call = source -> SuperCallCast();
     AstClassInstanceCreationExpression *class_creation =
         source -> ClassInstanceCreationExpressionCast();
+    bool exact = false;
 
     if (simple_name)
+    {
         left_tok = right_tok = simple_name -> identifier_token;
+        //
+        // If this type subclasses the enclosing type, then this method was
+        // called because the simple name was not inherited into this type
+        // (ie. the variable is private or else hidden in a superclass). In
+        // this case, turn on exact enclosing type checking.
+        //
+        if (this_type -> IsSubclass(environment_type))
+            exact = true;
+    }
     else if (class_creation)
         left_tok = right_tok = class_creation -> new_token;
     else if (super_call)
@@ -1611,15 +1622,16 @@ AstExpression *Semantic::CreateAccessToType(Ast *source,
                field_access -> IsThisAccess());
         left_tok = field_access -> LeftToken();
         right_tok = field_access -> identifier_token;
+        exact = true;
     }
     else assert(false);
 
     AstExpression *resolution;
 
-    if (! this_type -> HasEnclosingInstance(environment_type,
-                                            field_access != NULL))
+    if (! this_type -> HasEnclosingInstance(environment_type, exact))
     {
-        ReportSemError((ExplicitConstructorInvocation()
+        ReportSemError((ExplicitConstructorInvocation() &&
+                        this_type -> IsSubclass(environment_type)
                         ? SemanticError::ENCLOSING_INSTANCE_ACCESS_FROM_CONSTRUCTOR_INVOCATION
                         : SemanticError::ENCLOSING_INSTANCE_NOT_ACCESSIBLE),
                        left_tok, right_tok,
@@ -1653,11 +1665,10 @@ AstExpression *Semantic::CreateAccessToType(Ast *source,
         }
         TypeSymbol *resolved_type = resolution -> Type();
         if (resolved_type != environment_type &&
-            (! resolved_type -> IsSubclass(environment_type) || field_access))
+            (! resolved_type -> IsSubclass(environment_type) || exact))
         {
             AstExpression *intermediate =
-                FindEnclosingInstance(resolution, environment_type,
-                                      field_access);
+                FindEnclosingInstance(resolution, environment_type, exact);
             if (! intermediate)
             {
                 ReportSemError(SemanticError::ENCLOSING_INSTANCE_ACCESS_ACROSS_STATIC_REGION,
@@ -2466,8 +2477,8 @@ void Semantic::ProcessAmbiguousName(Ast *name)
         //
         if (field_access -> IsClassAccess())
         {
-            AddDependence(this_type, control.NoClassDefFoundError(), field_access -> identifier_token);
-            AddDependence(this_type, control.ClassNotFoundException(), field_access -> identifier_token);
+            AddDependence(this_type, control.NoClassDefFoundError());
+            AddDependence(this_type, control.ClassNotFoundException());
 
             if (type -> Primitive())
             {
@@ -2524,7 +2535,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                 if (outermost_type -> ACC_INTERFACE())
                 {
                     TypeSymbol *class_literal_type = outermost_type -> FindOrInsertClassLiteralClass(field_access -> identifier_token);
-                    AddDependence(this_type, class_literal_type, field_access -> identifier_token);
+                    AddDependence(this_type, class_literal_type);
 
                     AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(field_access -> identifier_token);
                     simple_name -> symbol = class_literal_type;
@@ -2550,7 +2561,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                 }
                 else
                 {
-                    AddDependence(this_type, control.Class(), field_access -> identifier_token);
+                    AddDependence(this_type, control.Class());
 
                     VariableSymbol *variable_symbol = outermost_type -> FindOrInsertClassLiteral(type);
                     AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(field_access -> identifier_token);
@@ -2699,7 +2710,6 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                                            ? type -> base_type : type);
                 if (! parent_type -> Primitive())
                     AddDependence(this_type, parent_type,
-                                  field_access -> identifier_token,
                                   field_access -> IsConstant());
             }
         }
@@ -3051,7 +3061,9 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
     if (simple_name)
     {
         SemanticEnvironment *where_found;
-        MethodSymbol *method = FindMethodInEnvironment(where_found, state_stack.Top(), method_call);
+        MethodSymbol *method = FindMethodInEnvironment(where_found,
+                                                       state_stack.Top(),
+                                                       method_call);
 
         if (! method)
             method_call -> symbol = control.no_type;
@@ -3061,56 +3073,30 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
 
             if (! method -> ACC_STATIC())
             {
-                if (StaticRegion())
+                if (ExplicitConstructorInvocation())
                 {
-                    if (ExplicitConstructorInvocation() &&
-                        this_type -> IsSubclass(method -> containing_type))
+                    if (where_found == state_stack.Top())
                     {
                         //
-                        // If the method in question is an instance method
-                        // that is declared in this_type (this_type is
-                        // definitely a class) or one of its super classes,
-                        // then we have an error.
+                        // If the method belongs to this type, including
+                        // inherited from an enclosing type, it is not
+                        // accessible.
                         //
                         ReportSemError(SemanticError::INSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR,
                                        method_call -> LeftToken(),
                                        method_call -> RightToken(),
                                        method -> Header(),
                                        method -> containing_type -> Name());
+                        method_call -> symbol = control.no_type;
+                        return;
                     }
-                    else
-                    {
-                        ReportSemError(SemanticError::METHOD_NOT_CLASS_METHOD,
-                                       simple_name -> identifier_token,
-                                       method_call -> right_parenthesis_token,
-                                       lex_stream -> NameString(simple_name -> identifier_token));
-                    }
-                    method_call -> symbol = control.no_type;
-                    return;
                 }
-                else if (ExplicitConstructorInvocation())
+                else if (StaticRegion())
                 {
-                    if (this_type -> IsSubclass(method -> containing_type))
-                    {
-                        //
-                        // If the method in question is an instance method
-                        // that is declared in this_type (this_type is
-                        // definitely a class) or one of its super classes,
-                        // then we have an error.
-                        //
-                        ReportSemError(SemanticError::INSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR,
-                                       method_call -> LeftToken(),
-                                       method_call -> RightToken(),
-                                       method -> Header(),
-                                       method -> containing_type -> Name());
-                    }
-                    else
-                    {
-                        ReportSemError(SemanticError::METHOD_NOT_CLASS_METHOD,
-                                       simple_name -> identifier_token,
-                                       method_call -> right_parenthesis_token,
-                                       lex_stream -> NameString(simple_name -> identifier_token));
-                    }
+                    ReportSemError(SemanticError::METHOD_NOT_CLASS_METHOD,
+                                   simple_name -> identifier_token,
+                                   method_call -> right_parenthesis_token,
+                                   lex_stream -> NameString(simple_name -> identifier_token));
                     method_call -> symbol = control.no_type;
                     return;
                 }
@@ -3194,7 +3180,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
 
             TypeSymbol *parent_type = (type -> IsArray() ? type -> base_type : type);
             if (! parent_type -> Primitive())
-                AddDependence(this_type, parent_type, field_access -> identifier_token);
+                AddDependence(this_type, parent_type);
         }
     }
 
@@ -3691,8 +3677,12 @@ TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class
     {
         anon_type -> AddInterface(super_type);
         anon_type -> super = control.Object();
+        AddDependence(anon_type, control.Object());
+        control.Object() -> subtypes -> AddElement(anon_type);
     }
     else anon_type -> super = super_type;
+    AddDependence(anon_type, super_type);
+    super_type -> subtypes -> AddElement(anon_type);
 
     this_type -> AddAnonymousType(anon_type);
 
@@ -3717,10 +3707,7 @@ TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class
     // Now process the body of the anonymous class !!!
     //
     CheckClassMembers(anon_type, class_body);
-    ProcessNestedTypeHeaders(anon_type, class_body);
-    if (anon_type -> owner -> MethodCast())
-         ProcessSuperTypesOfOuterType(anon_type);
-    else ProcessNestedSuperTypes(anon_type);
+    ProcessTypeHeaders(anon_type, class_body);
 
     //
     // If the class body has not yet been parsed, do so now.
@@ -5277,8 +5264,7 @@ void Semantic::ProcessPLUS(AstBinaryExpression *expr)
         //
         if (left_type != control.String())
         {
-            AddStringConversionDependence(left_type,
-                                          expr -> binary_operator_token);
+            AddStringConversionDependence(left_type);
             if (left_type == control.void_type)
                 ReportSemError(SemanticError::VOID_TO_STRING,
                                left -> LeftToken(),
@@ -5295,8 +5281,7 @@ void Semantic::ProcessPLUS(AstBinaryExpression *expr)
         //
         if (right_type != control.String())
         {
-            AddStringConversionDependence(right_type,
-                                          expr -> binary_operator_token);
+            AddStringConversionDependence(right_type);
             if (right_type == control.void_type)
                 ReportSemError(SemanticError::VOID_TO_STRING,
                                right -> LeftToken(),
@@ -5308,8 +5293,7 @@ void Semantic::ProcessPLUS(AstBinaryExpression *expr)
             }
         }
 
-        AddDependence(ThisType(), control.StringBuffer(),
-                      expr -> binary_operator_token);
+        AddDependence(ThisType(), control.StringBuffer());
 
         //
         // If both subexpressions are strings constants, identify the result as

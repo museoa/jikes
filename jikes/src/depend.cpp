@@ -103,6 +103,11 @@ void TypeCycleChecker::ProcessSubtypes(TypeSymbol *type)
          subtype;
          subtype = (TypeSymbol *) type -> subtypes -> NextElement())
     {
+        //
+        // Only worry about top-level types.
+        //
+        if (subtype -> outermost_type != subtype)
+            continue;
         if (subtype -> index == OMEGA)
              ProcessSubtypes(subtype);
         type -> index = Min(type -> index, subtype -> index);

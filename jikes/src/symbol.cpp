@@ -1906,7 +1906,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
     assert((member -> ACC_PRIVATE() && this == containing_type) ||
            (member -> ACC_PROTECTED() &&
             ! semantic_environment -> sem -> ProtectedAccessCheck(containing_type)) ||
-           containing_type == super);
+           (base_type == super && ! member -> ACC_STATIC()));
 
     MethodSymbol *read_method = ReadMethod(member, base_type);
 
@@ -1975,16 +1975,15 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
         // static.
         //
         BlockSymbol *block_symbol =
-            new BlockSymbol(parameter_count + (member -> ACC_STATIC() ? 0 : 1));
+            new BlockSymbol(parameter_count +
+                            (member -> ACC_STATIC() ? 0 : 1));
         block_symbol -> max_variable_index = 0;
         read_method -> SetBlockSymbol(block_symbol);
 
         for (int j = 0; j < member -> NumThrows(); j++)
             read_method -> AddThrows(member -> Throws(j));
 
-        AstSimpleName *base = ast_pool -> GenSimpleName(loc);
-
-        AstFieldAccess::FieldAccessTag tag = AstFieldAccess::NONE;
+        AstExpression *base;
         if (! member -> ACC_STATIC() && base_type == super)
         {
             //
@@ -1998,10 +1997,12 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
             // therefore inaccessible), so we don't have to worry about a
             // conflict in accessor methods for the same base type.
             //
-            tag = AstFieldAccess::SUPER_TAG;
+            base = ast_pool -> GenSuperExpression(loc);
         }
+        else
+            base = ast_pool -> GenSimpleName(loc);
 
-        AstFieldAccess *field_access = ast_pool -> GenFieldAccess(tag);
+        AstFieldAccess *field_access = ast_pool -> GenFieldAccess();
         field_access -> base = base;
         field_access -> dot_token = loc;
         field_access -> identifier_token = loc;
@@ -2039,7 +2040,8 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
                                               max_variable_index++);
             instance -> MarkComplete();
             read_method -> AddFormalParameter(instance);
-            base -> symbol = instance;
+            base -> symbol = (base_type == super
+                              ? (Symbol *) super : (Symbol *) instance);
         }
 
         for (int i = 0; i < parameter_count; i++)

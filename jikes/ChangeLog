@@ -1,3 +1,20 @@
+2002-07-18  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.cpp (EmitStatement): Fix case of infinite do-while
+	loop emitting dead code - bug 3085.
+	* src/expr.cpp (ProcessMethodName): Fix handling of non-inherited
+	enclosing instance methods in explicit constructors - bug 3082.
+	(CreateAccessToType): Fix access of non-inherited members.
+	* src/symbol.cpp (GetReadAccessMethod): More fixes of X.super.m(),
+	detected by bug 246.
+	* src/depend.cpp (ProcessSubtypes):
+	* src/error.cpp (CIRCULAR_*):
+	* src/getclass.cpp (ProcessClassFile):
+	* src/decl.cpp: Fix handling of cyclic inheritance - bug 338.
+	(AddInheritedMethods): Make warning become pedantic.
+	* src/semantic.h: Improve some documentation, as well as redo
+	methods involved in cyclic inheritance changes.
+
 2002-07-15  Mo DeJong  <supermo@bayarea.net>
 
 	* configure: Regen.

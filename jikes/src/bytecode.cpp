@@ -1072,7 +1072,8 @@ bool ByteCode::EmitStatement(AstStatement *statement)
                                        begin_label, sp -> statement);
             }
             CompleteLabel(begin_label);
-            return abrupt && ! sp -> can_complete_normally;
+            return (abrupt || IsOne(sp -> expression)) &&
+                ! sp -> can_complete_normally;
         }
     case Ast::FOR: // JLS 14.12
         {
