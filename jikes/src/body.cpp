@@ -1724,8 +1724,16 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
             for (int i = 0; i < super_call -> NumArguments(); i++)
             {
                 AstExpression *expr = super_call -> Argument(i);
-                if (expr -> Type() != constructor -> FormalParameter(i) -> Type())
-                    super_call -> Argument(i) = ConvertToType(expr, constructor -> FormalParameter(i) -> Type());
+                TypeSymbol * ctor_param_type;
+                if (super_call -> NeedsExtraNullArgument()) {
+                    // Synthetic constructor signature includes a synthetic
+                    // class pointer as the first parameter.
+                    ctor_param_type = constructor -> FormalParameter(i + 1) -> Type();
+                } else {
+                    ctor_param_type = constructor -> FormalParameter(i) -> Type();
+                }
+                if (expr -> Type() != ctor_param_type)
+                    super_call -> Argument(i) = ConvertToType(expr, ctor_param_type);
             }
 
             //

@@ -1,3 +1,20 @@
+2001-02-18  Mo DeJong  <mdejong@redhat.com>
+
+	* src/body.cpp (ProcessSuperCall): Fix
+	assert caused by cast expression that
+	was attempting to cast a primitive
+	type argument in a super invocation
+ 	to the synthetic argument type.
+	Jikes passes a synthetic class
+	type as the first argument to a
+	synthetic constructor. It was
+	failing to take that into account
+	when checking the argument types.
+	* src/bytecode.cpp (EmitCast):
+	Add comment explaining why an
+	assert might be generated on an
+	invalid cast of a primitive type.
+
 2001-02-17  Mo DeJong  <mdejong@redhat.com>
 
 	* src/option.cpp (ArgumentExpanded,

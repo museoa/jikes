@@ -3448,6 +3448,9 @@ void ByteCode::EmitCast(TypeSymbol *dest_type, TypeSymbol *source_type)
                                                                                               : dest_type == this_control.byte_type
                                                                                                            ? OP_I2B
                                                                                                            : OP_I2S); // short_type
+            // If the type we wanted to cast to could not be matched then
+            // the cast is invalid. For example, one might be trying
+            // to cast an int to a Object.
             assert(op_kind != OP_I2S || dest_type == this_control.short_type);
 
             PutOp(op_kind);
