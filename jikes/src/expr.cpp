@@ -6895,6 +6895,7 @@ void Semantic::ProcessConditionalExpression(Ast *expr)
                            conditional_expression -> true_expression -> Type() -> ContainingPackage() -> PackageName(),
                            conditional_expression -> true_expression -> Type() -> ExternalName());
             conditional_expression -> symbol = control.no_type;
+            return;
         }
         else if (true_type == control.null_type)
             conditional_expression -> symbol = false_type;

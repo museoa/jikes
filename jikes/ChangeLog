@@ -1,3 +1,11 @@
+2001-05-26  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/expr.cpp (Semantic::ProcessConditionalExpression):
+	Add a missing return that caused a regression in
+	Jikes 1.14. An assertion was being raised when a ?:
+	expression mixed a primitive and reference type
+	in the second and third operands.
+
 2001-05-17  Chris Abbey  <cabbey@bresnanlink.net>
 
 	* option.cpp:
