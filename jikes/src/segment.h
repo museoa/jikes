@@ -10,8 +10,7 @@
 #ifndef segment_INCLUDED
 #define segment_INCLUDED
 
-#include <stdio.h>
-#include "config.h"
+#include "platform.h"
 #include "tuple.h"
 
 class SegmentPool;

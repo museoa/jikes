@@ -7,9 +7,7 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
-#include "config.h"
-#include <sys/stat.h>
-#include <assert.h>
+#include "symbol.h"
 #include "stream.h"
 #include "control.h"
 #include "ast.h"
@@ -18,12 +16,6 @@
 #include "zip.h"
 #include "set.h"
 #include "case.h"
-
-#ifdef UNIX_FILE_SYSTEM
-#include <dirent.h>
-#elif defined(WIN32_FILE_SYSTEM)
-#include <windows.h>
-#endif
 
 char *FileSymbol::java_suffix = StringConstant::U8S__DO_java;
 int FileSymbol::java_suffix_length = strlen(java_suffix);
@@ -764,7 +756,8 @@ void DirectorySymbol::ReadDirectory()
     if (! entries)
     {
         entries = new DirectoryTable();
-
+	
+//FIXME: these need to go into platform.cpp
 #ifdef UNIX_FILE_SYSTEM
         DIR *directory = opendir(this -> DirectoryName());
         if (directory)

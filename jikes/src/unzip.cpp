@@ -31,7 +31,7 @@
 //  ...
 //  c16  20 Apr 97  J. Altman       added memzero(v[]) in huft_build()
 //
-#include "config.h"
+
 #include "unzip.h"
 
 unsigned long Unzip::global_bb;                         /* bit buffer */

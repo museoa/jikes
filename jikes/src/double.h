@@ -10,11 +10,11 @@
 #ifndef Double_INCLUDED
 #define Double_INCLUDED
 
-#include "config.h"
-#include <math.h>
+#include "platform.h"
 
 class LongInt;
 class IEEEdouble;
+
 class IEEEfloat
 {
 private:

@@ -10,16 +10,18 @@
 #ifndef lookup_INCLUDED
 #define lookup_INCLUDED
 
-#include "config.h"
-#ifdef HAVE_WCHAR_H
-# include <wchar.h>
-#endif
-#include <string.h>
-#include <sys/stat.h>
-#include <time.h>
+#include "platform.h"
 #include "tuple.h"
 #include "long.h"
 #include "double.h"
+
+#ifdef HAVE_TIME_H
+#include <time.h>
+#endif
+
+#ifdef HAVE_WCHAR_H
+# include <wchar.h>
+#endif
 
 class Control;
 class Symbol;

@@ -10,11 +10,15 @@
 #ifndef tab_INCLUDED
 #define tab_INCLUDED
 
-#include "config.h"
+#include "platform.h"
+
+/*
+//FIXME: include stuff
 #ifdef HAVE_WCHAR_H
 # include <wchar.h>
 #endif
 #include <string.h>
+*/
 
 class Tab
 {

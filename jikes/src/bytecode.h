@@ -10,7 +10,7 @@
 #ifndef bytecode_INCLUDED
 #define bytecode_INCLUDED
 
-#include <stdio.h>
+#include "platform.h"
 #include "tuple.h"
 #include "ast.h"
 #include "class.h"

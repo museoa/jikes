@@ -7,7 +7,6 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
-#include "config.h"
 #include "scanner.h"
 #include "control.h"
 #include "error.h"

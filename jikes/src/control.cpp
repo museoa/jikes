@@ -7,8 +7,6 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
-#include "config.h"
-#include <sys/stat.h>
 #include "control.h"
 #include "scanner.h"
 #include "parser.h"
@@ -650,7 +648,7 @@ DirectorySymbol *Control::FindSubdirectory(PathSymbol *path_symbol, wchar_t *nam
 
         DirectorySymbol *directory_symbol = NULL;
         struct stat status;
-        if ((::SystemStat(input_name, &status) == 0) && (status.st_mode & STAT_S_IFDIR))
+        if ((::SystemStat(input_name, &status) == 0) && (status.st_mode & JIKES_STAT_S_IFDIR))
             directory_symbol = system_table -> FindDirectorySymbol(status.st_dev, status.st_ino);
 
         if (! directory_symbol)

@@ -10,7 +10,7 @@
 #ifndef lpginput_INCLUDED
 #define lpginput_INCLUDED
 
-#include "config.h"
+#include "platform.h"
 #include "stream.h"
 
 typedef LexStream::TokenIndex TokenObject;

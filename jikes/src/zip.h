@@ -10,13 +10,16 @@
 #ifndef zip_INCLUDED
 #define zip_INCLUDED
 
-#ifdef WIN32_FILE_SYSTEM
-#include <windows.h>
-#endif
+#include "platform.h"
 
-#include "config.h"
-#include <stddef.h>
-#include <stdio.h>
+//FIXME: need to remove ?
+//#ifdef WIN32_FILE_SYSTEM
+//#include <windows.h>
+//#endif
+
+//#include <stddef.h>
+//#include <stdio.h>
+
 #include "tuple.h"
 #include "unzip.h"
 
@@ -24,6 +27,7 @@ class Control;
 class Zip;
 class DirectorySymbol;
 class FileSymbol;
+class NameSymbol;
 
 
 class ZipFile : public Unzip

@@ -7,12 +7,17 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
-#include "config.h"
+
+#include "op.h"
+
+/*
+//FIXME: include stuff
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream.h>
 #include <string.h>
-#include "op.h"
+*/
+
 
 void Operators::opdesc(int opc, char **name, char **desc)
 {

@@ -10,17 +10,8 @@
 #ifndef TUPLE_INCLUDED
 #define TUPLE_INCLUDED
 
-#ifdef WIN32_FILE_SYSTEM
-#include <windows.h>
-#endif
-
-#include "config.h"
+#include "platform.h"
 #include "jikesapi.h"
-
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <assert.h>
 
 class OutputBuffer;
 
@@ -70,7 +61,7 @@ protected:
         // reallocated.
         //
         //
-        int k = size >> log_blksize; /* which segment? */
+        int k = size >> log_blksize; // which segment?
 
         //
         // If the base is overflowed, reallocate it and initialize the new elements to NULL.

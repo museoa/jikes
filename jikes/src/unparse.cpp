@@ -7,10 +7,11 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
-#include "config.h"
+#include "platform.h"
 #include "ast.h"
-#include <iostream.h>
-#include <fstream.h>
+//FIXME: need to move to platform.h
+//#include <iostream.h>
+//#include <fstream.h>
 #ifdef TEST
     bool Ast::debug_unparse = false;
 #endif

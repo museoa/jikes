@@ -10,13 +10,18 @@
 #ifndef control_INCLUDED
 #define control_INCLUDED
 
-#include "config.h"
-#include <iostream.h>
-#include <stdio.h>
+#include "platform.h"
 #include "option.h"
 #include "symbol.h"
 #include "tuple.h"
 #include "set.h"
+
+/*
+//FIXME: need to readdress this include stuff
+#include <iostream.h>
+#include <stdio.h>
+*/
+
 
 class StoragePool;
 class Scanner;

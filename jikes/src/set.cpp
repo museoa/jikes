@@ -8,7 +8,6 @@
 // You must accept the terms of that agreement to use this software.
 //
 #include "set.h"
-#include "config.h"
 
 int SymbolSet::primes[] = {DEFAULT_HASH_SIZE, 101, 401, MAX_HASH_SIZE};
 

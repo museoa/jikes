@@ -10,7 +10,7 @@
 #ifndef diagnose_INCLUDED
 #define diagnose_INCLUDED
 
-#include "config.h"
+#include "platform.h"
 #include "parser.h"
 #include "jikesapi.h"
 

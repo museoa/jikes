@@ -8,14 +8,17 @@
 // You must accept the terms of that agreement to use this software.
 //
 
-#include <ctype.h>
-#include "config.h"
 #include "option.h"
 #include "javasym.h"
 #include "error.h"
 #include "case.h"
 
-#ifdef CYGWIN
+//FIXME: include stuff
+//#include <ctype.h>
+
+
+// FIXME: this and other # defined things need to go in platform.cpp!
+#ifdef HAVE_SYS_CYGWIN_H
 #include <sys/cygwin.h>
 #endif
 
@@ -468,9 +471,11 @@ Option::Option(ArgumentExpander &arguments) :
                 classpath = NULL;
             }
 
-#ifdef CYGWIN
-            // Under Cygwin, we convert a windows style path into a unix style path
-            // so that we can parse it using the unix path seperator char ':'
+#ifdef HAVE_CYGWIN_WIN32_TO_POSIX_PATH_LIST
+            // Under Cygwin, we convert a windows style path into a unix
+            // style path. A path like "C:\Cygwin\tmp;C:\Windows" is converted
+            // into "/tmp:/cygdrive/c/Windows" (assuming C:\Cygwin is cygroot).
+            // We can then parse it using the unix path seperator char ':'
             buf = new char[cygwin_win32_to_posix_path_list_buf_size(classpath)];
             cygwin_win32_to_posix_path_list(classpath, buf);
             delete [] classpath;

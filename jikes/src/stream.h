@@ -10,18 +10,21 @@
 #ifndef stream_INCLUDED
 #define stream_INCLUDED
 
-#include "config.h"
-#include <sys/stat.h>
-#include <limits.h>
-#include <iostream.h>
-#include <stddef.h>
-#include <stdio.h>
+#include "platform.h"
 #include "javadef.h"
 #include "javasym.h"
 #include "tuple.h"
 #include "tab.h"
 #include "lookup.h"
 #include "jikesapi.h"
+
+/*
+//FIXME: include stuff
+#include <limits.h>
+#include <iostream.h>
+#include <stddef.h>
+#include <stdio.h>
+*/
 
 class Control    ;
 class Input_info ;

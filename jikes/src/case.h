@@ -11,10 +11,14 @@
 #ifndef case_INCLUDED
 #define case_INCLUDED
 
-#include "config.h"
+#include "platform.h"
+
+/*
+//FIXME: need to readdress this include stuff
 #ifdef HAVE_WCHAR_H
 # include <wchar.h>
 #endif
+*/
 
 //
 // NOTE that this class is hard-wired to work on an ASCII machine.

@@ -7,10 +7,8 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
-#include "config.h"
-#include <iostream.h>
-#include "control.h"
 #include "lookup.h"
+#include "control.h"
 #include "symbol.h"
 #include "code.h"
 #include "ast.h"

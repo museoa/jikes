@@ -10,7 +10,7 @@
 #ifndef table_INCLUDED
 #define table_INCLUDED
 
-#include "config.h"
+#include "platform.h"
 #include "symbol.h"
 
 class VariableShadowSymbol

@@ -8,7 +8,7 @@
 // You must accept the terms of that agreement to use this software.
 //
 
-#include "config.h"
+#include "platform.h"
 #include "parser.h"
 #include "ast.h"
 

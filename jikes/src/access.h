@@ -11,7 +11,7 @@
 #ifndef access_INCLUDED
 #define access_INCLUDED
 
-#include "config.h"
+#include "platform.h"
 
 class AccessFlags
 {

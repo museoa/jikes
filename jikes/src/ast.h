@@ -11,10 +11,7 @@
 #ifndef ast_INCLUDED
 #define ast_INCLUDED
 
-#include "config.h"
-#include <assert.h>
-#include <string.h>
-#include <stdlib.h>
+#include "platform.h"
 #include "stream.h"
 #include "symbol.h"
 #include "set.h"

@@ -8,18 +8,20 @@
 // You must accept the terms of that agreement to use this software.
 //
 
-#include "assert.h"
-#include "config.h"
-#include "ast.h"
 #include "bytecode.h"
+#include "ast.h"
 #include "class.h"
 #include "control.h"
 #include "semantic.h"
 #include "stream.h"
 #include "symbol.h"
 #include "table.h"
+
+/*
+//FIXME: need to readdress this include stuff
+#ifdef HAVE_IOSTREAM_H
 #include <iostream.h>
-#include <string.h>
+#endif
 
 #ifdef HAVE_WCHAR_H
 # include <wchar.h>
@@ -28,6 +30,8 @@
 #ifdef WIN32_FILE_SYSTEM
 #include <windows.h>
 #endif
+*/
+
 
 void ByteCode::CompileClass()
 {

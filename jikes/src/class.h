@@ -10,8 +10,7 @@
 #ifndef class_INCLUDED
 #define class_INCLUDED
 
-#include "config.h"
-#include <stdio.h>
+#include "platform.h"
 #include "semantic.h"
 #include "access.h"
 #include "tuple.h"

@@ -10,8 +10,7 @@
 #ifndef Long_INCLUDED
 #define Long_INCLUDED
 
-#include "config.h"
-#include <math.h>
+#include "platform.h"
 
 class IEEEdouble;
 class IEEEfloat;

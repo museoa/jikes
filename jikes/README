@@ -6,6 +6,11 @@ This distribution is covered by the "IBM Public License Version
 Version 1.0 - Jikes" contained in the file license.htm.  You must
 accept the terms of the license agreement to use this software.
 
+See the ChangeLog for file revision history.
+
+To configure and build jikes just run ./configure ; make in the
+toplevel directory. Run "make install" to install jikes.
+
 Documentation files provided in 'doc' directory include:
 
 jikes.html: the Jikes FAQ (Frequently Asked Questions).
@@ -21,8 +26,6 @@ jikes.1: the man page.
 
 contrib.html: names of contributors, including the Jikes Project Core
 Team.
-
-ChangeLog: revision history.
 
 jikes.spec: "spec" file for use with RPM (Red Hat Package Manager).
 

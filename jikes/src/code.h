@@ -1,9 +1,13 @@
 #ifndef code_INCLUDED
 #define code_INCLUDED
 
-#include "config.h"
+#include "platform.h"
+
+/*
+//FIXME: need to readdress this include stuff
 #include <ctype.h>
 #include <assert.h>
+*/
 
 class Code
 {

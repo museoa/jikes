@@ -8,7 +8,7 @@
 // You must accept the terms of that agreement to use this software.
 //
 
-#include "config.h"
+#include "platform.h"
 #include "semantic.h"
 
 AccessFlags Semantic::ProcessClassModifiers(AstClassDeclaration *class_declaration)

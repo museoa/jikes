@@ -9,12 +9,17 @@
 //
 #ifdef TEST
 
-#include "config.h"
+#include "platform.h"
 #include "javasym.h"
 #include "control.h"
 #include "stream.h"
+
+/*
+//FIXME: need to readdress this include stuff
 #include <iostream.h>
 #include <stdio.h>
+*/
+
 
 static char*
       TK_notoken_STRING      = "TK_notoken",

@@ -7,14 +7,17 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
-#include "config.h"
-#include <ctype.h>
+
 #include "stream.h"
 #include "code.h"
 #include "zip.h"
 #include "symbol.h"
 #include "control.h"
 #include "semantic.h"
+
+#ifdef HAVE_CTYPE_H
+#include <ctype.h>
+#endif
 
 #if defined(HAVE_LIB_ICU_UC)
 # include <unicode/ucnv.h>

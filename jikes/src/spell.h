@@ -10,7 +10,7 @@
 #ifndef spell_INCLUDED
 #define spell_INCLUDED
 
-#include "config.h"
+#include "platform.h"
 #include "case.h"
 
 class Spell

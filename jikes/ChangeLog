@@ -1,3 +1,103 @@
+2000-05-04  Mo DeJong  <mdejong@cygnus.com>
+
+	* Makefile.in:
+	* aclocal.m4:
+	* autogen.sh:
+	* config.guess:
+	* config.sub:
+	* configure:
+	* configure.in:
+	* install-sh:
+	* src/config.h.in:
+	* src/platform.cpp:
+	* src/platform.h:
+	* src/m4/ac_check_error_discard_const.m4:
+	* src/m4/ac_check_mathlib.m4:
+	* src/m4/ac_check_wcs_funcs.m4:
+	* src/m4/ac_cxx_bool.m4:
+	* src/m4/ac_cxx_check_set_new_handler.m4:
+	* src/m4/ac_cxx_exceptions.m4:
+	* src/m4/ac_cxx_have_std.m4:
+	* src/m4/ac_cxx_namespaces.m4:
+	* src/m4/acx_check_pathname_style.m4: Added new files
+	to support the new autoconf based build system.
+	* src/config.cpp:
+	* src/config.h:
+	* src/configure:
+	* src/configure.in: Removed old autoconf based build
+	files as they are no longer needed.
+	* README: updated ChangeLog location, added build notes.
+	* src/Makefile.in:
+	* src/access.h:
+	* src/ast.cpp:
+	* src/ast.h:
+	* src/body.cpp:
+	* src/bytecode.cpp:
+	* src/bytecode.h:
+	* src/case.cpp:
+	* src/case.h:
+	* src/class.h:
+	* src/code.h:
+	* src/control.cpp:
+	* src/control.h:
+	* src/decl.cpp:
+	* src/definite.cpp:
+	* src/depend.cpp:
+	* src/depend.h:
+	* src/diagnose.cpp:
+	* src/diagnose.h:
+	* src/double.cpp:
+	* src/double.h:
+	* src/dump.cpp:
+	* src/error.cpp:
+	* src/error.h:
+	* src/expr.cpp:
+	* src/gencode.java:
+	* src/getclass.cpp:
+	* src/getclass.h:
+	* src/incrmnt.cpp:
+	* src/init.cpp:
+	* src/javaact.cpp:
+	* src/jikes.cpp:
+	* src/jikesapi.cpp:
+	* src/jikesapi.h:
+	* src/long.cpp:
+	* src/long.h:
+	* src/lookup.cpp:
+	* src/lookup.h:
+	* src/lpginput.cpp:
+	* src/lpginput.h:
+	* src/modifier.cpp:
+	* src/op.cpp:
+	* src/op.h:
+	* src/option.cpp:
+	* src/option.h:
+	* src/parser.cpp:
+	* src/parser.h:
+	* src/scanner.cpp:
+	* src/scanner.h:
+	* src/segment.cpp:
+	* src/segment.h:
+	* src/semantic.h:
+	* src/set.cpp:
+	* src/set.h:
+	* src/spell.h:
+	* src/stream.cpp:
+	* src/stream.h:
+	* src/symbol.cpp:
+	* src/symbol.h:
+	* src/system.cpp:
+	* src/tab.h:
+	* src/table.h:
+	* src/tuple.h:
+	* src/unparse.cpp:
+	* src/unzip.cpp:
+	* src/unzip.h:
+	* src/zip.cpp:
+	* src/zip.h:  Added support for new autoconf based build
+	by switching from #include "config.h" to #include "platform.h".
+	Additional minor fixups were required in some files.
+
 2000-05-03  Mo DeJong  <mdejong@cygnus.com>
 
 	* src/double.cpp:

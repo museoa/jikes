@@ -8,8 +8,7 @@
 // You must accept the terms of that agreement to use this software.
 //
 
-#include "config.h"
-#include <assert.h>
+#include "platform.h"
 #include "semantic.h"
 #include "control.h"
 

@@ -8,7 +8,6 @@
 // You must accept the terms of that agreement to use this software.
 //
 
-#include "config.h"
 #include "ast.h"
 #ifdef TEST
     unsigned Ast::count = 0;

@@ -7,9 +7,7 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
-#include "config.h"
-#include <sys/stat.h>
-#include <iostream.h>
+#include "platform.h"
 #include "control.h"
 #include "scanner.h"
 #include "parser.h"
@@ -391,7 +389,7 @@ bool Control::IncrementalRecompilation()
             delete line;
             return false;
         }
-        
+
         char q[2] = {U_q, U_NU};
         
         if (Case::StringEqual(line, U8S_quit) || Case::StringSegmentEqual(line, q, 2))

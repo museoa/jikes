@@ -10,15 +10,20 @@
 #ifndef parser_INCLUDED
 #define parser_INCLUDED
 
-#include "config.h"
-#include <limits.h>
+#include "platform.h"
+#include "lpginput.h"
+
+/*
+//FIXME: include stuff
 #include <ctype.h>
+#include <limits.h>
 #ifdef HAVE_WCHAR_H
 # include <wchar.h>
 #endif
 #include <string.h>
 #include <stdio.h>
-#include "lpginput.h"
+*/
+
 
 class StoragePool;
 class AstPackageDeclaration;

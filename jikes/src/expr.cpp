@@ -7,18 +7,23 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
+
+#include "platform.h"
 #include "double.h"
-#include "config.h"
-#include <assert.h>
-#include <stdio.h>
-#include <math.h>
-#include <sys/stat.h>
 #include "parser.h"
 #include "semantic.h"
 #include "control.h"
 #include "table.h"
 #include "tuple.h"
 #include "spell.h"
+
+/*
+//FIXME: need to readdress this include stuff
+#include <assert.h>
+#include <stdio.h>
+#include <math.h>
+*/
+
 
 bool Semantic::IsIntValueRepresentableInType(AstExpression *expr, TypeSymbol *type)
 {

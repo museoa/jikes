@@ -10,7 +10,7 @@
 #ifndef set_INCLUDED
 #define set_INCLUDED
 
-#include "config.h"
+#include "platform.h"
 #include "assert.h"
 #include "symbol.h"
 

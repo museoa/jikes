@@ -10,15 +10,17 @@
 #ifndef depend_INCLUDED
 #define depend_INCLUDED
 
-#include "tuple.h"
-#include "config.h"
-#include <limits.h>
+#include "platform.h"
+// Also included in platform.h but that might change
+//#include "tuple.h"
 
 class Semantic;
 class TypeSymbol;
+class FileSymbol;
 class AstClassBody;
 class AstConstructorDeclaration;
 class SymbolSet;
+class Control;
 
 class CycleChecker
 {

@@ -8,11 +8,13 @@
 // You must accept the terms of that agreement to use this software.
 //
 
+/*
 #include <iostream.h>
 #include <assert.h>
 #include <stdio.h>
+*/
 
-#include "config.h"
+#include "platform.h"
 #include "jikesapi.h"
 
 int main(int argc, char *argv[])

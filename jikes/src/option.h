@@ -11,20 +11,20 @@
 #ifndef option_INCLUDED
 #define option_INCLUDED
 
-#include "config.h"
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include "platform.h"
 #include "code.h"
 #include "tuple.h"
-
 #include "jikesapi.h"
+
+//FIXME: include stuff
+//#include <ctype.h>
 
 #if defined(HAVE_LIB_ICU_UC)
 # include <unicode/ucnv.h>
 #elif defined(HAVE_ICONV_H)
 # include <iconv.h>
 #endif
+
 
 class ArgumentExpander
 {

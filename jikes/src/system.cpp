@@ -7,8 +7,7 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
-#include "config.h"
-#include <sys/stat.h>
+#include "platform.h"
 #include "control.h"
 #include "semantic.h"
 #include "zip.h"
@@ -443,7 +442,8 @@ void Control::ProcessPath()
 
     system_table = new SystemTable();
     struct stat status;
-    if ((::SystemStat(dot_name_symbol -> Utf8Name(), &status) == 0) && (status.st_mode & STAT_S_IFDIR))
+    //FIXME: need to check for stat errors
+    if ((::SystemStat(dot_name_symbol -> Utf8Name(), &status) == 0) && (status.st_mode & JIKES_STAT_S_IFDIR))
         system_table -> InsertDirectorySymbol(status.st_dev, status.st_ino, default_directory);
 
 #elif defined(WIN32_FILE_SYSTEM)

@@ -7,11 +7,14 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
-#include "config.h"
-#include <time.h>
+#include "depend.h"
 #include "control.h"
 #include "ast.h"
 #include "semantic.h"
+
+#ifdef HAVE_TIME_H
+#include <time.h>
+#endif
 
 //
 // Note that the types are ordered based on on the subtype relationship. We reverse

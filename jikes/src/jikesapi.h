@@ -5,11 +5,15 @@
 #ifndef _JIKES_API_H_FLAG_
 #define _JIKES_API_H_FLAG_
 
-#include "stdlib.h"
+#ifdef HAVE_STDLIB_H
+# include <stdlib.h>
+#endif
 
-#if defined(UNIX_FILE_SYSTEM)
+#ifdef HAVE_STDIO_H
 # include <stdio.h>
-#elif defined(WIN32_FILE_SYSTEM)
+#endif
+
+#ifdef HAVE_WINDOWS_H
 # include <windows.h>
 #endif
 
@@ -146,6 +150,7 @@ class JikesAPI
             
             const char     *buffer;
             size_t    size;
+// FIXME : need to move into platform.h
 #ifdef   WIN32_FILE_SYSTEM
             HANDLE    srcfile;
             HANDLE    mapfile;
@@ -187,6 +192,7 @@ class JikesAPI
             virtual  size_t    doWrite(const unsigned char *data,size_t size);
             
             bool      valid;
+// FIXME: need to clean this up, why is this not wrapped in a platform.h function?
 #ifdef UNIX_FILE_SYSTEM
             FILE     *file;
 #elif defined(WIN32_FILE_SYSTEM)

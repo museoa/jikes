@@ -7,8 +7,7 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
-#include "config.h"
-#include <sys/stat.h>
+#include "platform.h"
 #include "semantic.h"
 #include "control.h"
 #include "depend.h"

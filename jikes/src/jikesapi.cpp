@@ -3,9 +3,8 @@
  */
 
 
+#include "platform.h"
 #include "control.h"
-#include "config.h"
-
 #include "jikesapi.h"
 
 

@@ -10,13 +10,7 @@
 #ifndef symbol_INCLUDED
 #define symbol_INCLUDED
 
-#include "config.h"
-#include <assert.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <string.h>
+#include "platform.h"
 #include "code.h"
 #include "stream.h"
 #include "option.h"

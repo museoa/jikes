@@ -7,7 +7,7 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
-#include "config.h"
+
 #include "segment.h"
 
 u2 &PairSegment::Image(u2 target)

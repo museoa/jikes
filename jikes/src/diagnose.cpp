@@ -7,14 +7,18 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
-#include "config.h"
-#include <assert.h>
-#include <iostream.h>
+
 #include "diagnose.h"
 #include "control.h"
 #include "semantic.h"
 #include "case.h"
 #include "spell.h"
+
+/*
+//FIXME: need to readdress this include stuff
+#include <iostream.h>
+*/
+
 
 void DiagnoseParser::ReallocateStacks()
 {

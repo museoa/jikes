@@ -10,10 +10,7 @@
 #ifndef semantic_INCLUDED
 #define semantic_INCLUDED
 
-#include "config.h"
-#ifdef HAVE_WCHAR_H
-# include <wchar.h>
-#endif
+#include "platform.h"
 #include "ast.h"
 #include "diagnose.h"
 #include "error.h"
@@ -21,6 +18,14 @@
 #include "control.h"
 #include "tuple.h"
 #include "set.h"
+
+/*
+//FIXME: include stuff
+#ifdef HAVE_WCHAR_H
+# include <wchar.h>
+#endif
+*/
+
 
 class cp_info;
 class TypeShadowSymbol;

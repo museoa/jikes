@@ -92,7 +92,7 @@ class gencode
             hfile.println("#ifndef code_INCLUDED");
             hfile.println("#define code_INCLUDED");
             hfile.println();
-            hfile.println("#include \"config.h\"");
+            hfile.println("#include \"platform.h\"");
             hfile.println("#include <ctype.h>");
             hfile.println("#include <assert.h>");
             hfile.println();
@@ -287,7 +287,7 @@ class gencode
             hfile.println("#ifndef code_INCLUDED");
             hfile.println("#define code_INCLUDED");
             hfile.println();
-            hfile.println("#include \"config.h\"");
+            hfile.println("#include \"platform.h\"");
             hfile.println("#include <ctype.h>");
             hfile.println("#include \"bool.h\"");
             hfile.println();

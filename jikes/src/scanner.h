@@ -10,17 +10,19 @@
 #ifndef scanner_INCLUDED
 #define scanner_INCLUDED
 
-#include "config.h"
-#include <limits.h>
-#include <iostream.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <time.h>
+#include "platform.h"
 #include "code.h"
 #include "javadef.h"
 #include "javasym.h"
 #include "stream.h"
+
+#ifdef HAVE_CTYPE_H
+#include <ctype.h>
+#endif
+
+#ifdef HAVE_TIME_H
+#include <time.h>
+#endif
 
 class Control;
 class FileSymbol;

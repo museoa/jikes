@@ -10,7 +10,7 @@
 #ifndef op_INCLUDED
 #define op_INCLUDED
 
-#include "config.h"
+#include "platform.h"
 #include "tuple.h"
 
 class cp_info;

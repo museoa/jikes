@@ -10,7 +10,7 @@
 #ifndef error_INCLUDED
 #define error_INCLUDED
 
-#include "config.h"
+#include "platform.h"
 #include "stream.h"
 #include "tuple.h"
 #include "jikesapi.h"

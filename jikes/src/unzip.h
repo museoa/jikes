@@ -2,7 +2,7 @@
 #ifndef unzip_INCLUDED
 #define unzip_INCLUDED
 
-#include "config.h"
+#include "platform.h"
 
 //
 // NOTE: Jikes incorporates compression code from the Info-ZIP
@@ -37,9 +37,10 @@
 //
 
 #define DFUNZIP /* needed for unzip compilation*/
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+//FIXME: need to move to platform.h
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <string.h>
 
 //
 // inflate.c -- put in the public domain by Mark Adler
