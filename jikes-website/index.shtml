@@ -131,7 +131,8 @@ been approved by the <a href="http://www.opensource.org/">OSI</a>
 The project provides access to the complete <A HREF="cvs.shtml">CVS</A>
 development tree, which includes not only Jikes, but also the source for the Jacks
 Test Suite and the Jikes Parser Generator used to build Jikes. Members of the community
-contribute <A HREF="downloads/">binaries</A> for their platforms of choice, additionally
+contribute <A HREF="/developerworks/project/showfiles.php?group_id=10">binaries</A>
+for their platforms of choice, additionally
 Jikes is included in many <A HREF="distribs.shtml">Open Source Operating Systems</A>.
 The Jacks Test Suite is a replacement for the Jikestst package, and it is expected
 to replace it over time.</p>
