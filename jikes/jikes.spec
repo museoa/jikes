@@ -22,7 +22,7 @@ and is maintained by the Jikes Project:
 %setup -q
 
 %build
-./configure --prefix=$RPM_BUILD_ROOT/usr
+./configure CXXFLAGS=-O3 --prefix=$RPM_BUILD_ROOT/usr
 make
 
 %install

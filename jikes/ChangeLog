@@ -1,5 +1,10 @@
 2000-07-30  Mo DeJong  <mdejong@redhat.com>
 
+	* jikes.spec: Add default -O3 flag when building
+	the release verison of jikes under Red Hat Linux.
+
+2000-07-30  Mo DeJong  <mdejong@redhat.com>
+
 	* src/decl.cpp (CompleteSymbolTable, AddInheritedMethods): Revert
 	change meant to fix bug 102. The fix for 102 causes crashes in
 	CheckInheritedMethodThrows. We will need to re-address this
