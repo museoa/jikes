@@ -1,3 +1,14 @@
+2002-07-12  Mo DeJong  <supermo@bayarea.net>
+
+	* configure: Regen.
+	* configure.in: Define HAVE_ENCODING if iconv or icu is supported.
+	* src/config.h.in: Regen.
+	* src/jikes.cpp:
+	* src/option.cpp:
+	* src/stream.cpp:
+	* src/stream.h: Replace HAVE_LIBICU_UC || HAVE_ICONV_H
+	checks with HAVE_ENCODING check.
+
 2002-07-12  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.cpp (EmitTryStatement): Fix case with empty try

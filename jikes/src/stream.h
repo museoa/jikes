@@ -114,7 +114,7 @@ public:
         return input_buffer = new wchar_t[size + 4];
     }
 
-#if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
+#if defined(HAVE_ENCODING)
     static bool IsSupportedEncoding(char* encoding);
     bool SetEncoding(char* encoding);
 #endif
@@ -132,7 +132,7 @@ protected:
 
 //private: // FIXME : Make vars private once extracted from LexStream!
 
-#if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
+#if defined(HAVE_ENCODING)
 
 #if defined(HAVE_LIBICU_UC)
      UConverter * _decoder;
@@ -165,7 +165,7 @@ protected:
 #endif
     }
 
-#endif // defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
+#endif // defined(HAVE_ENCODING)
 
     inline void InitializeDataBuffer(const char * buffer, long size) {
         data_buffer = buffer;
@@ -448,7 +448,7 @@ private:
 
     int hexvalue(wchar_t ch);
     
-#if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
+#if defined(HAVE_ENCODING)
     enum UnicodeLexerState
     {
         START,
@@ -562,11 +562,11 @@ private:
 
     void ReadInput();
     void ProcessInput(const char *, long);
-#if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
+#if defined(HAVE_ENCODING)
     void ProcessInputUnicode(const char *, long);
 #else
     void ProcessInputAscii(const char *, long);
-#endif // defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
+#endif // defined(HAVE_ENCODING)
 
     wchar_t *KeywordName(int);
 

@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
                "-debug              no effect (ignored for compatibility)\n"
                "-depend | -Xdepend  recompile all used classes\n"
                "-deprecation        report uses of deprecated features\n"
-#if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
+#if defined(HAVE_ENCODING)
                "-encoding encoding  use specified encoding to read source files\n"
 # if defined(HAVE_LIBICU_UC)
                "                    this binary requires the ICU library\n"

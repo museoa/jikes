@@ -436,7 +436,7 @@ Option::Option(ArgumentExpander& arguments,
                     continue;
                 }
                 i++;
-#if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
+#if defined(HAVE_ENCODING)
                 encoding = new char[strlen(arguments.argv[i]) + 1];
                 strcpy(encoding, arguments.argv[i]);
                 if (! Stream::IsSupportedEncoding(encoding))
@@ -446,9 +446,9 @@ Option::Option(ArgumentExpander& arguments,
                     encoding = NULL;
                 }
 
-#else // ! defined(HAVE_LIBICU_UC) && ! defined(HAVE_ICONV_H)
+#else // ! defined(HAVE_ENCODING)
                 bad_options.Next() = new OptionError(OptionError::UNSUPPORTED_OPTION, "-encoding");
-#endif // ! defined(HAVE_LIBICU_UC) && ! defined(HAVE_ICONV_H)
+#endif // ! defined(HAVE_ENCODING)
             }
             else if (strcmp(arguments.argv[i], "-extdirs") == 0 ||
                      strcmp(arguments.argv[i], "--extdirs") == 0)

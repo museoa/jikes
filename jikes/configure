@@ -5431,6 +5431,15 @@ _ACEOF
 fi
 
 
+if test "$ac_cv_header_iconv_h" = "yes" || \
+   test "$ac_cv_lib_icu_uc_u_getVersion" = "yes" ; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_ENCODING 1
+_ACEOF
+
+fi
+
 
 for ac_func in cygwin_win32_to_posix_path_list
 do

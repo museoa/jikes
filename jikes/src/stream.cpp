@@ -276,12 +276,12 @@ Stream::Stream()
 Stream::~Stream()
 {
     DestroyInput();
-#if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
+#if defined(HAVE_ENCODING)
     DestroyEncoding();
 #endif
 }
 
-#if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
+#if defined(HAVE_ENCODING)
 
 // This method will return true is the given encoding
 // can be supported, it is static because we need to
@@ -432,7 +432,7 @@ Stream::DecodeNextCharacter() {
     return next;
 }
 
-#endif // defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
+#endif // defined(HAVE_ENCODING)
 
 
 // Class LexStream
@@ -837,14 +837,14 @@ int LexStream::hexvalue(wchar_t ch)
 // Store/convert filesize bytes from a file in the input_buffer.
 //
 
-#if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
+#if defined(HAVE_ENCODING)
 
 void LexStream::ProcessInput(const char *buffer, long filesize)
 {
     LexStream::ProcessInputUnicode(buffer,filesize);
 }
 
-#else // defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
+#else // defined(HAVE_ENCODING)
 
 void LexStream::ProcessInput(const char *buffer, long filesize)
 {
@@ -971,11 +971,11 @@ void LexStream::ProcessInputAscii(const char *buffer, long filesize)
     return;
 }
 
-#endif // defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
+#endif // defined(HAVE_ENCODING)
 
 
 
-#if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
+#if defined(HAVE_ENCODING)
 
 void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
 {
@@ -1196,7 +1196,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
 
     return;
 }
-#endif // defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
+#endif // defined(HAVE_ENCODING)
 
 void LexStream::ReportMessage(StreamError::StreamErrorKind kind,
                               unsigned start_location,
