@@ -1,3 +1,9 @@
+2001-09-05  Ian P. Cardenas  <ian.cardenas@emagine-solutions.com>
+
+	* src/semantic.h (AddDependence): changed pedantic error reporting
+	to use ReportSemError as to avoid segfault when error is NULL -
+	patch 108, from bug 491.
+
 2001-09-05  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/platform.h (Ostream operator<<): Add missing

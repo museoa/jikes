@@ -1285,11 +1285,11 @@ inline void Semantic::AddDependence(TypeSymbol *base_type_, TypeSymbol *parent_t
             if (parent_type -> ContainingPackage() == control.unnamed_package &&
                 base_type -> ContainingPackage() != control.unnamed_package)
             {
-                error -> Report(SemanticError::PARENT_TYPE_IN_UNNAMED_PACKAGE,
-                                tok,
-                                tok,
-                                parent_type_ -> ContainingPackage() -> PackageName(),
-                                parent_type_ -> ExternalName());
+                ReportSemError(SemanticError::PARENT_TYPE_IN_UNNAMED_PACKAGE,
+                               tok,
+                               tok,
+                               parent_type_ -> ContainingPackage() -> PackageName(),
+                               parent_type_ -> ExternalName());
             }
         }
     }
