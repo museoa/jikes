@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 2000, 2001 International Business
+// Copyright (C) 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -1505,7 +1505,7 @@ wchar_t StringConstant::US_smallest_int[] = {
     U_NU}; // "-2147483648"
 
 char StringConstant::U8S_help_header[] = "Jikes Compiler - " JIKES_VERSION_STRING
-        "\n(C) Copyright IBM Corp. 1997, 1998, 1999, 2000, 2001.\n"
+        "\n(C) Copyright IBM Corp. 1997, 1998, 1999, 2000, 2001, 2002.\n"
         "- Licensed Materials - Program Property of IBM - All Rights Reserved.\n";
 char StringConstant::U8S_command_format[] = "use: jikes [options] [@files] file.java...\n";
 

@@ -1,5 +1,10 @@
 2002-02-09  Eric Blake  <ebb9@email.byu.edu>
 
+	* doc/jikes.1:
+	* src/platform.cpp (U8S_help_header): Update copyright.
+
+2002-02-09  Eric Blake  <ebb9@email.byu.edu>
+
 	* configure.in: Bump version to 1.15b, to mark a stable CVS
 	version for use with GNU Classpath.
 	* configure:
