@@ -1,3 +1,9 @@
+2001-09-21  Eric Blake  <ebb9@email.byu.edu>
+
+	* configure.in: Update the version to 1.15 in preparation for
+	release candidate.
+	* configure: Regenerate.
+
 2001-09-21  Mo DeJong  <supermo@bayarea.net>
 
 	* HACKING: Add note about running ./autogen.sh to regenerate
