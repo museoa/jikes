@@ -56,6 +56,8 @@
             will compile the Java 2 API without problems, but your
             resulting .class files will then require a Java 2
             compliant VM to run.</p>
+	    <p>It has been reported that when compiling with gcc3 on HP-UX 11 the
+	    </code>ac_cv_header_iconv_h=no</code> paramater to configure is needed.</p>
             <h2>Source control</h2>
             <p>&nbsp;&nbsp;<i>Nothing special</i> : just use WebCVS or
             install a HP-UX CVS client on your machine (if not already
