@@ -1,4 +1,4 @@
-2001-03-03  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+2001-03-03  Christopher Abbey  <cabbey@bresnanlink.net>
 
         * ChangeLog: Revisionism sucks, but this is a revisionist
         change. What I've done it to make the ChangeLog agree with
@@ -8,7 +8,7 @@
 	so my local cvs repo has all the change information. This wont
 	work in the future.
 
-2001-03-02  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+2001-03-02  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* faq/bug-reporting.shtml: fixed bad table border, left over
         from debug mode... should not have been commited
@@ -21,7 +21,7 @@
 	source through WebCVS, fixed a few typos, added
 	info about CVS protocol.
 
-2001-02-28  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+2001-02-28  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* faq/bug-reporting.shtml:
 	landed final revision of bug reporting docs
@@ -33,13 +33,13 @@
 	* faq/bug-reporting.shtml:
 	cleaned up Chris' bad typing/spelling
 
-2001-02-27  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+2001-02-27  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* faq/bug-reporting.shtml:
 	more of the bug reporting page comes in... I just might finish
 	this before 1.13 ships at this rate.... ;)
 
-2001-02-26  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+2001-02-26  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* images/ydl.png, distribs.shtml:
 	woof woof - added Yellow Dog Linux to distributions list.
@@ -48,12 +48,12 @@
 	adding first portion of bug reporting on the off chance that
 	someone wants to help get this finished by the 1.13 release date.
 
-2001-02-25  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+2001-02-25  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* faq/user-index.shtml:
 	updated info on classpath handling from Andrew Inggs
 
-2001-02-19  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+2001-02-19  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* faq/dev-aix.shtml, faq/dev-compiling.shtml, faq/dev-cross-compiling.shtml,
 	faq/dev-hp-ux.shtml, faq/dev-index.shtml, faq/dev-license.shtml,
@@ -77,13 +77,13 @@
 	* faq/user-index.shtml:
 	lots of user faq updates from Andrew I.
 
-2001-02-16  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+2001-02-16  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* index.shtml, styles/jikes-faq.css:
 	removed margin-left: -XXem; from uls because MSIE 5.5
         made it unreadible
 
-2001-02-16  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+2001-02-16  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* styles/jikes-faq.css, faq/dev-aix.shtml,
         faq/dev-compiling.shtml, faq/dev-cross-compiling.shtml,
@@ -136,11 +136,11 @@
 
 	* distribs.shtml: fixed bad link
 
-2001-02-09  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+2001-02-09  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* cvs.shtml: added readonly cvs mirror to cvs.shtml
 
-2001-02-07  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+2001-02-07  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* index.shtml, lists.shtml, todo.shtml, ChangeLog:
 	mailing list revisions
@@ -150,7 +150,7 @@
 	* index.shtml:
 	fixed broken download url.
 
-2001-02-06  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+2001-02-06  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* project/index.html:
 	opps... broke some redirectors.... putting a temp
@@ -161,11 +161,11 @@
         a hack now that Donna fixed the bugs system... oh, yeah, we just
         went live too. ;)
 
-2001-02-04  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+2001-02-04  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* lists.shtml: added jacks to lists
 
-2001-02-03  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+2001-02-03  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* cvs-begin.shtml, distribs.shtml, index.shtml, leadership.shtml,
         patchguide.shtml, people.shtml, todo.shtml:
@@ -178,7 +178,7 @@
 	* index.shtml, leadership.shtml:
 	getting ready for golive, some cleanup.
 
-2001-02-01  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+2001-02-01  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* index.shtml, leadership.shtml, people.shtml:
 	fixed busted linkages, renamed leadership.shtml
@@ -191,7 +191,7 @@
 	file based on comments from Dave. It now more closely resembles todays reality
 	than the uncertainty that was present when he drafted the original version.
 
-2001-01-30  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+2001-01-30  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* people.shtml:
 	updated Neil Boyd Martin's info
@@ -205,24 +205,24 @@
 
 	* todo.shtml: added 'nother todo
 
-2001-01-28  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+2001-01-28  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* index.shtml: added research database link
 
-2001-01-27  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+2001-01-27  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* todo.shtml: added classpath, reformated
 
-2001-01-26  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+2001-01-26  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* index.shtml, todo.shtml: added todo list, and links to index
 
-2001-01-18  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+2001-01-18  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* cvs-begin.shtml, cvs.shtml, distribs.shtml, footer.shtml,
         index.shtml, people.shtml: fixed cvs links, removed CRLF.
 
-2001-01-16  Christopher Abbey  <cabbey@tweedle.cabbey.net>
+2001-01-16  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* cvs-begin.shtml: initial version
 
