@@ -1,5 +1,9 @@
 2004-04-11  Elliott Hughes  <enh@acm.org>
 
+	* AUTHORS: credit where credit's due.
+
+2004-04-11  Elliott Hughes  <enh@acm.org>
+
 	* src/diagnose.cpp: Remove an extraneous endl that caused blank
 	lines to appear in +E or +D output when there were syntax (rather
 	than lexical or semantic) errors. There are still some cases where
