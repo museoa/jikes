@@ -47,8 +47,8 @@
 /* Define if you have the <iconv.h> header file. */
 #undef HAVE_ICONV_H
 
-/* Define if you have the <iostream.h> header file. */
-#undef HAVE_IOSTREAM_H
+/* Define Jikes functions in a namespace */
+#undef HAVE_JIKES_NAMESPACE
 
 /* use unix style mkdir(str, S_IRWXU) */
 #undef HAVE_LIBC5_MKDIR
@@ -79,12 +79,6 @@
 
 /* define if the compiler implements namespaces */
 #undef HAVE_NAMESPACES
-
-/* Define if you have the <new> header file. */
-#undef HAVE_NEW
-
-/* Define if you have the <new.h> header file. */
-#undef HAVE_NEW_H
 
 /* defined if running on a system with dos style paths */
 #undef HAVE_PATHNAME_STYLE_DOS
