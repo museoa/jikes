@@ -10,5 +10,5 @@
 
 aclocal
 autoheader
-automake --ignore-deps
 autoconf
+automake --ignore-deps --foreign --add-missing --force-missing

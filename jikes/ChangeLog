@@ -1,5 +1,15 @@
 2002-11-14  Eric Blake  <ebb9@email.byu.edu>
 
+	* COPYING: Revert - Jikes is not under the GPL.
+	* autogen.sh: 
+	* configure.in (AM_INIT_AUTOMAKE): Fix so that COPYING will not be
+	overwritten again.
+	* Makefile.in:
+	* doc/Makefile.in:
+	* src/Makefile.in: Regenerate.
+
+2002-11-14  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/Makefile.in: Regenerate after fixing a bug in automake 1.7.1
 	- see patch 371.
 
