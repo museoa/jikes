@@ -1,18 +1,3 @@
-
-//
-// This software is subject to the terms of the IBM Jikes Compiler
-// License Agreement available at the following URL:
-// http://www.ibm.com/research/jikes.
-// Copyright (C) 1996, 1999, International Business Machines Corporation
-// and others.  All Rights Reserved.
-// You must accept the terms of that agreement to use this software.
-//
-// $Id$
-//
-// Generate code.h and code.cpp to reflect classification of Unicode
-// characters used by a Java Virtual Machine (usually Sun's, so that
-// Jikes and the Sun JVM use same classification).
-
 import java.lang.Integer;
 import java.lang.Character;
 import java.io.PrintStream;
@@ -110,7 +95,6 @@ class gencode
             hfile.println("#include \"config.h\"");
             hfile.println("#include <ctype.h>");
             hfile.println("#include <assert.h>");
-            hfile.println("#include \"bool.h\"");
             hfile.println();
             hfile.println("class Code");
             hfile.println("{");
@@ -118,7 +102,7 @@ class gencode
             hfile.println("    // To facilitate the scanning, the character set is partitioned into");
             hfile.println("    // 8 classes using the array CODE. The classes are described below");
             hfile.println("    // together with some self-explanatory functions defined on CODE.");
-            hfile.println("    // ");
+            hfile.println("    //");
             hfile.println("    enum {");
 
             hfile.println("             LOG_BASE_SIZE       = " + LOG_BASE_SIZE + ',');
@@ -153,7 +137,6 @@ class gencode
             hfile.println("    }");
             hfile.println();
             hfile.println("    static inline void CodeCheck(wchar_t c)");
-            hfile.println();
             hfile.println("    {");
             hfile.println("         assert(c >> LOG_COMPLEMENT_SIZE < BASE_SIZE);");
             hfile.println("         assert(base[c >> LOG_COMPLEMENT_SIZE] + c >= (&code[0]));");
@@ -234,34 +217,34 @@ class gencode
                     num += SLOT_SIZE;
                     for (int k = 0; k < SLOT_SIZE; k += 4)
                     {
-                        cfile.print("    ");
                         for (int l = 0; l < 4; l++)
                         {
+                            cfile.print(l == 0 ? "    " : " ");
                             switch(slot[k + l])
                             {
                                 case NEWLINE_CODE:
-                                     cfile.print("NEWLINE_CODE, ");
+                                     cfile.print("NEWLINE_CODE,");
                                      break;
                                 case SPACE_CODE:
-                                     cfile.print("SPACE_CODE, ");
+                                     cfile.print("SPACE_CODE,");
                                      break;
                                 case BAD_CODE:
-                                     cfile.print("BAD_CODE, ");
+                                     cfile.print("BAD_CODE,");
                                      break;
                                 case DIGIT_CODE:
-                                     cfile.print("DIGIT_CODE, ");
+                                     cfile.print("DIGIT_CODE,");
                                      break;
                                 case OTHER_DIGIT_CODE:
-                                     cfile.print("OTHER_DIGIT_CODE, ");
+                                     cfile.print("OTHER_DIGIT_CODE,");
                                      break;
                                 case LOWER_CODE:
-                                     cfile.print("LOWER_CODE, ");
+                                     cfile.print("LOWER_CODE,");
                                      break;
                                 case UPPER_CODE:
-                                     cfile.print("UPPER_CODE, ");
+                                     cfile.print("UPPER_CODE,");
                                      break;
                                 default:
-                                     cfile.print("OTHER_LETTER_CODE, ");
+                                     cfile.print("OTHER_LETTER_CODE,");
                                      break;
                             }
                         }
@@ -283,15 +266,15 @@ class gencode
             cfile.println("{");
             for (int k = 0; k < BASE_SIZE; k += 4)
             {
-                cfile.print("   ");
                 for (int i = 0; i < 4; i++)
                 {
                     int j = k + i;
+                    cfile.print(i == 0 ? "   " : " ");
                     cfile.print(" &code[" + 
                                 (base_index[j] >= 0 ? base_index[j] : base_index[BASE_SIZE]) +
                                 "] - " +
                                 (j * SLOT_SIZE) +
-                                  ", ");
+                                  ",");
                 }
                 cfile.println();
             }
@@ -322,7 +305,7 @@ class gencode
             hfile.println("    // To facilitate the scanning, the character set is partitioned into");
             hfile.println("    // 8 classes using the array CODE. The classes are described below");
             hfile.println("    // together with some self-explanatory functions defined on CODE.");
-            hfile.println("    // ");
+            hfile.println("    //");
             hfile.println("    enum {");
             hfile.println("             NEWLINE_CODE      = " + NEWLINE_CODE + ",");
             hfile.println("             SPACE_CODE        = " + SPACE_CODE + ",");
@@ -377,36 +360,36 @@ class gencode
 
                 for (int j = 0; j < 256; j += 4)
                 {
-                    cfile.print("    ");
                     for (int l = 0; l < 4; l++)
                     {
                         byte b = base[BaseIndex(k)][DataIndex(k)];
                         k++;
+                        cfile.print(l == 0 ? "    " : " ");
                         switch(b)
                         {
                             case NEWLINE_CODE:
-                                 cfile.print("NEWLINE_CODE, ");
+                                 cfile.print("NEWLINE_CODE,");
                                  break;
                             case SPACE_CODE:
-                                 cfile.print("SPACE_CODE, ");
+                                 cfile.print("SPACE_CODE,");
                                  break;
                             case BAD_CODE:
-                                 cfile.print("BAD_CODE, ");
+                                 cfile.print("BAD_CODE,");
                                  break;
                             case DIGIT_CODE:
-                                 cfile.print("DIGIT_CODE, ");
+                                 cfile.print("DIGIT_CODE,");
                                  break;
                             case OTHER_DIGIT_CODE:
-                                 cfile.print("OTHER_DIGIT_CODE, ");
+                                 cfile.print("OTHER_DIGIT_CODE,");
                                  break;
                             case LOWER_CODE:
-                                 cfile.print("LOWER_CODE, ");
+                                 cfile.print("LOWER_CODE,");
                                  break;
                             case UPPER_CODE:
-                                 cfile.print("UPPER_CODE, ");
+                                 cfile.print("UPPER_CODE,");
                                  break;
                             default:
-                                 cfile.print("OTHER_LETTER_CODE, ");
+                                 cfile.print("OTHER_LETTER_CODE,");
                                  break;
                         }
                     }
@@ -438,7 +421,7 @@ class gencode
         cfile.println("// variants of system functions requiring EBCDIC translation");
         cfile.println();
         cfile.println("#include <stdio.h>");
-        cfile.println("#include <sys/stat.h>   ");
+        cfile.println("#include <sys/stat.h>");
         cfile.println();
         cfile.println("int system_stat(const char * name, struct stat * stat_struct)");
         cfile.println("{");
