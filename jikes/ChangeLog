@@ -1,3 +1,8 @@
+2001-12-10  Chris Dennis  <Chris.Dennis@invidi.com>
+
+	* src/expr.cpp (ProcessClassInstanceCreationExpression): Yet
+	another case of bug 2377, bad for-loop scoping in VC++.
+
 2001-12-09  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/body.cpp (ProcessTryStatement): Update finally blocks to

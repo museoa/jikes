@@ -4231,9 +4231,9 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
             }
 
             SymbolSet *exception_set = TryExceptionTableStack().Top();
-            for (int i = method -> NumThrows() - 1; i >= 0; i--)
+            for (int j = method -> NumThrows() - 1; j >= 0; j--)
             {
-                TypeSymbol *exception = method -> Throws(i);
+                TypeSymbol *exception = method -> Throws(j);
                 if (exception_set)
                     exception_set -> AddElement(exception);
 
