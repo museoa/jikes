@@ -568,7 +568,7 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor, Tuple<
         EmitStatement((AstStatement *) constructor_block -> explicit_constructor_invocation_opt);
     else
     {
-        assert(unit_type == control.Object() && "A constructor block without an explicit constructor_invocation");
+        assert(unit_type == this_control.Object() && "A constructor block without an explicit constructor_invocation");
     }
 
     // supply needed field initialization unless constructor
