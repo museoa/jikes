@@ -453,6 +453,8 @@ public:
 
     virtual ~MethodSymbol();
 
+    bool IsFinal();
+
     bool IsTyped()
     {
         return type_ != NULL;
@@ -588,6 +590,12 @@ private:
     // another constructor that accepts extra local parameters.
     //
     MethodSymbol *local_constructor;
+
+    bool ACC_FINAL()
+    {
+assert(! "use the ACC_FINAL() flag on a method symbol. Use the function \"IsFinal()\" instead");
+        return false;
+    }
 };
 
 

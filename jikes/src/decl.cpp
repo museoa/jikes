@@ -2907,8 +2907,8 @@ void Semantic::CheckMethodOverride(AstMethodDeclaration *method_declaration, Met
                        hidden_method -> Header((Semantic *) this, token_location),
                        hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                        hidden_method -> containing_type -> ExternalName());
-    if (hidden_method -> ACC_FINAL() || hidden_method -> ACC_PRIVATE()) // Merged because same kind of message. See error.cpp
-        ReportSemError(hidden_method -> ACC_FINAL() ? SemanticError::FINAL_METHOD_OVERRIDE : SemanticError::PRIVATE_METHOD_OVERRIDE,
+    if (hidden_method -> IsFinal() || hidden_method -> ACC_PRIVATE()) // Merged because same kind of message. See error.cpp
+        ReportSemError(hidden_method -> IsFinal() ? SemanticError::FINAL_METHOD_OVERRIDE : SemanticError::PRIVATE_METHOD_OVERRIDE,
                        method_declarator -> LeftToken(),
                        method_declarator -> RightToken(),
                        method -> Header((Semantic *) this, token_location),
@@ -3035,9 +3035,9 @@ void Semantic::CheckMethodOverride(AstClassDeclaration *class_declaration, Metho
                        hidden_method -> Header((Semantic *) this, class_declaration -> identifier_token),
                        hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                        hidden_method -> containing_type -> ExternalName());
-    if (hidden_method -> ACC_FINAL() || hidden_method -> ACC_PRIVATE()) // Merged because same kind of message. See error.cpp
-        ReportSemError(hidden_method -> ACC_FINAL() ? SemanticError::FINAL_METHOD_OVERRIDE_EXTERNALLY
-                                                    : SemanticError::PRIVATE_METHOD_OVERRIDE_EXTERNALLY,
+    if (hidden_method -> IsFinal() || hidden_method -> ACC_PRIVATE()) // Merged because same kind of message. See error.cpp
+        ReportSemError(hidden_method -> IsFinal() ? SemanticError::FINAL_METHOD_OVERRIDE_EXTERNALLY
+                                                  : SemanticError::PRIVATE_METHOD_OVERRIDE_EXTERNALLY,
                        class_declaration -> identifier_token,
                        (class_declaration -> NumInterfaces() > 0
                                            ? class_declaration -> Interface(class_declaration -> NumInterfaces() - 1) -> RightToken()
@@ -3510,10 +3510,15 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
                                            : ProcessMethodModifiers(method_declaration));
 
     //
+    // TODO: File Query Sun on that one. We no longer explicitly mark such methods as final
+    //       as it appears that some tools expect these methods to remain unmarked.
+    //
+    //
     // A private method and all methods declared in a final class are implicitly final.
     //
-    if (access_flags.ACC_PRIVATE() || this_type -> ACC_FINAL())
-        access_flags.SetACC_FINAL();
+    // if (access_flags.ACC_PRIVATE() || this_type -> ACC_FINAL())
+    //    access_flags.SetACC_FINAL();
+    //
 
     //
     // A method enclosed in an inner type may not be declared static.

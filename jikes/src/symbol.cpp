@@ -28,6 +28,11 @@ int FileSymbol::java_suffix_length = strlen(java_suffix);
 char *FileSymbol::class_suffix = StringConstant::U8S__DO_class;
 int FileSymbol::class_suffix_length = strlen(class_suffix);
 
+bool MethodSymbol::IsFinal()
+{
+    return ((AccessFlags *) this) -> ACC_FINAL() || ((AccessFlags *) this) -> ACC_PRIVATE() || containing_type -> ACC_FINAL();
+}
+
 wchar_t *MethodSymbol::Header(Semantic *sem, LexStream::TokenIndex token_location)
 {
     if (! this -> IsTyped())
