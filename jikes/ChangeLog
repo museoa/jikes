@@ -1,3 +1,13 @@
+2001-05-17  Chris Abbey  <cabbey@bresnanlink.net>
+
+	* option.cpp:
+	* control.cpp: Completed the removal of EBCDIC related
+	code that Vadim started in October 1999. (it was all
+	dead code after the preprocessor ran anyway.) If support
+	for EBCDIC is ever put back in it should be done through
+	the API and ICU/iconv.
+	* platform.h: replaced comment explaining the U_ enums.
+
 2001-05-13  Chris Abbey  <cabbey@bresnanlink.net>
 
 	Released Jikes 1.14, Happy Mother's Day.
@@ -2732,7 +2742,7 @@ that
 
 1999-10-08  Vadim Zaliva  <lord@crocodile.org>
 
-	All EBCEDIC code removed.
+	All EBCDIC code removed.
 	* stream.cpp (ProcessInput): Tested and now in conformance with JLS.
 	* code.h (class Code): aIsAlpha, IsDigit etc, checks now using ICU.
 

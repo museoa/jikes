@@ -29,6 +29,7 @@ namespace Jikes {	// Open namespace Jikes block
 // To make it universal, one should uncomment the constructor and
 // make the array "lower" non-static. In such a case, each object
 // of type Case that is declared will allocate its own "lower" array.
+// This would need to be done for i.e. an EBCDIC machine.
 //
 class Case
 {
@@ -167,7 +168,8 @@ public:
         return (s1[i] == s2[i]);
     }
 
-
+// see comment above.
+//
 //  Lcase()
 //  {
 //      for (int c = 0; c < 256; c++)

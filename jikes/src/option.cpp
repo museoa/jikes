@@ -225,14 +225,6 @@ Option::Option(ArgumentExpander &arguments) :
                 paths_buffer = new char[strlen(classpath)+1];
                 strcpy(paths_buffer, classpath);
                 classpath = paths_buffer;
-
-#ifdef EBCDIC
-                //
-                //  Maintain CLASSPATH in ASCII and translate back to EBCDIC when building file name
-                //
-                for (int k = 0; k < strlen(classpath); k++)
-                    classpath[k] = Code::ToASCII(classpath[k]);
-#endif
             }
             else if (strcmp(arguments.argv[i],"-bootclasspath") == 0 && ((i + 1) < arguments.argc))
             {
@@ -243,14 +235,6 @@ Option::Option(ArgumentExpander &arguments) :
                 paths_buffer = new char[strlen(bootclasspath)+1];
                 strcpy(paths_buffer, bootclasspath);
                 bootclasspath = paths_buffer;
-
-#ifdef EBCDIC
-                //
-                //  Maintain CLASSPATH in ASCII and translate back to EBCDIC when building file name
-                //
-                for (int k = 0; k < strlen(bootclasspath); k++)
-                    bootclasspath[k] = Code::ToASCII(bootclasspath[k]);
-#endif
             }
             else if (strcmp(arguments.argv[i],"-extdirs") == 0 && ((i + 1) < arguments.argc))
             {
@@ -261,14 +245,6 @@ Option::Option(ArgumentExpander &arguments) :
                 paths_buffer = new char[strlen(extdirs)+1];
                 strcpy(paths_buffer, extdirs);
                 extdirs = paths_buffer;
-
-#ifdef EBCDIC
-                //
-                //  Maintain CLASSPATH in ASCII and translate back to EBCDIC when building file name
-                //
-                for (int k = 0; k < strlen(extdirs); k++)
-                    extdirs[k] = Code::ToASCII(extdirs[k]);
-#endif
             }
             else if (strcmp(arguments.argv[i],"-sourcepath") == 0 && ((i + 1) < arguments.argc))
             {
@@ -279,14 +255,6 @@ Option::Option(ArgumentExpander &arguments) :
                 paths_buffer = new char[strlen(sourcepath)+1];
                 strcpy(paths_buffer, sourcepath);
                 sourcepath = paths_buffer;
-
-#ifdef EBCDIC
-                //
-                //  Maintain CLASSPATH in ASCII and translate back to EBCDIC when building file name
-                //
-                for (int k = 0; k < strlen(sourcepath); k++)
-                    sourcepath[k] = Code::ToASCII(sourcepath[k]);
-#endif
             }
             else if (strcmp(arguments.argv[i], "-depend") == 0 || strcmp(arguments.argv[i], "-Xdepend") == 0)
                  depend = true;
@@ -353,13 +321,6 @@ Option::Option(ArgumentExpander &arguments) :
                 if (! directory)
                     bad_options.Next() = new OptionError(SemanticError::INVALID_DIRECTORY, arguments.argv[i]);
 #endif
-#ifdef EBCDIC
-                //
-                // need to translate directory name to ASCII
-                //
-                for (int k = 0; k < directory_length; k++)
-                    directory[k] = Code::ToASCII(directory[k]);
-#endif
                 if (directory)
                 {
                     for (char *ptr = directory; *ptr; ptr++)
@@ -379,10 +340,6 @@ Option::Option(ArgumentExpander &arguments) :
                 debug_unparse_ast = true;
                 debug_unparse_ast_debug = true;
             }
-#ifdef EBCDIC
-            else if (strcmp(arguments.argv[i], "+ASCII") == 0)
-                     ascii = true;
-#endif
             else if (strcmp(arguments.argv[i], "+B") == 0)
                  bytecode = false;
             else if (strcmp(arguments.argv[i], "+c") == 0)
@@ -512,13 +469,6 @@ Option::Option(ArgumentExpander &arguments) :
             strcpy(paths_buffer, bootclasspath);
             bootclasspath = paths_buffer;
 
-#ifdef EBCDIC
-            //
-            //  Maintain CLASSPATH in ASCII and translate back to EBCDIC when building file name
-            //
-            for (int k = 0; k < strlen(bootclasspath); k++)
-                bootclasspath[k] = Code::ToASCII(bootclasspath[k]);
-#endif
             while (isspace(*bootclasspath))
                 bootclasspath++;
 
@@ -542,13 +492,6 @@ Option::Option(ArgumentExpander &arguments) :
             strcpy(paths_buffer, extdirs);
             extdirs = paths_buffer;
 
-#ifdef EBCDIC
-            //
-            //  Maintain CLASSPATH in ASCII and translate back to EBCDIC when building file name
-            //
-            for (int k = 0; k < strlen(extdirs); k++)
-                extdirs[k] = Code::ToASCII(extdirs[k]);
-#endif
             while (isspace(*extdirs))
                 extdirs++;
 
@@ -574,13 +517,6 @@ Option::Option(ArgumentExpander &arguments) :
             strcpy(paths_buffer, classpath);
             classpath = paths_buffer;
 
-#ifdef EBCDIC
-            //
-            //  Maintain CLASSPATH in ASCII and translate back to EBCDIC when building file name
-            //
-            for (int k = 0; k < strlen(classpath); k++)
-                classpath[k] = Code::ToASCII(classpath[k]);
-#endif
             while (isspace(*classpath))
                 classpath++;
 
@@ -611,13 +547,6 @@ Option::Option(ArgumentExpander &arguments) :
             strcpy(paths_buffer, sourcepath);
             sourcepath = paths_buffer;
 
-#ifdef EBCDIC
-            //
-            //  Maintain CLASSPATH in ASCII and translate back to EBCDIC when building file name
-            //
-            for (int k = 0; k < strlen(sourcepath); k++)
-                sourcepath[k] = Code::ToASCII(sourcepath[k]);
-#endif
             while (isspace(*sourcepath))
                 sourcepath++;
 
