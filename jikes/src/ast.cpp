@@ -1445,14 +1445,14 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
         for (int i = 0; i < NumSwitchLabels(); i++)
         {
             if (i % 10 == 0)
-                Coutput << "        " << endl;
+                Coutput << endl << "        ";
             Coutput << " #" << this -> SwitchLabel(i) -> id << ':';
         }
         Coutput << endl;
         for (int k = 0; k < NumStatements(); k++)
         {
             if (k % 10 == 0)
-                Coutput << "            " << endl;
+                Coutput << endl << "            ";
             Coutput << " #" << this -> Statement(k) -> id;
         }
         Coutput << endl;
