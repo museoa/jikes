@@ -4055,7 +4055,7 @@ TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class
         super_type -> LocalClassProcessingCompleted() ||
         anon_type -> EnclosingType())
     {
-        if (anon_type -> NumConstructorParameters())
+        if (anon_type -> NumConstructorParameters() && ! anon_type -> Bad())
         {
             class_body -> default_constructor -> constructor_symbol ->
                 SetSignature(control);
