@@ -46,10 +46,15 @@
     <TABLE BORDER=0 ALIGN="CENTER">
       <TR VALIGN="MIDDLE">
         <TD ALIGN="RIGHT"><a href="http://developer.apple.com/"><IMG SRC="images/apple.jpg" alt="" BORDER=0 HEIGHT=61 WIDTH=50></A></TD>
-        <TD ALIGN="LEFT" ><a href="http://developer.apple.com">Apple's Mac OS X Developer Tools</a></TD>
-<!--      </TR><TR>
+        <TD ALIGN="LEFT" ><a href="http://developer.apple.com/">Apple's Mac OS X Developer Tools</a></TD>
+      </TR><TR>
         <TD COLSPAN=2><HR></TD>
--->      </TR>
+      </TR>
+      <TR VALIGN="MIDDLE">
+        <TD ALIGN="RIGHT"><a href="http://fink.sourceforge.net/pdb/package.php/jikes"><IMG SRC="images/fink.png" alt="" BORDER=0 HEIGHT=85 WIDTH=171></A></TD>
+        <TD ALIGN="LEFT" ><a href="http://fink.sourceforge.net/pdb/package.php/jikes">Fink</a></TD>
+      </TR>
+
     </TABLE>
 
 
