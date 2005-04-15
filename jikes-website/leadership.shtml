@@ -66,7 +66,7 @@ a few months.
 <p>Contributors are listed on the <a href="people.shtml#contrib">people page</a>.
 
 <h1>Copyright notice for contributions</h1>
-<p>Jikes is covered by the <A HREF="http://oss.software.ibm.com/developerworks/opensource/license10.html">IBM Public License</A>.
+<p>Jikes is covered by the <A HREF="http://www-128.ibm.com/developerworks/library/os-ipl.html">IBM Public License</A>.
 All further contributions must be made under the same terms. All contributions must contain the following
 copyright notice:
 <BLOCKQUOTE><code>Copyright &copy; <FONT COLOR="GREEN">{date} {name of contributor}</FONT> and others. All rights reserved.<BR CLEAR="LEFT">

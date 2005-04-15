@@ -41,7 +41,7 @@
             <li><a href="http://sourceforge.net/project/showfiles.php?group_id=128803">Downloads</a>
             <li><a href="http://sourceforge.net/tracker/?group_id=128803&amp;atid=712760">View bugs</a>
             <li><a href="faq/bug-reporting.shtml">Report bugs here</a>
-            <li><a href="http://oss.software.ibm.com/developerworks/opensource/license10.html">IBM Public License</a>
+            <li><a href="http://www-128.ibm.com/developerworks/library/os-ipl.html">IBM Public License</a>
           </ul>
           <hr>
           For Developers
@@ -182,7 +182,7 @@ who work on Jikes as part of their job description. Jikes survives today soley
 based on the free time contributions of members of the open source community.
 
 <P>The source code is available under
-<a href="http://oss.software.ibm.com/developerworks/opensource/license10.html">IBM's Public License</a>,
+<a href="http://www-128.ibm.com/developerworks/library/os-ipl.html">IBM's Public License</a>,
 which has been approved by the <a href="http://www.opensource.org/">OSI</a>
 (Open Source Initiative) as a fully certified open source license.
 The project provides access to the complete <A HREF="cvs.shtml">CVS</A>

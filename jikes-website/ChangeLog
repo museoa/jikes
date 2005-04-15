@@ -1,3 +1,9 @@
+2005-04-14  Chris Abbey	 <jikes@cabbey.net>
+
+	* index.shtml:
+	* leadership.shtml: update to new url for license, reported by
+	John Yeager.
+
 2005-03-07  Chris Abbey	 <jikes@cabbey.net>
 
 	* distribs.shtml: fix broken links reported by Lukas Theussl, add
