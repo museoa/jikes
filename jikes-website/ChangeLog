@@ -1,5 +1,9 @@
 2005-04-14  Chris Abbey	 <jikes@cabbey.net>
 
+	* patchguide.shtml: add instruction to attach patch
+
+2005-04-14  Chris Abbey	 <jikes@cabbey.net>
+
 	* index.shtml:
 	* leadership.shtml: update to new url for license, reported by
 	John Yeager.

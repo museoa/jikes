@@ -10,7 +10,7 @@
 <h1>Jikes Patches Guidelines</h1>
 
 <p>The Jikes project welcomes patches, but cannot promise that every
-patch submitted will be accepted. Patches should be submitted to the
+patch submitted will be accepted. Patches should be attached to an entry in the
 <a href="http://sourceforge.net/tracker/?group_id=128803&atid=712762">patch queue</a>.
 
 <p>Here are some guidelines on submitting a patch. If you make it
@@ -31,6 +31,10 @@ likely we will include it; for example, please:
  and reference the file as src/ast.h, rather than in the src directory referencing
  the file as ast.h. <small>(It is really a minor item, but it helps immensly if we
  are consistent, and that is the "standard" way of doing it.)</small>
+<li>Create an entry in the patch queue that describes the patch, or the
+problem it solves (it can be as simple as saying "fixes bug #12345") and
+discusses the testing you've done on that patch.
+<li>Attach your patch to the patch queue as a file, do not paste it inline.
 </ul>
 
 <h1>Sample ChangeLog and Patch</h1>
