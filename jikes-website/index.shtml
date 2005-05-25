@@ -69,7 +69,7 @@
 	    <li><a href="http://java.sun.com/docs/books/effective/">Effective Java.</a>
 	    <!-- li><a href="queries/">Old Jikes &quot;Queries to Sun&quot; database</a -->
 	    <li><a href="http://jikesrvm.sourceforge.net/">The Jikes Research Virtual Machine project</a> can only be built with Jikes.
-	    <li><a href="http://ibm.com/alphaworks/robocode/?origin=jikes">Robocode</a> is a fun way to learn java programming, and it uses jikes under the covers to reduce the compile delays and keep the student's attention!
+	    <li><a href="http://robocode.sourceforge.net/">Robocode</a> is a fun way to learn java programming, and it uses jikes under the covers to reduce the compile delays and keep the student's attention!
           </ul>
         </td>
         <TD class=navbar WIDTH=6>&nbsp;</TD><!--padding-->
