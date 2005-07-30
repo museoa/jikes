@@ -146,9 +146,10 @@ large corporations, and the continued growth of Java for Linux.</p>
 
 <p>It's worth pointing out that Jikes is not, and is not intended to be, a complete
 development environment -- it is simply a command line compiler. It should not be
-considered a replacement for more complete tools, such as <A HREF="http://sources.redhat.com/sourcenav/">
-Source Navigator</A> or <A HREF="http://www.ibm.com/software/ad/vajava/">IBM's VisualAge for Java</A>
-which provide sophisticated graphical IDEs (Integrated Development Environments).</P>
+considered a replacement for more complete tools, such as <A
+HREF="http://www.slickedit.com/"> Visual Slick Edit</A> or <A
+HREF="http://www.eclipse.org/">Eclipse</A> which provide sophisticated
+graphical IDEs (Integrated Development Environments).</P>
 
 <p>The Jikes compiler was released in binary form in April 1997 on the IBM 
 <A HREF="http://ibm.com/alphaworks/">alphaWorks</A> site.  Jikes for Linux

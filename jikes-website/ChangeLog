@@ -1,3 +1,10 @@
+2005-07-29  Chris Abbey  <jikes@cabbey.net>
+
+	* images/openbsd.jpg: add puffer
+	* distribs.html: add openbsd, reported missing by Ian Darwin
+	* index.html: update outdated editor references, also pointed out
+	by Ian.
+
 2005-05-24  Chris Abbey  <jikes@cabbey.net>
 
 	* index.shtml: new url for robocode

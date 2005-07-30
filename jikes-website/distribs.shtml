@@ -16,23 +16,29 @@
       </TR><TR>
         <TD COLSPAN=2><HR></TD>
       </TR><TR VALIGN="MIDDLE">
-        <TD ALIGN="RIGHT"><a href="http://www.freebsd.org/"><IMG SRC="images/freebsd.gif" alt="" BORDER=0 HEIGHT=72 WIDTH=64></a></TD>
-        <TD ALIGN="LEFT" ><a href="http://www.freebsd.org/">FreeBSD</a></TD>
-      </TR><TR>
-        <TD COLSPAN=2><HR></TD>
-      </TR><TR VALIGN="MIDDLE">
         <TD ALIGN="RIGHT"><a href="http://www.suse.com"><IMG SRC="images/suse.gif" alt="" BORDER=0 HEIGHT=76 WIDTH=108></A></TD>
         <TD ALIGN="LEFT" ><a href="http://www.suse.com">SuSE</a></TD>
       </TR><TR>
         <TD COLSPAN=2><HR></TD>
       </TR><TR VALIGN="MIDDLE">
-        <TD ALIGN="RIGHT"><a href="http://packages.gentoo.org/packages/?category=dev-java;name=jikes"><IMG SRC="images/gentoo.png" alt="" BORDER=0 HEIGHT=66 WIDTH=68></A></TD>
-        <TD ALIGN="LEFT" ><a href="http://packages.gentoo.org/packages/?category=dev-java;name=jikes">Gentoo</a> - (<small>in portage</small>)</TD>
+        <TD ALIGN="RIGHT"><a href="http://www.freebsd.org/"><IMG SRC="images/freebsd.gif" alt="" BORDER=0 HEIGHT=72 WIDTH=64></a></TD>
+        <TD ALIGN="LEFT" ><a href="http://www.freebsd.org/">FreeBSD</a></TD>
+      </TR><TR>
+        <TD COLSPAN=2><HR></TD>
+      </TR><TR VALIGN="MIDDLE">
+        <TD ALIGN="RIGHT"><a href="http://www.openbsd.org/"><IMG SRC="images/openbsd.jpg" alt="" BORDER=0 HEIGHT=84 WIDTH=99></a></TD>
+        <TD ALIGN="LEFT" ><a href="http://www.openbsd.org/">OpenBSD</a> - (<small>in Ports and Packages</small>)
+</TD>
       </TR><TR>
         <TD COLSPAN=2><HR></TD>
       </TR><TR VALIGN="MIDDLE">
         <TD ALIGN="RIGHT"><a href="http://darwinports.opendarwin.org/ports/?by=name&amp;substr=jikes&amp;Search="><IMG SRC="images/opendarwin.png" alt="" BORDER=0 HEIGHT=80 WIDTH=80></A></TD>
         <TD ALIGN="LEFT" ><a href="http://darwinports.opendarwin.org/ports/?by=name&amp;substr=jikes&amp;Search=">OpenDarwin</a> - (<small>in Darwin Ports</small>)</TD>
+      </TR><TR>
+        <TD COLSPAN=2><HR></TD>
+      </TR><TR VALIGN="MIDDLE">
+        <TD ALIGN="RIGHT"><a href="http://packages.gentoo.org/packages/?category=dev-java;name=jikes"><IMG SRC="images/gentoo.png" alt="" BORDER=0 HEIGHT=66 WIDTH=68></A></TD>
+        <TD ALIGN="LEFT" ><a href="http://packages.gentoo.org/packages/?category=dev-java;name=jikes">Gentoo</a> - (<small>in portage</small>)</TD>
       </TR><TR>
         <TD COLSPAN=2><HR></TD>
       </TR><TR VALIGN="MIDDLE">
