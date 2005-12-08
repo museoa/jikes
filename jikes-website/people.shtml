@@ -102,7 +102,8 @@
        <b>Location:</b> Bristol, U.K.<BR>
        <b>Contributions:</b> Language specification issues, testing.</p>
 
-    <h1>In the here and now</h1>
+    <h1>Other Participants</h1>
+      <P>Over time, the project has had a number of additional leaders and contributors:</p>
       
       <h2><a name="admin">Project Administration</a></h2>
 
@@ -119,11 +120,12 @@
            <b>Email:</b> <A HREF="mailto:jikes-dev@www-126.ibm.com">on jikes-dev list</A><BR>
            <!--b>URL:</b> <A HREF=""></A><BR-->
            <b>Organization:</b> IBM Corp - <small>not working on jikes officially, only on personal time</small><BR>
-           <b>Occupation:</b> Staff Software Engineer, eServer iSeries Logical Partitioning<BR>
+           <b>Occupation:</b> Advisory Software Engineer, Embedded Linux<BR>
            <b>Location:</b> Rochester, MN, USA<BR>
            <b>Comments:</b> java geek, open source bigot, linux advocate, thorn in management's side<BR>
-           <b>Contributions:</b> AIX support &amp; binary, a few patches, some testcases, developerWorks/OpenSourceSoftware Zone support structure liaison. (which means I tend to scream at the IBM staff responsible for this server when things break)</p>
+           <b>Contributions:</b> AIX support &amp; binary, a few patches, some testcases, developerWorks/OpenSourceSoftware Zone support structure liaison.</p>
         
+
       <h2><a name="contrib">Project Contributors</a></h2>
         <p>Folks who have through their repeated contributions to and outstanding participation
         in the project have gained the notice of the project administration. (in some semblance of chronology)
