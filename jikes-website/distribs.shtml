@@ -32,6 +32,13 @@
       </TR><TR>
         <TD COLSPAN=2><HR></TD>
       </TR><TR VALIGN="MIDDLE">
+        <TD ALIGN="RIGHT"><a href="http://www.netbsd.org/"><IMG SRC="images/netbsd.jpg" alt="" BORDER=0 HEIGHT=90 WIDTH=90></a></TD>
+        <TD ALIGN="LEFT" ><a href="http://www.netbsd.org/">NetBSD</a> -
+        (<small>by way of <a href="http://www.pkgsrc.org/">pkgsrc</a></small>)
+</TD>
+      </TR><TR>
+        <TD COLSPAN=2><HR></TD>
+      </TR><TR VALIGN="MIDDLE">
         <TD ALIGN="RIGHT"><a href="http://darwinports.opendarwin.org/ports/?by=name&amp;substr=jikes&amp;Search="><IMG SRC="images/opendarwin.png" alt="" BORDER=0 HEIGHT=80 WIDTH=80></A></TD>
         <TD ALIGN="LEFT" ><a href="http://darwinports.opendarwin.org/ports/?by=name&amp;substr=jikes&amp;Search=">OpenDarwin</a> - (<small>in Darwin Ports</small>)</TD>
       </TR><TR>

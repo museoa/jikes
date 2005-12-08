@@ -1,3 +1,8 @@
+2005-12-07  Chris Abbey  <jikes@cabbey.net>
+
+	* images/netbsd.jpg: add flag logo
+	* distribs.html: add netbsd, reported missing by Antoine Reilles
+
 2005-07-29  Chris Abbey  <jikes@cabbey.net>
 
 	* images/openbsd.jpg: add puffer
