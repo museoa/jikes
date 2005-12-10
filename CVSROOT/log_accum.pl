@@ -291,7 +291,7 @@ sub mail_notification
 {
     local(@text) = @_;
 
-    print "Mailing the commit message to $MAIL_TO from $ENV{HOSTNAME}...\n";
+    print "Mailing the commit message to $MAIL_TO ...\n";
 
     open(MAIL, "| mail -s \"cvs commit: $ARGV[0]\" $MAIL_TO") || die("opening pipe to mail failed!\n");
     print(MAIL join("\n", @text));
