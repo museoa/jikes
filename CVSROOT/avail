@@ -1,6 +1,6 @@
 unavail
-avail|mdernst,mdejong,cabbey|jikes,jikespg,jikestst,core,jikes-website
-avail|cabbey|CVSROOT
+avail|daveshields,mdernst,mdejong,cabbey|jikes,jikespg,jikestst,core,jikes-website
+avail|daveshields,cabbey|CVSROOT
 avail|pdavoust|jikes-website
 avail|ebblake,enh|jikes,jikespg,jikestst
 #the following prevent anyone except jikes admin changing the license files
